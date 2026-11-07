@@ -49,6 +49,8 @@ Elements with the same `SiteID` are one asset, so the federation file has them a
 - An element that openings cut stays separate, as a void on a merged element would cut everything else in that space.
 - A site is only merged within a model, so one in two models stays as one element in each.
 
+Faceted breps, which Revit writes for most families, are first written as polygon face sets of the same faces, so that instancing and compact writing work on them too (part of compact writing, so `--no-compact` leaves them). A brep with voids, or not made of plain faces and loops, stays as it is, as does any model that isn't IFC4.
+
 Face sets that are the same shape, moved and turned, are written once and placed with mapped items (`--no-instance` skips this). A copy has the same faces and colours as what it's placed from, and every point within `--precision-mm`, with no mirroring. This goes before compact writing, so copies can't drift apart by being rounded differently. It saves most where a model repeats parts, such as a gantry's bolts and signs, and next to nothing on road meshes, which are all different.
 
 Where a family doesn't say what a thing is, as with a road's meshes, `hidden-if` and `envelope-if` rules go by a property's value instead: `SET.PROPERTY=VALUE`.
