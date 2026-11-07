@@ -39,6 +39,18 @@ class SpfFile {
 // Every #reference in a line, skipping the line's own id and anything in a string
 void for_each_ref(std::string_view line, const std::function<void(uint32_t)>& visit);
 
+// A line's attributes, split at its outermost commas
+std::vector<std::string_view> attributes_of(std::string_view line);
+
+// The #references in an attribute
+std::vector<uint32_t> refs_in(std::string_view text);
+
+// 128 bits from a name, in IFC's GlobalId alphabet. The same name gets the same GUID on every run.
+std::string derived_guid(const std::string& name);
+
+// The model's length unit in metres, from the project's units; 0 if it isn't a plain SI unit
+double length_unit(const SpfFile& spf);
+
 enum class WhenEmpty { Drop, Null };
 
 // Copies a line without the references gone() says aren't there. A reference in a list is removed

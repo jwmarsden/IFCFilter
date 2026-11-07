@@ -9,10 +9,32 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 find_package(Boost CONFIG REQUIRED)
-find_package(IfcOpenShell CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 
-add_executable(bimpass src/main.cpp src/report.cpp src/split.cpp src/spf.cpp src/compact.cpp src/zip.cpp)
+# An installed IfcOpenShell if there is one, as the flake provides. Otherwise the submodule, built
+# here with the same options: the parser only, and just the schemas the models use.
+find_package(IfcOpenShell CONFIG QUIET)
+if(IfcOpenShell_FOUND)
+    message(STATUS "IfcOpenShell: installed, at ${IfcOpenShell_DIR}")
+else()
+    set(IFCOPENSHELL_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/IfcOpenShell)
+    if(NOT EXISTS ${IFCOPENSHELL_SOURCE}/cmake/CMakeLists.txt)
+        message(FATAL_ERROR "IfcOpenShell isn't installed or checked out: run git submodule update --init")
+    endif()
+    message(STATUS "IfcOpenShell: building the submodule")
+    set(SCHEMA_VERSIONS 2x3 4)
+    foreach(flag BUILD_IFCGEOM BUILD_IFCPYTHON BUILD_CONVERT BUILD_GEOMSERVER BUILD_EXAMPLES WITH_OPENCASCADE WITH_CGAL COLLADA_SUPPORT)
+        set(${flag} OFF)
+    endforeach()
+    add_subdirectory(${IFCOPENSHELL_SOURCE}/cmake ifcopenshell EXCLUDE_FROM_ALL)
+    add_library(IfcOpenShell::IfcParse ALIAS IfcParse)
+    add_library(IfcOpenShell::parse_schema_ifc2x3 ALIAS parse_schema_ifc2x3)
+    add_library(IfcOpenShell::parse_schema_ifc4 ALIAS parse_schema_ifc4)
+endif()
+
+add_executable(bimpass src/main.cpp src/report.cpp src/split.cpp src/merge.cpp src/instance.cpp src/rigid.cpp src/register.cpp src/system.cpp src/spf.cpp src/compact.cpp src/zip.cpp)
+# The schemas are plugins, loaded when a file is opened, so nothing links to them
+add_dependencies(bimpass IfcOpenShell::parse_schema_ifc2x3 IfcOpenShell::parse_schema_ifc4)
 target_compile_definitions(bimpass PRIVATE BOOST_OPTIONAL_USE_OLD_DEFINITION_OF_NONE)
 if(MSVC)
     target_compile_options(bimpass PRIVATE /W4 /bigobj /utf-8)
@@ -22,9 +44,14 @@ endif()
 target_link_libraries(bimpass PRIVATE IfcOpenShell::IfcParse Boost::headers ZLIB::ZLIB)
 if(WIN32)
     target_compile_definitions(bimpass PRIVATE NOMINMAX)
-    # IfcOpenShell only builds as a shared library, so its DLL goes beside the program
+    # IfcOpenShell only builds as shared libraries, so its DLLs go beside the program. Schema plugins
+    # are looked for beside the parser's DLL, and aren't linked, so they have to be named.
     add_custom_command(TARGET bimpass POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:bimpass> $<TARGET_FILE_DIR:bimpass>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_RUNTIME_DLLS:bimpass>
+            $<TARGET_FILE:IfcOpenShell::parse_schema_ifc2x3>
+            $<TARGET_FILE:IfcOpenShell::parse_schema_ifc4>
+            $<TARGET_FILE_DIR:bimpass>
         COMMAND_EXPAND_LISTS)
 endif()
 

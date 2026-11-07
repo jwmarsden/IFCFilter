@@ -1,22 +1,32 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 namespace bimpass {
 
 struct SplitOptions {
-    std::string ifc_path;
+    std::vector<std::string> inputs;  // models, and folders of them
     std::string out_dir;
     std::string rules_path;      // see rules.txt; none if empty
     double transparent = 0.7;    // as AMISChatter's ifc_geometry: at least this see-through is an envelope
+    bool merge = true;           // see merge.h
+    bool instance = true;        // see instance.h
     bool compact = true;         // see compact.h
     double precision_mm = 0.1;
     bool zip = true;             // outputs as .ifczip, not .ifc
+    int jobs = 0;                // models at once, as memory allows; 0 for as many as there are processors
+    std::string worker_shared;   // for one model of a parallel run: the file of GUIDs in several models
 };
 
-// Writes OUT/STEM.federate.ifc, STEM.hidden.ifc, STEM.envelopes.ifc and STEM.manifest.csv,
-// and links STEM.original.ifc to the input.
+// Writes STEM.federate.ifc, STEM.hidden.ifc, STEM.envelopes.ifc and manifest/STEM.manifest.csv under OUT
+// for each model, and links STEM.original.ifc to its input. register.csv says what they were built from. No GUID is written twice in a run, so models to be
+// federated together should go through in one run.
 // Geometry is copied as it is. Returns a process exit code.
 int split(const SplitOptions& options);
+
+// Compares models, and folders of them, with OUT/register.csv, without changing anything. Returns 0 if
+// the outputs are up to date with them, and 1 if something is new, changed or missing.
+int check(const std::vector<std::string>& inputs, const std::string& out_dir);
 
 }  // namespace bimpass

@@ -1,0 +1,4 @@
+[submodule "third_party/IfcOpenShell"]
+	path = third_party/IfcOpenShell
+	url = https://github.com/IfcOpenShell/IfcOpenShell
+	shallow = true

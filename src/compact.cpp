@@ -1,6 +1,7 @@
 #include "compact.h"
 
 #include "spf.h"
+#include "system.h"
 
 #include <algorithm>
 #include <array>
@@ -21,42 +22,6 @@ namespace bimpass {
 namespace {
 
 constexpr size_t MAX_POLYGON = 4096;  // ear clipping is slow past this, and a set this odd can stay as it is
-
-// A line's attributes, split at its outermost commas
-std::vector<std::string_view> attributes_of(std::string_view line) {
-    std::vector<std::string_view> out;
-    const auto open = line.find('(');
-    const auto close = line.rfind(')');
-    if (open == std::string_view::npos || close == std::string_view::npos || close <= open) return out;
-    bool in_string = false;
-    int depth = 0;
-    size_t start = open + 1;
-    for (size_t i = start; i < close; ++i) {
-        const char c = line[i];
-        if (c == '\'') in_string = !in_string;
-        else if (in_string) continue;
-        else if (c == '(') ++depth;
-        else if (c == ')') --depth;
-        else if (c == ',' && depth == 0) {
-            out.push_back(line.substr(start, i - start));
-            start = i + 1;
-        }
-    }
-    out.push_back(line.substr(start, close - start));
-    return out;
-}
-
-std::vector<uint32_t> refs_in(std::string_view text) {
-    std::vector<uint32_t> out;
-    for (size_t i = 0; i < text.size(); ++i) {
-        if (text[i] != '#') continue;
-        uint32_t id = 0;
-        for (++i; i < text.size() && std::isdigit(static_cast<unsigned char>(text[i])); ++i) id = id * 10 + (text[i] - '0');
-        --i;
-        out.push_back(id);
-    }
-    return out;
-}
 
 std::vector<uint32_t> integers_in(std::string_view text) {
     std::vector<uint32_t> out;
@@ -310,30 +275,6 @@ bool triangulate(const std::vector<uint32_t>& face, const std::vector<Point>& po
         return false;
     }
     return true;
-}
-
-// The model's length unit in metres, from the project's units; 0 if it isn't a plain SI unit
-double length_unit(const SpfFile& spf) {
-    for (uint32_t id = 0; id < spf.max_id(); ++id) {
-        if (spf.type(id) != "IFCPROJECT") continue;
-        const auto attributes = attributes_of(spf.line(id));
-        if (attributes.size() < 9) return 0;
-        const auto units = refs_in(attributes[8]);
-        if (units.empty()) return 0;
-        const auto listed = attributes_of(spf.line(units[0]));
-        if (listed.empty()) return 0;
-        for (const uint32_t unit : refs_in(listed[0])) {
-            const auto line = spf.line(unit);
-            if (line.find(".LENGTHUNIT.") == std::string_view::npos) continue;
-            if (spf.type(unit) != "IFCSIUNIT") return 0;
-            if (line.find(".MILLI.") != std::string_view::npos) return 1e-3;
-            if (line.find(".CENTI.") != std::string_view::npos) return 1e-2;
-            if (line.find(".DECI.") != std::string_view::npos) return 1e-1;
-            return line.find(",$,") != std::string_view::npos ? 1 : 0;
-        }
-        return 0;
-    }
-    return 0;
 }
 
 void append_list(const std::vector<uint32_t>& ids, std::string& out) {
@@ -701,7 +642,7 @@ CompactStats compact(const std::string& path, double precision_mm) {
         }
         out << "ENDSEC;\nEND-ISO-10303-21;\n";
     }
-    fs::rename(temporary, path);
+    replace_file(temporary, path);
     stats.bytes_after = fs::file_size(path);
     return stats;
 }

@@ -2,25 +2,37 @@
 
 #include "compact.h"
 #include "ifc_access.h"
+#include "instance.h"
+#include "merge.h"
+#include "register.h"
 #include "spf.h"
+#include "system.h"
 #include "zip.h"
 
 #include <algorithm>
 #include <array>
+#include <atomic>
+#include <cctype>
+#include <condition_variable>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <functional>
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <mutex>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <system_error>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 namespace bimpass {
+namespace fs = std::filesystem;
 namespace {
 
 enum Output : uint8_t { FEDERATION = 0, HIDDEN = 1, ENVELOPES = 2 };
@@ -29,11 +41,25 @@ constexpr std::array<const char*, 3> SUFFIXES = {".federate.ifc", ".hidden.ifc",
 constexpr std::array<const char*, 3> FOLDERS = {"federate", "non-federate", "non-federate"};
 constexpr const char* ZIPPED = "zip";  // added to an .ifc, makes .ifczip
 
+// Elements with this value of this property go to this output
+struct PropertyRule {
+    std::string set, property, value;
+    Output output = FEDERATION;
+};
+
+std::string trimmed(std::string s) {
+    while (!s.empty() && s.back() == ' ') s.pop_back();
+    while (!s.empty() && s.front() == ' ') s.erase(s.begin());
+    return s;
+}
+
 // A family matches a rule if its name holds the rule's text
 struct Rules {
     std::vector<std::string> keep_largest;  // the largest solid is the thing; the rest is detail inside it
     std::vector<std::string> physical;      // transparent, but really there (gratings)
     std::vector<std::string> envelope;      // opaque, but not really there (clearance envelopes)
+    std::vector<std::string> hidden;        // really there, but out of sight (buried piles)
+    std::vector<PropertyRule> by_property;  // for models where the family doesn't say what a thing is
 
     static bool matches(const std::vector<std::string>& list, const std::string& family) {
         return std::any_of(list.begin(), list.end(), [&](const std::string& s) { return family.find(s) != std::string::npos; });
@@ -53,33 +79,27 @@ struct Rules {
             if (action == "keep-largest") rules.keep_largest.push_back(family);
             else if (action == "physical") rules.physical.push_back(family);
             else if (action == "envelope") rules.envelope.push_back(family);
+            else if (action == "hidden") rules.hidden.push_back(family);
+            else if (action == "hidden-if" || action == "envelope-if") {
+                const auto dot = family.find('.');
+                const auto equals = family.find('=');
+                if (dot == std::string::npos || equals == std::string::npos || equals < dot) throw std::runtime_error(path + ": " + action + " needs SET.PROPERTY=VALUE: " + family);
+                rules.by_property.push_back({family.substr(0, dot), family.substr(dot + 1, equals - dot - 1), trimmed(family.substr(equals + 1)), action == "hidden-if" ? HIDDEN : ENVELOPES});
+            }
             else throw std::runtime_error(path + ": unknown rule " + action);
         }
         return rules;
     }
 };
 
-// 128 bits from a name, in IFC's GlobalId alphabet. The same part of the same element gets the same GUID on every run.
-std::string derived_guid(const std::string& name) {
-    static const char* ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$";
-    uint64_t hi = 0x6c62272e07bb0142ULL, lo = 0x62b821756295c58dULL;  // FNV-1a 128
-    for (const unsigned char c : name) {
-        lo ^= c;
-        // multiply by 2^88 + 0x13B, in 32-bit parts so that it needs no 128-bit type
-        const uint64_t low_part = (lo & 0xFFFFFFFFULL) * 0x13BULL;
-        const uint64_t high_part = (lo >> 32) * 0x13BULL + (low_part >> 32);
-        const uint64_t carry = high_part >> 32;
-        const uint64_t new_hi = hi * 0x13BULL + carry + (lo << 24);
-        lo = (high_part << 32) | (low_part & 0xFFFFFFFFULL);
-        hi = new_hi;
-    }
-    std::string out(22, '0');
-    for (int i = 21; i >= 0; --i) {
-        out[i] = ALPHABET[static_cast<unsigned>(lo & 63)];
-        lo = (lo >> 6) | (hi << 58);
-        hi >>= 6;
-    }
-    return out;
+// A line's first attribute, if it's a string: for a root, that's its GlobalId
+std::string_view guid_in(std::string_view line) {
+    auto open = line.find('(');
+    if (open == std::string_view::npos) return {};
+    open = line.find_first_not_of(' ', open + 1);
+    if (open == std::string_view::npos || line[open] != '\'') return {};
+    const auto close = line.find('\'', open + 1);
+    return close == std::string_view::npos ? std::string_view() : line.substr(open + 1, close - open - 1);
 }
 
 struct Element {
@@ -87,6 +107,8 @@ struct Element {
     std::string guid, type, family;
     std::vector<uint32_t> leaves;       // body geometry items, through any mapping
     bool has_body = false;
+    bool feature = false;               // an opening, which stays with what it cuts
+    bool by_property = false;           // a property rule says where it goes
     std::array<uint64_t, 3> items{}, faces{};
 };
 
@@ -103,9 +125,37 @@ class Model {
     std::unordered_map<uint32_t, Output> placed;  // leaves not in the federation file
     std::unordered_set<uint32_t> conflicts;
     std::vector<Element> elements;
-    std::vector<bool> is_product, is_type, keeps_guid;  // by id
+    std::vector<bool> is_product, is_type;  // by id
     std::vector<bool> is_root;
+    std::unordered_map<uint32_t, std::string> renamed;  // roots whose GUID isn't unique, and what they have instead
+
+    // A root's GUID in an output. What's in one output only is the thing itself, and keeps its GUID.
+    // What's in several keeps it in the federation file, and elsewhere has one made from it.
+    std::string guid_in_output(uint32_t id, std::string_view guid, Output output, bool whole) const {
+        const auto at = renamed.find(id);
+        const std::string unique = at == renamed.end() ? std::string(guid) : at->second;
+        return output == FEDERATION || whole ? unique : derived_guid(unique + "/" + OUTPUT_NAMES[output]);
+    }
 };
+
+// GUIDs have to be unique across everything a run writes. One that's in other models too changes in
+// all of them, so that no model's result depends on the order they're given in. One that's repeated
+// inside a model stays on its first root.
+void rename_repeats(const SpfFile& spf, const std::string& stem, const std::unordered_set<std::string>& shared, Model& model) {
+    std::unordered_set<std::string_view> seen;
+    for (uint32_t id = 0; id < spf.max_id(); ++id) {
+        if (!model.is_root[id]) continue;
+        const auto guid = guid_in(spf.line(id));
+        if (guid.empty()) continue;
+        const bool repeated = !seen.insert(guid).second;
+        const bool elsewhere = shared.count(std::string(guid)) > 0;
+        if (!repeated && !elsewhere) continue;
+        std::string name(guid);
+        if (elsewhere) name += "@" + stem;
+        if (repeated) name += "#" + std::to_string(id);
+        model.renamed[id] = derived_guid(name);
+    }
+}
 
 std::vector<uint32_t> ids_of(const Instances& instances) {
     std::vector<uint32_t> out;
@@ -149,12 +199,8 @@ void classify(ifcopenshell::file& file, const Rules& rules, double threshold, ui
     model.is_product.assign(max_id, false);
     model.is_type.assign(max_id, false);
     model.is_root.assign(max_id, false);
-    model.keeps_guid.assign(max_id, false);
     for (const auto& i : all_of(file, "IfcRoot")) model.is_root[i.id()] = true;
     for (const auto& i : all_of(file, "IfcTypeObject")) model.is_type[i.id()] = true;
-    for (const char* always : {"IfcProject", "IfcSpatialStructureElement"}) {
-        for (const auto& i : all_of(file, always)) model.keeps_guid[i.id()] = true;
-    }
 
     for (const char* type : {"IfcShapeModel"}) {
         for (const auto& i : all_of(file, type)) {
@@ -183,6 +229,24 @@ void classify(ifcopenshell::file& file, const Rules& rules, double threshold, ui
         if (!added && at->second != output) model.conflicts.insert(leaf);
     };
 
+    std::unordered_map<uint32_t, Output> by_property;
+    if (!rules.by_property.empty()) {
+        for (const auto& i : all_of(file, "IfcRelDefinesByProperties")) {
+            const auto relationship = i.as<express::entity>();
+            const auto set = link(relationship, "RelatingPropertyDefinition");
+            if (!set || !set.declaration().is("IfcPropertySet")) continue;
+            const std::string name = text(set, "Name");
+            for (const PropertyRule& rule : rules.by_property) {
+                if (rule.set != name) continue;
+                for (const auto& p : links(set, "HasProperties")) {
+                    const auto property = p.as<express::entity>();
+                    if (text(property, "Name") != rule.property || trimmed(nominal_text(property)) != rule.value) continue;
+                    for (const auto& object : links(relationship, "RelatedObjects")) by_property[object.id()] = rule.output;
+                }
+            }
+        }
+    }
+
     for (const auto& instance : all_of(file, "IfcProduct")) {
         const auto product = instance.as<express::entity>();
         model.is_product[product.id()] = true;
@@ -202,8 +266,12 @@ void classify(ifcopenshell::file& file, const Rules& rules, double threshold, ui
 
         // Openings cut things; they stay with what they cut
         const bool sorted = !product.declaration().is("IfcFeatureElement");
+        element.feature = !sorted;
         const bool physical = Rules::matches(rules.physical, element.family);
-        const bool envelope = Rules::matches(rules.envelope, element.family);
+        const auto ruled = by_property.find(product.id());
+        element.by_property = ruled != by_property.end();
+        const bool envelope = Rules::matches(rules.envelope, element.family) || (element.by_property && ruled->second == ENVELOPES);
+        const bool hidden = Rules::matches(rules.hidden, element.family) || (element.by_property && ruled->second == HIDDEN);
         const bool keep_largest = Rules::matches(rules.keep_largest, element.family);
         uint32_t largest = 0;
         double largest_area = -1;
@@ -228,6 +296,7 @@ void classify(ifcopenshell::file& file, const Rules& rules, double threshold, ui
         }
         for (const uint32_t id : element.leaves) {
             if (!sorted) want(id, FEDERATION);
+            else if (hidden) want(id, HIDDEN);
             else if (envelope || (model.leaves[id].transparent && !physical)) want(id, ENVELOPES);
             else if (keep_largest && largest && id != largest) want(id, HIDDEN);
             else want(id, FEDERATION);
@@ -318,6 +387,8 @@ class Writer {
 
     bool included(uint32_t id) const { return id < included_.size() && included_[id]; }
 
+    void add_lines(std::vector<std::string> lines) { added_ = std::move(lines); }
+
     // Elements and the things hanging off them
     void close_over(const std::vector<uint32_t>& relationships, const std::vector<uint32_t>& followers) {
         std::string text;
@@ -362,16 +433,16 @@ class Writer {
                 ++dropped_;
                 continue;
             }
-            if (output_ != FEDERATION && model_.is_root[id] && !model_.keeps_guid[id] && !whole_.count(id)) {
-                const auto open = text.find('\'');
-                const auto close = text.find('\'', open + 1);
-                if (open != std::string::npos && close != std::string::npos) {
-                    const std::string guid = text.substr(open + 1, close - open - 1);
-                    text.replace(open + 1, close - open - 1, derived_guid(guid + "/" + OUTPUT_NAMES[output_]));
+            if (model_.is_root[id]) {
+                const auto guid = guid_in(text);
+                if (!guid.empty()) {
+                    const size_t at = static_cast<size_t>(guid.data() - text.data());
+                    text.replace(at, guid.size(), model_.guid_in_output(id, guid, output_, whole_.count(id) > 0));
                 }
             }
             out << text << '\n';
         }
+        for (const std::string& line : added_) out << line << '\n';
         out << "ENDSEC;\nEND-ISO-10303-21;\n";
     }
 
@@ -385,6 +456,7 @@ class Writer {
     const Output output_;
     std::vector<bool> gone_;
     std::vector<bool> included_;
+    std::vector<std::string> added_;  // new instances, for elements that have been merged
     std::unordered_set<uint32_t> whole_;
     uint64_t dropped_ = 0;
 };
@@ -398,11 +470,70 @@ std::string quoted(const std::string& s) {
     return out + "\"";
 }
 
-}  // namespace
+std::string lowercase(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return s;
+}
 
-int split(const SplitOptions& options) {
-    namespace fs = std::filesystem;
-    const fs::path input(options.ifc_path);
+// The models to work on: files as given, and the .ifc files directly in any folder given
+std::vector<fs::path> models_in(const std::vector<std::string>& inputs) {
+    std::vector<fs::path> models;
+    for (const std::string& input : inputs) {
+        if (!fs::is_directory(input)) {
+            models.emplace_back(input);
+            continue;
+        }
+        std::vector<fs::path> found;
+        for (const auto& entry : fs::directory_iterator(input)) {
+            if (entry.is_regular_file() && lowercase(entry.path().extension().string()) == ".ifc") found.push_back(entry.path());
+        }
+        std::sort(found.begin(), found.end());
+        models.insert(models.end(), found.begin(), found.end());
+    }
+    return models;
+}
+
+// GUIDs in more than one model. This goes by text, before anything is parsed, so it also picks up other
+// strings the length of a GUID; that's harmless, as only a root's GUID is ever looked up in the result.
+std::unordered_set<std::string> guids_in_several(const std::vector<fs::path>& models, unsigned jobs) {
+    std::vector<std::vector<std::string>> found(models.size());
+    std::vector<std::string> errors(models.size());
+    std::atomic<size_t> next{0};
+    const auto read_models = [&]() {
+        for (size_t model = next++; model < models.size(); model = next++) {
+            try {
+                const SpfFile spf(models[model].string());
+                for (uint32_t id = 0; id < spf.max_id(); ++id) {
+                    const auto guid = guid_in(spf.line(id));
+                    if (guid.size() == 22) found[model].emplace_back(guid);
+                }
+            } catch (const std::exception& e) {
+                errors[model] = e.what();
+            }
+        }
+    };
+    std::vector<std::thread> threads;
+    for (unsigned i = 1; i < jobs; ++i) threads.emplace_back(read_models);
+    read_models();
+    for (auto& thread : threads) thread.join();
+    for (const std::string& error : errors) {
+        if (!error.empty()) throw std::runtime_error(error);
+    }
+
+    std::unordered_map<std::string, size_t> first_model;
+    std::unordered_set<std::string> shared;
+    for (size_t model = 0; model < models.size(); ++model) {
+        for (std::string& guid : found[model]) {
+            const auto at = first_model.find(guid);
+            if (at == first_model.end()) first_model.emplace(std::move(guid), model);
+            else if (at->second != model) shared.insert(std::move(guid));
+        }
+        found[model] = {};
+    }
+    return shared;
+}
+
+int split_model(const fs::path& input, const SplitOptions& options, const Rules& rules, const std::unordered_set<std::string>& shared) {
     const std::string stem = input.stem().string();
     const auto output_path = [&](Output output) { return fs::path(options.out_dir) / FOLDERS[output] / (stem + SUFFIXES[output]); };
     for (const Output output : {FEDERATION, HIDDEN, ENVELOPES}) {
@@ -414,26 +545,26 @@ int split(const SplitOptions& options) {
         }
     }
 
-    const Rules rules = Rules::load(options.rules_path);
-    const SpfFile spf(options.ifc_path);
+    const SpfFile spf(input.string());
     const uint32_t max_id = spf.max_id();
     Model model;
     std::vector<uint32_t> always;
     {
         // The parser is only for working out what goes where, and is the biggest user of memory
-        auto file = std::make_unique<ifcopenshell::file>(options.ifc_path);
+        auto file = std::make_unique<ifcopenshell::file>(input.string());
         if (!file->good()) {
-            std::cerr << options.ifc_path << ": can't be read as IFC\n";
+            std::cerr << input.string() << ": can't be read as IFC\n";
             return 1;
         }
         if (file->schema()->name() != "IFC4") {
-            std::cerr << options.ifc_path << ": warning: schema is " << file->schema()->name() << ", and is written out as it is, not converted to IFC4\n";
+            std::cerr << input.string() << ": warning: schema is " << file->schema()->name() << ", and is written out as it is, not converted to IFC4\n";
         }
         classify(*file, rules, options.transparent, max_id, model);
         for (const char* type : {"IfcProject", "IfcSpatialStructureElement"}) {
             for (const auto& i : all_of(*file, type)) always.push_back(i.id());
         }
     }
+    rename_repeats(spf, stem, shared, model);
 
     const auto output_of = [&](uint32_t leaf) {
         const auto at = model.placed.find(leaf);
@@ -467,9 +598,21 @@ int split(const SplitOptions& options) {
     }
 
     std::array<std::unique_ptr<Writer>, 3> writers;
+    MergePlan merge;
     // The federation file goes last, as it also takes whatever nothing else reached
     for (const Output output : {HIDDEN, ENVELOPES, FEDERATION}) {
-        writers[output] = std::make_unique<Writer>(spf, model, output, gone_from(model, output, max_id, in_output[output]));
+        auto gone = gone_from(model, output, max_id, in_output[output]);
+        if (output == FEDERATION && options.merge) {
+            std::vector<uint32_t> candidates;
+            for (const auto& element : model.elements) {
+                const bool spatial = std::find(always.begin(), always.end(), element.id) != always.end();
+                if (in_output[FEDERATION][element.id] && !element.feature && !spatial) candidates.push_back(element.id);
+            }
+            const std::function<bool(uint32_t)> is_gone = [&](uint32_t id) { return id < gone.size() && gone[id]; };
+            merge = plan_merge(spf, candidates, is_gone, stem);
+            for (const auto& [element, asset] : merge.merged_into) gone[element] = true;
+        }
+        writers[output] = std::make_unique<Writer>(spf, model, output, std::move(gone));
         Writer& writer = *writers[output];
         for (const uint32_t id : always) writer.include(id);
         for (const auto& element : model.elements) {
@@ -478,13 +621,39 @@ int split(const SplitOptions& options) {
             const uint32_t others = in_output[(output + 1) % 3][element.id] + in_output[(output + 2) % 3][element.id];
             if (!others) writer.whole().insert(element.id);
         }
+        if (output == FEDERATION) {
+            for (const uint32_t id : merge.keep) writer.include(id);
+            writer.add_lines(merge.lines);
+        }
         writer.close_over(relationships, followers);
     }
     Writer& federation = *writers[FEDERATION];
+
+    // What only merged elements used: their types, materials and sets of properties. The asset has what
+    // it needs, and the manifest says what went into it, so these don't count as unused and stay out.
+    std::vector<bool> left_behind(max_id, false);
+    {
+        std::vector<uint32_t> stack;
+        for (const auto& [element, asset] : merge.merged_into) stack.push_back(element);
+        for (const uint32_t id : relationships) {
+            if (federation.included(id)) continue;
+            bool merged = false;
+            for_each_ref(spf.line(id), [&](uint32_t next) { merged = merged || merge.merged_into.count(next) > 0; });
+            if (merged) stack.push_back(id);
+        }
+        while (!stack.empty()) {
+            const uint32_t id = stack.back();
+            stack.pop_back();
+            if (id >= max_id || left_behind[id] || federation.included(id)) continue;
+            left_behind[id] = true;
+            for_each_ref(spf.line(id), [&](uint32_t next) { stack.push_back(next); });
+        }
+    }
+
     uint64_t unreached = 0;
     const std::unordered_set<uint32_t> layer_set(layers.begin(), layers.end());
     for (uint32_t id = 0; id < max_id; ++id) {
-        if (spf.line(id).empty() || layer_set.count(id)) continue;
+        if (spf.line(id).empty() || layer_set.count(id) || left_behind[id]) continue;
         if (!writers[HIDDEN]->included(id) && !writers[ENVELOPES]->included(id) && !federation.included(id)) {
             // Rels and followers were already weighed; what's left is unused types, materials and the like
             const auto kind = kind_of(spf.type(id));
@@ -504,9 +673,11 @@ int split(const SplitOptions& options) {
 
     std::array<uint64_t, 3> sizes{};
     std::array<CompactStats, 3> compacted{};
+    std::array<InstanceStats, 3> instanced{};
     for (const Output output : {FEDERATION, HIDDEN, ENVELOPES}) {
         const auto path = output_path(output);
         writers[output]->write(path.string(), layers);
+        if (options.instance) instanced[output] = instance(path.string(), options.precision_mm);
         if (options.compact) compacted[output] = compact(path.string(), options.precision_mm);
         if (!options.zip) {
             sizes[output] = fs::file_size(path);
@@ -518,7 +689,9 @@ int split(const SplitOptions& options) {
         sizes[output] = fs::file_size(zipped);
     }
 
-    std::ofstream manifest(fs::path(options.out_dir) / (stem + ".manifest.csv"));
+    const auto manifest_path = fs::path(options.out_dir) / "manifest" / (stem + ".manifest.csv");
+    fs::create_directories(manifest_path.parent_path());
+    std::ofstream manifest(manifest_path);
     manifest << "guid,class,family,output,output_guid,items,faces,action,reason\n";
     std::array<uint64_t, 3> element_counts{}, item_counts{}, face_counts{};
     uint64_t split_elements = 0, moved_elements = 0;
@@ -532,16 +705,24 @@ int split(const SplitOptions& options) {
             ++element_counts[output];
             item_counts[output] += element.items[output];
             face_counts[output] += element.faces[output];
-            if (spatial && output != FEDERATION) continue;
             const bool whole = places == 1;
-            const std::string guid = (output == FEDERATION || whole) ? element.guid : derived_guid(element.guid + "/" + OUTPUT_NAMES[output]);
-            const char* reason = output == HIDDEN ? "keep-largest rule"
-                : output != ENVELOPES ? ""
-                : Rules::matches(rules.envelope, element.family) ? "envelope rule" : "transparent";
+            const bool copied = spatial && output != FEDERATION;
+            const auto asset = merge.merged_into.find(element.id);
+            const bool merged = output == FEDERATION && asset != merge.merged_into.end();
+            const std::string guid = merged ? merge.assets[asset->second].guid : model.guid_in_output(element.id, element.guid, output, whole);
+            const char* action = merged ? "merged" : copied ? "copied" : !whole ? "split" : output == FEDERATION ? "kept" : "moved";
+            const std::string reason = merged ? "site ID " + merge.assets[asset->second].site
+                : copied ? "spatial structure"
+                : output == HIDDEN ? (element.by_property || Rules::matches(rules.hidden, element.family) ? "hidden rule" : "keep-largest rule")
+                : output == ENVELOPES ? (element.by_property || Rules::matches(rules.envelope, element.family) ? "envelope rule" : "transparent")
+                : model.renamed.count(element.id) ? "GUID not unique" : "";
             manifest << element.guid << ',' << element.type << ',' << quoted(element.family) << ',' << OUTPUT_NAMES[output] << ',' << guid << ','
-                     << element.items[output] << ',' << element.faces[output] << ',' << (whole ? (output == FEDERATION ? "kept" : "moved") : "split") << ',' << reason << '\n';
+                     << element.items[output] << ',' << element.faces[output] << ',' << action << ',' << reason << '\n';
         }
     }
+
+    element_counts[FEDERATION] += merge.assets.size();
+    element_counts[FEDERATION] -= merge.merged_into.size();
 
     const auto mb = [](uint64_t bytes) { return bytes / 1048576.0; };
     std::cout << std::fixed << std::setprecision(1) << input.filename().string() << ": " << mb(fs::file_size(input)) << " MB\n";
@@ -551,6 +732,17 @@ int split(const SplitOptions& options) {
     }
     std::cout << "  " << split_elements << " elements split, " << moved_elements << " moved whole, " << model.conflicts.size()
               << " shared items wanted in two places (left in the federation file), " << unreached << " unused instances kept in the federation file\n";
+    if (!model.renamed.empty()) std::cout << "  " << model.renamed.size() << " GUIDs changed, as they weren't unique\n";
+    if (options.merge) {
+        std::cout << "  " << merge.merged_into.size() << " elements merged into " << merge.assets.size() << " by site ID, " << merge.left_out_openings
+                  << " left out as openings cut them, " << merge.left_out_other << " left out as they're placed in a way that can't be repeated\n";
+    }
+    if (options.instance) {
+        const InstanceStats& federated = instanced[FEDERATION];
+        std::cout << "  federate instanced: " << federated.sets << " face sets, " << federated.copies << " now placed from " << federated.shapes << " shapes, "
+                  << mb(federated.bytes_before) << " -> " << mb(federated.bytes_after) << " MB\n";
+        if (!federated.checked) std::cout << "  warning: the model's length unit isn't plain SI, so nothing was instanced\n";
+    }
     if (options.compact) {
         const CompactStats& federated = compacted[FEDERATION];
         std::cout << "  federate written compactly: " << mb(federated.bytes_before) << " -> " << mb(federated.bytes_after) << " MB, "
@@ -563,7 +755,244 @@ int split(const SplitOptions& options) {
     uint64_t dropped = 0;
     for (const auto& writer : writers) dropped += writer->dropped();
     if (dropped) std::cout << "  warning: " << dropped << " lines couldn't be written without what they refer to\n";
+    std::cout << std::flush;
     return 0;
+}
+
+// A model at most takes about 8 times its size in memory, measured on models from 24 to 260 MB
+constexpr uint64_t MEMORY_PER_BYTE = 10;
+
+std::string worker_command(const fs::path& model, const SplitOptions& options, const fs::path& shared, const fs::path& log) {
+    const auto quote = [](const std::string& s) { return "\"" + s + "\""; };
+    std::ostringstream command;
+    command.precision(17);
+    command << quote(program_path()) << " split " << quote(model.string()) << " --out " << quote(options.out_dir) << " --worker-shared " << quote(shared.string());
+    if (!options.rules_path.empty()) command << " --rules " << quote(options.rules_path);
+    command << " --transparent " << options.transparent << " --precision-mm " << options.precision_mm;
+    if (!options.merge) command << " --no-merge";
+    if (!options.instance) command << " --no-instance";
+    if (!options.compact) command << " --no-compact";
+    if (!options.zip) command << " --no-zip";
+    command << " > " << quote(log.string()) << " 2>&1";
+#ifdef _WIN32
+    return "\"" + command.str() + "\"";  // cmd takes off the outside quotes, and would otherwise take the program's
+#else
+    return command.str();
+#endif
+}
+
+// Each model goes in a process of its own: all they share is the list of GUIDs. They start biggest first,
+// and only when what's running leaves room in memory. One that fails gets another go on its own.
+void run_in_parallel(const std::vector<fs::path>& models, const SplitOptions& options, unsigned jobs, const std::unordered_set<std::string>& shared,
+                     const std::function<void(const fs::path&, const Source&, int)>& finished) {
+    const fs::path work = fs::path(options.out_dir) / ".work";
+    fs::create_directories(work);
+    const fs::path shared_path = work / "shared-guids.txt";
+    {
+        std::ofstream out(shared_path, std::ios::binary);
+        for (const std::string& guid : shared) out << guid << '\n';
+    }
+
+    struct Job {
+        fs::path model;
+        uint64_t memory = 0;
+        bool started = false;
+    };
+    std::vector<Job> queue;
+    for (const fs::path& model : models) queue.push_back({model, fs::file_size(model) * MEMORY_PER_BYTE, false});
+    std::sort(queue.begin(), queue.end(), [](const Job& a, const Job& b) { return a.memory > b.memory; });
+    const uint64_t budget = available_memory() / 5 * 4;
+    std::cout << models.size() << " models, up to " << jobs << " at once, in " << budget / (1ULL << 30) << " GB of memory\n" << std::flush;
+
+    std::mutex lock;
+    std::condition_variable room;
+    uint64_t in_use = 0;
+    size_t running = 0, done = 0;
+    std::vector<fs::path> failed;
+
+    const auto run_one = [&](const fs::path& model, bool retry) {
+        const fs::path log = work / (model.stem().string() + ".log");
+        Source source;
+        int code = 1;
+        std::string error;
+        try {
+            source = read_source(model);
+            code = std::system(worker_command(model, options, shared_path, log).c_str());
+        } catch (const std::exception& e) {
+            error = e.what();
+        }
+        const std::lock_guard<std::mutex> guard(lock);
+        if (code && !retry) {
+            failed.push_back(model);
+            return;
+        }
+        ++done;
+        std::ifstream text(log);
+        std::cout << "[" << done << "/" << models.size() << "] " << text.rdbuf();
+        std::cout.clear();  // an empty log counts as a failed write
+        if (!error.empty()) std::cerr << model.string() << ": " << error << "\n";
+        std::cout << std::flush;
+        // An exception that left this thread would end the whole run
+        try {
+            finished(model, source, code);
+        } catch (const std::exception& e) {
+            std::cerr << model.string() << ": " << e.what() << "\n";
+        }
+    };
+
+    const auto worker = [&]() {
+        while (true) {
+            Job* job = nullptr;
+            {
+                std::unique_lock<std::mutex> guard(lock);
+                while (true) {
+                    bool waiting = false;
+                    for (Job& candidate : queue) {
+                        if (candidate.started) continue;
+                        waiting = true;
+                        if (running == 0 || !budget || in_use + candidate.memory <= budget) {
+                            job = &candidate;
+                            break;
+                        }
+                    }
+                    if (job || !waiting) break;
+                    room.wait(guard);
+                }
+                if (!job) return;
+                job->started = true;
+                in_use += job->memory;
+                ++running;
+            }
+            run_one(job->model, false);
+            {
+                const std::lock_guard<std::mutex> guard(lock);
+                in_use -= job->memory;
+                --running;
+            }
+            room.notify_all();
+        }
+    };
+    std::vector<std::thread> threads;
+    for (unsigned i = 0; i < jobs; ++i) threads.emplace_back(worker);
+    for (auto& thread : threads) thread.join();
+
+    for (const fs::path& model : failed) {
+        std::cout << "trying " << model.filename().string() << " again, on its own\n" << std::flush;
+        run_one(model, true);
+    }
+    std::error_code ignored;
+    fs::remove_all(work, ignored);
+}
+
+}  // namespace
+
+int split(const SplitOptions& options) {
+    // One of the processes that run_in_parallel starts
+    if (!options.worker_shared.empty()) {
+        std::unordered_set<std::string> shared;
+        std::ifstream in(options.worker_shared);
+        for (std::string guid; std::getline(in, guid);) shared.insert(guid);
+        return split_model(options.inputs.at(0), options, Rules::load(options.rules_path), shared);
+    }
+
+    const std::vector<fs::path> models = models_in(options.inputs);
+    if (models.empty()) {
+        std::cerr << "no .ifc files to work on\n";
+        return 2;
+    }
+    // Outputs are named after the input, so these would overwrite each other
+    std::unordered_map<std::string, fs::path> stems;
+    for (const fs::path& model : models) {
+        const auto [at, added] = stems.emplace(lowercase(model.stem().string()), model);
+        if (!added) {
+            std::cerr << at->second.string() << " and " << model.string() << " would have the same output names\n";
+            return 2;
+        }
+    }
+
+    const Rules rules = Rules::load(options.rules_path);
+    const unsigned threads = std::max(1u, std::thread::hardware_concurrency());
+    const unsigned jobs = static_cast<unsigned>(std::min<size_t>(options.jobs > 0 ? static_cast<unsigned>(options.jobs) : threads, models.size()));
+    const auto shared = models.size() > 1 ? guids_in_several(models, jobs) : std::unordered_set<std::string>{};
+    const auto register_path = fs::path(options.out_dir) / "register.csv";
+    Register sources = load_register(register_path);
+    int result = 0;
+    size_t failed = 0;
+    std::array<size_t, 3> states{};
+    bool register_saved = true;
+    // The source is read first, so that the register says what was there when the model was read
+    const auto finished = [&](const fs::path&, const Source& source, int code) {
+        if (code) {
+            result = code;
+            ++failed;
+            return;
+        }
+        ++states[static_cast<size_t>(state_of(sources, source))];
+        record(sources, source);
+        // As it goes, so that a stopped run still counts. The next save has everything, so this can't lose the run.
+        try {
+            save_register(register_path, sources);
+        } catch (const std::exception& e) {
+            std::cerr << "warning: the register wasn't saved: " << e.what() << "\n";
+            register_saved = false;
+        }
+    };
+    if (jobs > 1) {
+        run_in_parallel(models, options, jobs, shared, finished);
+    } else {
+        for (const fs::path& model : models) {
+            // One bad model shouldn't lose the rest of a long run
+            int code = 1;
+            Source source;
+            try {
+                source = read_source(model);
+                code = split_model(model, options, rules, shared);
+            } catch (const std::exception& e) {
+                std::cerr << model.string() << ": " << e.what() << "\n";
+            }
+            finished(model, source, code);
+        }
+    }
+    if (!register_saved) {
+        save_register(register_path, sources);  // a last go; if this fails too, it's reported as an error
+    }
+    std::cout << "register: " << states[static_cast<size_t>(SourceState::New)] << " new, " << states[static_cast<size_t>(SourceState::Changed)] << " changed, "
+              << states[static_cast<size_t>(SourceState::Unchanged)] << " unchanged\n";
+    if (failed) std::cerr << failed << " of " << models.size() << " models failed\n";
+    return result;
+}
+
+int check(const std::vector<std::string>& inputs, const std::string& out_dir) {
+    const auto register_path = fs::path(out_dir) / "register.csv";
+    if (!fs::exists(register_path)) std::cout << "no register yet at " << register_path.string() << ", so everything is new\n";
+    const Register sources = load_register(register_path);
+    size_t added = 0, changed = 0, unchanged = 0, missing = 0;
+    for (const fs::path& model : models_in(inputs)) {
+        const Source source = read_source(model);
+        switch (state_of(sources, source)) {
+            case SourceState::New:
+                ++added;
+                std::cout << "new        " << source.model << "  modified " << source.modified << "\n";
+                break;
+            case SourceState::Changed: {
+                const Source& known = sources.at(source.model);
+                ++changed;
+                std::cout << "changed    " << source.model << "  modified " << known.modified << " -> " << source.modified << ", exported " << known.ifc_timestamp << " -> "
+                          << source.ifc_timestamp << ", " << known.size << " -> " << source.size << " bytes\n";
+                break;
+            }
+            case SourceState::Unchanged:
+                ++unchanged;
+                break;
+        }
+    }
+    for (const auto& [model, source] : sources) {
+        if (fs::exists(source.path)) continue;
+        ++missing;
+        std::cout << "missing    " << model << "  was at " << source.path << "\n";
+    }
+    std::cout << added << " new, " << changed << " changed, " << missing << " missing, " << unchanged << " unchanged\n";
+    return added || changed || missing ? 1 : 0;
 }
 
 }  // namespace bimpass

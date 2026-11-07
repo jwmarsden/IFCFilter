@@ -4,13 +4,15 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <vector>
 
 namespace {
 
 int usage(int code) {
     (code ? std::cerr : std::cout)
         << "usage: bimpass report MODEL.ifc [--csv FAMILIES.csv] [--suspects ELEMENTS.csv] [--top N] [--heavy-faces N] [--transparent T]\n"
-        << "       bimpass split MODEL.ifc --out DIR [--rules rules.txt] [--transparent T] [--no-compact] [--precision-mm MM] [--no-zip]\n";
+        << "       bimpass split MODEL.ifc|FOLDER... --out DIR [--rules rules.txt] [--transparent T] [--no-merge] [--no-instance] [--no-compact] [--precision-mm MM] [--no-zip] [--jobs N]\n"
+        << "       bimpass check MODEL.ifc|FOLDER... --out DIR\n";
     return code;
 }
 
@@ -34,19 +36,39 @@ int main(int argc, char** argv) {
             if (arg == "--out") options.out_dir = value();
             else if (arg == "--rules") options.rules_path = value();
             else if (arg == "--transparent") options.transparent = std::stod(value());
+            else if (arg == "--jobs") options.jobs = std::stoi(value());
+            else if (arg == "--worker-shared") options.worker_shared = value();
+            else if (arg == "--no-merge") options.merge = false;
+            else if (arg == "--no-instance") options.instance = false;
             else if (arg == "--no-compact") options.compact = false;
             else if (arg == "--no-zip") options.zip = false;
             else if (arg == "--precision-mm") options.precision_mm = std::stod(value());
             else if (!arg.empty() && arg[0] == '-') return usage(2);
-            else if (options.ifc_path.empty()) options.ifc_path = arg;
-            else return usage(2);
+            else options.inputs.push_back(arg);
         }
-        if (options.ifc_path.empty() || options.out_dir.empty()) return usage(2);
+        if (options.inputs.empty() || options.out_dir.empty()) return usage(2);
         try {
             return bimpass::split(options);
         } catch (const std::exception& e) {
             std::cerr << e.what() << "\n";
             return 1;
+        }
+    }
+    if (command == "check") {
+        std::vector<std::string> inputs;
+        std::string out_dir;
+        for (int i = 2; i < argc; ++i) {
+            const std::string arg = argv[i];
+            if (arg == "--out" && i + 1 < argc) out_dir = argv[++i];
+            else if (!arg.empty() && arg[0] == '-') return usage(2);
+            else inputs.push_back(arg);
+        }
+        if (inputs.empty() || out_dir.empty()) return usage(2);
+        try {
+            return bimpass::check(inputs, out_dir);
+        } catch (const std::exception& e) {
+            std::cerr << e.what() << "\n";
+            return 2;
         }
     }
     if (command != "report") return usage(2);

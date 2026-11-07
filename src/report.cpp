@@ -1,6 +1,7 @@
 #include "report.h"
 
 #include "ifc_access.h"
+#include "site.h"
 
 #ifndef _WIN32
 #include <sys/resource.h>
@@ -21,10 +22,6 @@
 
 namespace bimpass {
 namespace {
-
-const std::set<std::string> SITE_PSETS = {"Asset", "Data"};  // the FD models keep everything in Data
-const std::string SITE_PROPERTY = "SiteID";
-const std::set<std::string> NOT_A_SITE = {"", "N/A", "PLACEHOLDER", "Placeholder", "placeholder"};
 
 double megabytes(uint64_t bytes) { return bytes / 1048576.0; }
 
