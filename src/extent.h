@@ -49,8 +49,8 @@ class Extents {
     std::unordered_map<uint32_t, std::optional<Rigid>> placements_;
 };
 
-// The face sets an opening reaches: those of the openings themselves, and those of what they cut whose box
-// meets the opening's box. Taking a solid from a mesh is fragile, so these are left exactly as they are. An
+// The face sets and faceted breps an opening reaches: those of the openings themselves, and those of what they
+// cut whose box meets the opening's box. Taking a solid from a mesh is fragile, so these are left exactly as they are. An
 // item whose reach, or whose opening's, can't be worked out counts as reached.
 std::unordered_set<uint32_t> sets_openings_touch(const SpfFile& spf);
 

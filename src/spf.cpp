@@ -141,10 +141,16 @@ double length_unit(const SpfFile& spf) {
             const auto line = spf.line(unit);
             if (line.find(".LENGTHUNIT.") == std::string_view::npos) continue;
             if (spf.type(unit) != "IFCSIUNIT") return 0;
-            if (line.find(".MILLI.") != std::string_view::npos) return 1e-3;
-            if (line.find(".CENTI.") != std::string_view::npos) return 1e-2;
-            if (line.find(".DECI.") != std::string_view::npos) return 1e-1;
-            return line.find(",$,") != std::string_view::npos ? 1 : 0;
+            // Dimensions, UnitType, Prefix, Name; exporters differ in the spaces between them
+            const auto unit_attributes = attributes_of(line);
+            if (unit_attributes.size() != 4) return 0;
+            auto prefix = unit_attributes[2];
+            while (!prefix.empty() && prefix.front() == ' ') prefix.remove_prefix(1);
+            while (!prefix.empty() && prefix.back() == ' ') prefix.remove_suffix(1);
+            if (prefix == ".MILLI.") return 1e-3;
+            if (prefix == ".CENTI.") return 1e-2;
+            if (prefix == ".DECI.") return 1e-1;
+            return prefix == "$" ? 1 : 0;
         }
         return 0;
     }

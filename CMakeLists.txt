@@ -32,7 +32,7 @@ else()
     add_library(IfcOpenShell::parse_schema_ifc4 ALIAS parse_schema_ifc4)
 endif()
 
-add_executable(bimpass src/main.cpp src/report.cpp src/split.cpp src/merge.cpp src/extent.cpp src/instance.cpp src/rigid.cpp src/register.cpp src/system.cpp src/upgrade.cpp src/spf.cpp src/compact.cpp src/zip.cpp)
+add_executable(bimpass src/main.cpp src/report.cpp src/split.cpp src/merge.cpp src/extent.cpp src/instance.cpp src/rigid.cpp src/register.cpp src/system.cpp src/upgrade.cpp src/spf.cpp src/breps.cpp src/compact.cpp src/zip.cpp)
 # The schemas are plugins, loaded when a file is opened, so nothing links to them
 add_dependencies(bimpass IfcOpenShell::parse_schema_ifc2x3 IfcOpenShell::parse_schema_ifc4)
 target_compile_definitions(bimpass PRIVATE BOOST_OPTIONAL_USE_OLD_DEFINITION_OF_NONE)

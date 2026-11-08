@@ -48,7 +48,7 @@ void sets_under(const SpfFile& spf, uint32_t item, std::unordered_set<uint32_t>&
         stack.pop_back();
         if (id >= spf.max_id() || !seen.insert(id).second) continue;
         const auto type = spf.type(id);
-        if (type == "IFCPOLYGONALFACESET" || type == "IFCTRIANGULATEDFACESET") out.insert(id);
+        if (type == "IFCPOLYGONALFACESET" || type == "IFCTRIANGULATEDFACESET" || type == "IFCFACETEDBREP") out.insert(id);
         else if (type == "IFCPRODUCTDEFINITIONSHAPE" || type == "IFCSHAPEREPRESENTATION" || type == "IFCMAPPEDITEM" || type == "IFCREPRESENTATIONMAP") {
             for_each_ref(spf.line(id), [&](uint32_t next) { stack.push_back(next); });
         }

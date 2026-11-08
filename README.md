@@ -52,11 +52,13 @@ Elements with the same `SiteID` are one asset, so the federation file has them a
 
 - It's an `IfcBuildingElementProxy` named after the site, with a GUID made from the site ID and the model's file name. Each element's body becomes a mapped item of it, placed where the element was, so geometry and colours are as they were.
 - It has the properties that have the same value on every element it's made from. Other properties, types and materials aren't kept on it. The manifest says which element went into which asset.
-- A blank, `N/A`, placeholder or `No Linear Assets Req` site ID isn't an asset, nor is one ending in `xx`, which stands for a range of sites. A site with one element stays as it is.
+- A blank, `N/A`, placeholder, `TBA`, `TBC` or `No Linear Assets Req` site ID isn't an asset, nor is one ending in `xx`, which stands for a range of sites, or in six zeros, such as `ECL000000`, a class of asset with no site given yet. A site with one element stays as it is.
 - A shape with no style of its own takes its colour from its element's material, which isn't kept, so it comes out in a viewer's default colour.
 - Openings that cut a part now cut the asset. They reach other parts only where those meet what they cut: on the gantries of 100333, all they'd take was 0.3 litres from 40 bolts and nuts, presumably inside their holes, which can't be seen.
 - A site is only merged within a model, so one in two models stays as one element in each.
 - Parts of a site are only merged if each is within 5 m of another (`--merge-gap M`, and 0 doesn't check), as two things far apart with one site ID, such as two cameras, are a mistake in the data. The gap is between boxes around the parts, so it's never more than the real gap, and parts that can't merge still count as what joins the rest. Groups that are far apart are merged as separate assets, a part on its own stays as it is, and the manifest says which. A part whose reach can't be worked out stays as it is too.
+
+Faceted breps, which Revit writes for most families, are first written as polygon face sets of the same faces, so that instancing and compact writing work on them too (part of compact writing, so `--no-compact` leaves them). A brep with voids, or not made of plain faces and loops, stays as it is, as does one an opening reaches and any model that isn't IFC4.
 
 Face sets that are the same shape, moved and turned, are written once and placed with mapped items (`--no-instance` skips this). A copy has the same faces and colours as what it's placed from, and every point within `--precision-mm`, with no mirroring. This goes before compact writing, so copies can't drift apart by being rounded differently. It saves most where a model repeats parts, such as a gantry's bolts and signs, and next to nothing on road meshes, which are all different.
 

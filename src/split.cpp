@@ -1,5 +1,6 @@
 #include "split.h"
 
+#include "breps.h"
 #include "compact.h"
 #include "ifc_access.h"
 #include "instance.h"
@@ -699,11 +700,13 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     if (no_link) std::cerr << "note: no " << original.filename().string() << " link: " << no_link.message() << "\n";
 
     std::array<uint64_t, 3> sizes{};
+    std::array<BrepStats, 3> converted{};
     std::array<CompactStats, 3> compacted{};
     std::array<InstanceStats, 3> instanced{};
     for (const Output output : {FEDERATION, HIDDEN, ENVELOPES}) {
         const auto path = output_path(output);
         writers[output]->write(path.string(), layers);
+        if (options.compact) converted[output] = breps_to_face_sets(path.string());
         if (options.instance) instanced[output] = instance(path.string(), options.precision_mm);
         if (options.compact) compacted[output] = compact(path.string(), options.precision_mm);
         const auto zipped = fs::path(path.string() + ZIPPED);
@@ -748,7 +751,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
                 : output == ENVELOPES ? (element.by_property || Rules::matches(rules.envelope, element.family) ? "envelope rule" : "transparent")
                 : model.renamed.count(element.id) ? "GUID not unique" : "";
             manifest << element.guid << ',' << element.type << ',' << quoted(element.family) << ',' << OUTPUT_NAMES[output] << ',' << guid << ','
-                     << element.items[output] << ',' << element.faces[output] << ',' << action << ',' << reason << '\n';
+                     << element.items[output] << ',' << element.faces[output] << ',' << action << ',' << quoted(reason) << '\n';
         }
     }
 
@@ -777,6 +780,13 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
                       << " elements left as they are, as nothing of their site is near them\n";
         }
         if (!merge.gap_checked) std::cout << "  warning: the model's length unit isn't plain SI, so parts of a site weren't checked for being far apart\n";
+    }
+    if (options.compact) {
+        const BrepStats& federated = converted[FEDERATION];
+        if (federated.converted || federated.left)
+            std::cout << "  federate breps as face sets: " << federated.converted << " (" << federated.faces << " faces, " << federated.faces_dropped << " with no area left out), "
+                      << federated.left << " left as breps (" << federated.left_cut << " as openings reach them), " << mb(federated.bytes_before) << " -> " << mb(federated.bytes_after) << " MB\n";
+        if (!federated.schema) std::cout << "  warning: the model isn't IFC4, which face sets need, so breps were left as they are\n";
     }
     if (options.instance) {
         const InstanceStats& federated = instanced[FEDERATION];
