@@ -4,7 +4,7 @@ Prepares an IFC model for federation. It takes one model and splits it into thes
 
 | Output | Holds |
 |---|---|
-| `federate/STEM.federate.ifc` | What should be federated, with tessellation explosions fixed and elements merged by site ID where appropriate |
+| `federate/DISCIPLINE/STEM.federate.ifc` | What should be federated, with tessellation explosions fixed and elements merged by site ID where appropriate |
 | `non-federate/STEM.hidden.ifczip` | Geometry filtered out because it isn't visible or important to the federation, such as reinforcement inside a slab |
 | `non-federate/STEM.envelopes.ifczip` | Space-proofing and clash shapes that aren't physical, typically transparent envelopes around things |
 | `manifest/STEM.manifest.csv` | Where each original element went, its new GUID, what was done and why |
@@ -12,7 +12,7 @@ Prepares an IFC model for federation. It takes one model and splits it into thes
 
 `STEM.original.ifc` is a link to the input, to compare in a viewer. Windows only allows links in developer mode, so without it this file is left out, with a note.
 
-The federation file is plain `.ifc`, as that's the format Bentley's list of supported formats names. The other two are ifczips, each a zip holding one IFC file, and `--no-zip` writes those as plain `.ifc` too.
+The federation file is plain `.ifc`, as that's the format Bentley's list of supported formats names. Federation files are in a folder for each discipline, named after the folder the input is in, as there are hundreds of them; a run moves any it finds where an older run put them, straight under `federate`. The other two are ifczips, each a zip holding one IFC file, and `--no-zip` writes those as plain `.ifc` too.
 
 The federation target is Bentley Infrastructure Cloud, under IFC4, so an IFC2X3 model is written as IFC4. Geometry and properties are copied as they are, and only what IFC4 changed is rewritten:
 
@@ -51,11 +51,13 @@ GUIDs are made from the old GUID and the model's file name, so they're the same 
 Elements with the same `SiteID` are one asset, so the federation file has them as one element (`--no-merge` skips this):
 
 - It's an `IfcBuildingElementProxy` named after the site, with a GUID made from the site ID and the model's file name. Each element's body becomes a mapped item of it, placed where the element was, so geometry and colours are as they were.
-- It has the properties that have the same value on every element it's made from. Other properties, types and materials aren't kept on it. The manifest says which element went into which asset.
+- It has the properties that have the same value on every element it's made from. Other properties, types and materials aren't kept on it, apart from `Quantities`: its height, width and length are those of the whole asset, in metres (length the longer way across in plan, width the shorter, height up), and other numbers that differ part to part are added up, which won't mean much for some of them. The manifest says which element went into which asset.
 - A blank, `N/A`, placeholder, `TBA`, `TBC` or `No Linear Assets Req` site ID isn't an asset, nor is one ending in `xx`, which stands for a range of sites, or in six zeros, such as `ECL000000`, a class of asset with no site given yet. A site with one element stays as it is.
 - A shape with no style of its own takes its colour from its element's material, which isn't kept, so it comes out in a viewer's default colour.
 - Openings that cut a part now cut the asset. They reach other parts only where those meet what they cut: on the gantries of 100333, all they'd take was 0.3 litres from 40 bolts and nuts, presumably inside their holes, which can't be seen.
 - A site is only merged within a model, so one in two models stays as one element in each.
+- Each site is a level of its own in the federation file, a building storey named after the site ID, holding its asset, or its element if it has only one. The building lists its levels in alphabetical order. What has no site ID stays on the level it was on, and a level left with nothing on it is left out.
+- An element with no site ID goes by its `DesignTag`, if that's an ID: not a placeholder, with no spaces, as a description has, and not on more than half the model's tagged elements, as a code for the whole model is. If its tag is only on one site's parts, it joins that site; otherwise elements with the same tag are an asset, named after it, and the manifest says `design tag X`. A tag can still name a type rather than one thing, as in BS, where the 5 m gap keeps panels of one type apart only where they don't touch.
 - Parts of a site are only merged if each is within 5 m of another (`--merge-gap M`, and 0 doesn't check), as two things far apart with one site ID, such as two cameras, are a mistake in the data. The gap is between boxes around the parts, so it's never more than the real gap, and parts that can't merge still count as what joins the rest. Groups that are far apart are merged as separate assets, a part on its own stays as it is, and the manifest says which. A part whose reach can't be worked out stays as it is too.
 
 Faceted breps, which Revit writes for most families, are first written as polygon face sets of the same faces, so that instancing and compact writing work on them too (part of compact writing, so `--no-compact` leaves them). A brep with voids, or not made of plain faces and loops, stays as it is, as does one an opening reaches and any model that isn't IFC4.

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -260,28 +261,34 @@ std::unordered_set<uint32_t> sets_openings_touch(const SpfFile& spf) {
     Extents extents(spf);
     const double unit = length_unit(spf);
     const double margin = unit > 0 ? 0.01 / unit : 0;  // 10 mm, for points that only just touch
+    // Each element's openings first, so that a merged asset, with hundreds of openings over thousands of
+    // parts, has its parts' boxes worked out once rather than once an opening
+    std::map<uint32_t, std::vector<std::optional<Box>>> openings_of;
     for (uint32_t id = 0; id < spf.max_id(); ++id) {
         if (spf.line(id).empty() || spf.type(id) != "IFCRELVOIDSELEMENT") continue;
         const auto relationship = attributes_of(spf.line(id));
         if (relationship.size() < 6) continue;
-        const auto openings = refs_in(relationship[5]);
         std::optional<Box> reached;
-        for (const uint32_t opening : openings) {
+        for (const uint32_t opening : refs_in(relationship[5])) {
             const auto attributes = attributes_of(spf.line(opening));
             if (attributes.size() >= 7) {
                 for (const uint32_t representation : representations_of(spf, attributes[6], false)) sets_under(spf, representation, sets);
             }
             reached = extents.product(opening);
         }
-        for (const uint32_t element : refs_in(relationship[4])) {
-            const auto attributes = attributes_of(spf.line(element));
-            if (attributes.size() < 7) continue;
-            const auto placed = extents.placement(attributes[5]);
-            for (const uint32_t representation : representations_of(spf, attributes[6], false)) {
-                for (const uint32_t item : refs_in(attributes_of(spf.line(representation))[3])) {
-                    Box box;
-                    if (!reached || !placed || !extents.item(item, *placed, box) || boxes_meet(box, *reached, margin)) sets_under(spf, item, sets);
-                }
+        for (const uint32_t element : refs_in(relationship[4])) openings_of[element].push_back(reached);
+    }
+    for (const auto& [element, reached] : openings_of) {
+        const bool all_known = std::all_of(reached.begin(), reached.end(), [](const std::optional<Box>& b) { return b.has_value(); });
+        const auto attributes = attributes_of(spf.line(element));
+        if (attributes.size() < 7) continue;
+        const auto placed = extents.placement(attributes[5]);
+        for (const uint32_t representation : representations_of(spf, attributes[6], false)) {
+            for (const uint32_t item : refs_in(attributes_of(spf.line(representation))[3])) {
+                Box box;
+                const bool meets = !all_known || !placed || !extents.item(item, *placed, box) ||
+                                   std::any_of(reached.begin(), reached.end(), [&](const std::optional<Box>& b) { return boxes_meet(box, *b, margin); });
+                if (meets) sets_under(spf, item, sets);
             }
         }
     }

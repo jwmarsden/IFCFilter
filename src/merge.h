@@ -16,7 +16,8 @@
 namespace bimpass {
 
 struct MergedAsset {
-    std::string site, guid;
+    std::string site, guid;  // site: its site ID, or its design tag
+    std::string label;       // what it was merged by, as "site ID X" or "design tag X"
     std::string note;  // which group it is, if its site's parts are far apart
 };
 
@@ -29,8 +30,15 @@ struct MergePlan {
     uint64_t left_out_other = 0;                       // placed in a way a mapped item can't repeat
     uint64_t left_out_extent = 0;                      // where its shape reaches couldn't be worked out
     uint64_t sites_apart = 0;                          // sites whose parts are in groups too far apart to be one thing
-    std::unordered_map<uint32_t, std::string> apart;   // element, and its site, left as it is as nothing of its site is near it
+    std::unordered_map<uint32_t, std::string> apart;   // element, and its label, left as it is as nothing of its site is near it
+    uint64_t by_design = 0;                            // elements with no site ID that merged by their design tag
+    uint64_t joined_by_design = 0;                     // of those, ones whose tag is only on one site, so they joined it
+    uint64_t tags_not_ids = 0;                         // design tags on most of the model, so not taken as IDs
     bool gap_checked = true;                           // false if the model's length unit isn't known
+    std::unordered_map<uint32_t, std::string> replace; // lines of the input written as this instead; empty to leave one out
+    std::vector<uint32_t> dropped;                     // levels left with nothing on them, left out
+    uint64_t levels = 0, on_levels = 0;                // site levels made, and the elements and assets on them
+    uint64_t quantities_combined = 0;                  // Quantities values worked out for assets as a whole
 };
 
 // candidates are the elements that could merge; gone says what isn't in the file being written. Parts of a site

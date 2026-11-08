@@ -2,6 +2,8 @@
 
 // Where a model says which site, and so which asset, an element belongs to.
 
+#include <algorithm>
+#include <cctype>
 #include <set>
 #include <string>
 
@@ -19,6 +21,15 @@ inline bool is_one_site(const std::string& site) {
         return site.size() > e.size() && site.compare(site.size() - e.size(), e.size(), e) == 0;
     };
     return !NOT_A_SITE.count(site) && !ends_with("xx") && !ends_with("000000");
+}
+
+// Where there's no site ID, the design tag can say what goes together, if it's an ID: some models give
+// every element the same one, or a description, and those aren't
+inline const std::set<std::string> DESIGN_PSETS = {"Quantities", "Data", "General", "Model Properties"};
+inline const std::string DESIGN_PROPERTY = "DesignTag";
+
+inline bool looks_like_an_id(const std::string& tag) {
+    return is_one_site(tag) && std::none_of(tag.begin(), tag.end(), [](unsigned char c) { return std::isspace(c); });
 }
 
 }  // namespace bimpass

@@ -20,7 +20,8 @@ struct SplitOptions {
     std::string worker_shared;   // for one model of a parallel run: the file of GUIDs in several models
 };
 
-// Writes STEM.federate.ifc, STEM.hidden.ifc, STEM.envelopes.ifc and manifest/STEM.manifest.csv under OUT
+// Writes federate/DISCIPLINE/STEM.federate.ifc, where DISCIPLINE is the name of the input's folder,
+// non-federate/STEM.hidden.ifc and STEM.envelopes.ifc, and manifest/STEM.manifest.csv under OUT
 // for each model, and links STEM.original.ifc to its input. register.csv says what they were built from. No GUID is written twice in a run, so models to be
 // federated together should go through in one run.
 // Geometry is copied as it is. Returns a process exit code.

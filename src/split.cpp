@@ -390,6 +390,7 @@ class Writer {
     bool included(uint32_t id) const { return id < included_.size() && included_[id]; }
 
     void add_lines(std::vector<std::string> lines) { added_ = std::move(lines); }
+    void replace_lines(std::unordered_map<uint32_t, std::string> lines) { replaced_ = std::move(lines); }  // an empty line leaves one out
 
     // Elements and the things hanging off them
     void close_over(const std::vector<uint32_t>& relationships, const std::vector<uint32_t>& followers) {
@@ -431,7 +432,13 @@ class Writer {
                 continue;
             }
             if (!included_[id]) continue;
-            if (!rewrite(spf_.line(id), is_gone, policy(id), text)) {
+            std::string_view line = spf_.line(id);
+            const auto replaced = replaced_.find(id);
+            if (replaced != replaced_.end()) {
+                if (replaced->second.empty()) continue;
+                line = replaced->second;
+            }
+            if (!rewrite(line, is_gone, policy(id), text)) {
                 ++dropped_;
                 continue;
             }
@@ -459,6 +466,7 @@ class Writer {
     std::vector<bool> gone_;
     std::vector<bool> included_;
     std::vector<std::string> added_;  // new instances, for elements that have been merged
+    std::unordered_map<uint32_t, std::string> replaced_;  // lines written differently
     std::unordered_set<uint32_t> whole_;
     uint64_t dropped_ = 0;
 };
@@ -537,7 +545,15 @@ std::unordered_set<std::string> guids_in_several(const std::vector<fs::path>& mo
 
 int split_model(const fs::path& input, const SplitOptions& options, const Rules& rules, const std::unordered_set<std::string>& shared) {
     const std::string stem = input.stem().string();
-    const auto output_path = [&](Output output) { return fs::path(options.out_dir) / FOLDERS[output] / (stem + SUFFIXES[output]); };
+    // Federation files go in a folder for their discipline, named after the folder the input is in, as there
+    // are hundreds of them
+    const std::string discipline = fs::absolute(input).parent_path().filename().string();
+    const auto output_path = [&](Output output) {
+        const auto folder = fs::path(options.out_dir) / FOLDERS[output];
+        return (output == FEDERATION && !discipline.empty() ? folder / discipline : folder) / (stem + SUFFIXES[output]);
+    };
+    // Where a run before discipline folders put the federation file
+    const auto flat = fs::path(options.out_dir) / FOLDERS[FEDERATION] / (stem + SUFFIXES[FEDERATION]);
     for (const Output output : {FEDERATION, HIDDEN, ENVELOPES}) {
         const auto target = output_path(output);
         fs::create_directories(target.parent_path());
@@ -639,6 +655,10 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
             const std::function<bool(uint32_t)> is_gone = [&](uint32_t id) { return id < gone.size() && gone[id]; };
             merge = plan_merge(spf, candidates, is_gone, stem, options.merge_gap_m);
             for (const auto& [element, asset] : merge.merged_into) gone[element] = true;
+            for (const uint32_t level : merge.dropped) {
+                gone[level] = true;
+                in_output[FEDERATION][level] = false;
+            }
         }
         writers[output] = std::make_unique<Writer>(spf, model, output, std::move(gone));
         Writer& writer = *writers[output];
@@ -652,6 +672,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         if (output == FEDERATION) {
             for (const uint32_t id : merge.keep) writer.include(id);
             writer.add_lines(merge.lines);
+            writer.replace_lines(merge.replace);
         }
         writer.close_over(relationships, followers);
     }
@@ -713,6 +734,10 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         // The federation file stays plain, as that's the format Bentley's list names
         if (!options.zip || output == FEDERATION) {
             fs::remove(zipped);  // from a run that did zip it
+            if (output == FEDERATION && flat != path) {
+                fs::remove(flat);  // from a run before discipline folders
+                fs::remove(fs::path(flat.string() + ZIPPED));
+            }
             sizes[output] = fs::file_size(path);
             continue;
         }
@@ -744,8 +769,8 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
             const std::string guid = merged ? merge.assets[asset->second].guid : model.guid_in_output(element.id, element.guid, output, whole);
             const char* action = merged ? "merged" : copied ? "copied" : !whole ? "split" : output == FEDERATION ? "kept" : "moved";
             const auto apart = merge.apart.find(element.id);
-            const std::string reason = merged ? "site ID " + merge.assets[asset->second].site + merge.assets[asset->second].note
-                : output == FEDERATION && apart != merge.apart.end() ? "site ID " + apart->second + ", far from the rest of it"
+            const std::string reason = merged ? merge.assets[asset->second].label + merge.assets[asset->second].note
+                : output == FEDERATION && apart != merge.apart.end() ? apart->second + ", far from the rest of it"
                 : copied ? "spatial structure"
                 : output == HIDDEN ? (element.by_property || Rules::matches(rules.hidden, element.family) ? "hidden rule" : "keep-largest rule")
                 : output == ENVELOPES ? (element.by_property || Rules::matches(rules.envelope, element.family) ? "envelope rule" : "transparent")
@@ -772,9 +797,18 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
                   << upgrade.retyped << " predefined types now user defined\n";
     }
     if (options.merge) {
-        std::cout << "  " << merge.merged_into.size() << " elements merged into " << merge.assets.size() << " by site ID, " << merge.openings_moved
+        std::cout << "  " << merge.merged_into.size() << " elements merged into " << merge.assets.size() << " by site ID or design tag, " << merge.openings_moved
                   << " openings now cutting the asset, " << merge.left_out_other << " left out as they're placed in a way that can't be repeated, "
                   << merge.left_out_extent << " left out as where they reach couldn't be worked out\n";
+        if (merge.quantities_combined) std::cout << "  " << merge.quantities_combined << " Quantities values worked out for assets as a whole\n";
+        if (merge.levels) {
+            std::cout << "  " << merge.levels << " site levels, named after their sites, holding " << merge.on_levels << " elements and assets; " << merge.dropped.size()
+                      << " levels left empty, so left out\n";
+        }
+        if (merge.by_design || merge.tags_not_ids) {
+            std::cout << "  " << merge.by_design << " elements with no site ID merged by design tag, " << merge.joined_by_design << " of them joining the one site their tag is on; "
+                      << merge.tags_not_ids << " design tags on most of the model, so not taken as IDs\n";
+        }
         if (merge.sites_apart || !merge.apart.empty()) {
             std::cout << "  " << merge.sites_apart << " sites with parts over " << options.merge_gap_m << " m apart, so not merged as one; " << merge.apart.size()
                       << " elements left as they are, as nothing of their site is near them\n";
