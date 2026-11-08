@@ -14,7 +14,8 @@ struct SplitOptions {
     bool instance = true;        // see instance.h
     bool compact = true;         // see compact.h
     double precision_mm = 0.1;
-    bool zip = true;             // outputs as .ifczip, not .ifc
+    double merge_gap_m = 5;      // parts of a site further apart than this aren't one thing; 0 doesn't check
+    bool zip = true;             // the hidden and envelope files as .ifczip, not .ifc; the federation file is always .ifc
     int jobs = 0;                // models at once, as memory allows; 0 for as many as there are processors
     std::string worker_shared;   // for one model of a parallel run: the file of GUIDs in several models
 };

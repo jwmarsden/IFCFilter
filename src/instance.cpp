@@ -1,6 +1,7 @@
 #include "instance.h"
 
 #include "rigid.h"
+#include "extent.h"
 #include "spf.h"
 #include "system.h"
 
@@ -245,6 +246,8 @@ class Instancer {
     // Mapped items get flattened, so what's under one that scales or has its own style has to stay
     void exclude_what_cannot_be_flattened() {
         std::unordered_set<uint32_t> visited;
+        // What an opening cuts stays as it is, as taking a solid from a mesh is fragile
+        for (const uint32_t id : sets_openings_touch(spf_)) excluded_[id] = true;
         for (uint32_t id = 0; id < max_id_; ++id) {
             if (kinds_[id] != Kind::Mapped) continue;
             if (placement_of(id) && !styled_mapped_.count(id)) continue;

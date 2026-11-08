@@ -11,7 +11,7 @@ namespace {
 int usage(int code) {
     (code ? std::cerr : std::cout)
         << "usage: bimpass report MODEL.ifc [--csv FAMILIES.csv] [--suspects ELEMENTS.csv] [--top N] [--heavy-faces N] [--transparent T]\n"
-        << "       bimpass split MODEL.ifc|FOLDER... --out DIR [--rules rules.txt] [--transparent T] [--no-merge] [--no-instance] [--no-compact] [--precision-mm MM] [--no-zip] [--jobs N]\n"
+        << "       bimpass split MODEL.ifc|FOLDER... --out DIR [--rules rules.txt] [--transparent T] [--no-merge] [--merge-gap M] [--no-instance] [--no-compact] [--precision-mm MM] [--no-zip] [--jobs N]\n"
         << "       bimpass check MODEL.ifc|FOLDER... --out DIR\n";
     return code;
 }
@@ -39,6 +39,7 @@ int main(int argc, char** argv) {
             else if (arg == "--jobs") options.jobs = std::stoi(value());
             else if (arg == "--worker-shared") options.worker_shared = value();
             else if (arg == "--no-merge") options.merge = false;
+            else if (arg == "--merge-gap") options.merge_gap_m = std::stod(value());
             else if (arg == "--no-instance") options.instance = false;
             else if (arg == "--no-compact") options.compact = false;
             else if (arg == "--no-zip") options.zip = false;

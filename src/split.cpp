@@ -7,6 +7,7 @@
 #include "register.h"
 #include "spf.h"
 #include "system.h"
+#include "upgrade.h"
 #include "zip.h"
 
 #include <algorithm>
@@ -545,19 +546,45 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         }
     }
 
-    const SpfFile spf(input.string());
+    // An IFC2X3 model goes through as an IFC4 copy, which goes when this is done: it's before the
+    // file below, as Windows can't remove a file that's still open
+    struct Temporary {
+        fs::path path;
+        ~Temporary() {
+            if (path.empty()) return;
+            std::error_code ignored;
+            fs::remove(path, ignored);
+            fs::remove(path.parent_path(), ignored);  // only goes if nothing else is in it
+        }
+    } upgraded;
+    fs::path source = input;
+    Upgrade upgrade;
+    std::string why_not_ifc4 = "only IFC2X3 can be converted";
+    if (schema_in_header(input).rfind("IFC2X3", 0) == 0) {
+        upgraded.path = fs::path(options.out_dir) / ".work" / (stem + ".ifc4.ifc");
+        fs::create_directories(upgraded.path.parent_path());
+        upgrade = upgrade_to_ifc4(SpfFile(input.string()), upgraded.path);
+        if (upgrade.refused.empty()) {
+            source = upgraded.path;
+        } else {
+            why_not_ifc4 = "";
+            for (const std::string& reason : upgrade.refused) why_not_ifc4 += (why_not_ifc4.empty() ? "" : "; ") + reason;
+        }
+    }
+
+    const SpfFile spf(source.string());
     const uint32_t max_id = spf.max_id();
     Model model;
     std::vector<uint32_t> always;
     {
         // The parser is only for working out what goes where, and is the biggest user of memory
-        auto file = std::make_unique<ifcopenshell::file>(input.string());
+        auto file = std::make_unique<ifcopenshell::file>(source.string());
         if (!file->good()) {
             std::cerr << input.string() << ": can't be read as IFC\n";
             return 1;
         }
         if (file->schema()->name() != "IFC4") {
-            std::cerr << input.string() << ": warning: schema is " << file->schema()->name() << ", and is written out as it is, not converted to IFC4\n";
+            std::cerr << input.string() << ": warning: schema is " << file->schema()->name() << ", and is written out as it is: " << why_not_ifc4 << "\n";
         }
         classify(*file, rules, options.transparent, max_id, model);
         for (const char* type : {"IfcProject", "IfcSpatialStructureElement"}) {
@@ -609,7 +636,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
                 if (in_output[FEDERATION][element.id] && !element.feature && !spatial) candidates.push_back(element.id);
             }
             const std::function<bool(uint32_t)> is_gone = [&](uint32_t id) { return id < gone.size() && gone[id]; };
-            merge = plan_merge(spf, candidates, is_gone, stem);
+            merge = plan_merge(spf, candidates, is_gone, stem, options.merge_gap_m);
             for (const auto& [element, asset] : merge.merged_into) gone[element] = true;
         }
         writers[output] = std::make_unique<Writer>(spf, model, output, std::move(gone));
@@ -679,11 +706,13 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         writers[output]->write(path.string(), layers);
         if (options.instance) instanced[output] = instance(path.string(), options.precision_mm);
         if (options.compact) compacted[output] = compact(path.string(), options.precision_mm);
-        if (!options.zip) {
+        const auto zipped = fs::path(path.string() + ZIPPED);
+        // The federation file stays plain, as that's the format Bentley's list names
+        if (!options.zip || output == FEDERATION) {
+            fs::remove(zipped);  // from a run that did zip it
             sizes[output] = fs::file_size(path);
             continue;
         }
-        const auto zipped = fs::path(path.string() + ZIPPED);
         zip_file(path.string(), zipped.string(), path.filename().string());
         fs::remove(path);
         sizes[output] = fs::file_size(zipped);
@@ -711,7 +740,9 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
             const bool merged = output == FEDERATION && asset != merge.merged_into.end();
             const std::string guid = merged ? merge.assets[asset->second].guid : model.guid_in_output(element.id, element.guid, output, whole);
             const char* action = merged ? "merged" : copied ? "copied" : !whole ? "split" : output == FEDERATION ? "kept" : "moved";
-            const std::string reason = merged ? "site ID " + merge.assets[asset->second].site
+            const auto apart = merge.apart.find(element.id);
+            const std::string reason = merged ? "site ID " + merge.assets[asset->second].site + merge.assets[asset->second].note
+                : output == FEDERATION && apart != merge.apart.end() ? "site ID " + apart->second + ", far from the rest of it"
                 : copied ? "spatial structure"
                 : output == HIDDEN ? (element.by_property || Rules::matches(rules.hidden, element.family) ? "hidden rule" : "keep-largest rule")
                 : output == ENVELOPES ? (element.by_property || Rules::matches(rules.envelope, element.family) ? "envelope rule" : "transparent")
@@ -733,9 +764,19 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     std::cout << "  " << split_elements << " elements split, " << moved_elements << " moved whole, " << model.conflicts.size()
               << " shared items wanted in two places (left in the federation file), " << unreached << " unused instances kept in the federation file\n";
     if (!model.renamed.empty()) std::cout << "  " << model.renamed.size() << " GUIDs changed, as they weren't unique\n";
+    if (source != input) {
+        std::cout << "  written as IFC4: " << upgrade.lengthened << " instances given the attributes IFC4 added, " << upgrade.ports << " port relationships now nesting, "
+                  << upgrade.retyped << " predefined types now user defined\n";
+    }
     if (options.merge) {
-        std::cout << "  " << merge.merged_into.size() << " elements merged into " << merge.assets.size() << " by site ID, " << merge.left_out_openings
-                  << " left out as openings cut them, " << merge.left_out_other << " left out as they're placed in a way that can't be repeated\n";
+        std::cout << "  " << merge.merged_into.size() << " elements merged into " << merge.assets.size() << " by site ID, " << merge.openings_moved
+                  << " openings now cutting the asset, " << merge.left_out_other << " left out as they're placed in a way that can't be repeated, "
+                  << merge.left_out_extent << " left out as where they reach couldn't be worked out\n";
+        if (merge.sites_apart || !merge.apart.empty()) {
+            std::cout << "  " << merge.sites_apart << " sites with parts over " << options.merge_gap_m << " m apart, so not merged as one; " << merge.apart.size()
+                      << " elements left as they are, as nothing of their site is near them\n";
+        }
+        if (!merge.gap_checked) std::cout << "  warning: the model's length unit isn't plain SI, so parts of a site weren't checked for being far apart\n";
     }
     if (options.instance) {
         const InstanceStats& federated = instanced[FEDERATION];
@@ -747,7 +788,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         const CompactStats& federated = compacted[FEDERATION];
         std::cout << "  federate written compactly: " << mb(federated.bytes_before) << " -> " << mb(federated.bytes_after) << " MB, "
                   << federated.instances_before << " -> " << federated.instances_after << " instances, " << federated.sets_triangulated << " face sets as triangles, "
-                  << federated.sets_left << " left as polygons (" << federated.faces_left << " faces), "
+                  << federated.sets_left << " left as polygons (" << federated.faces_left << " faces), " << federated.sets_cut << " left exactly as they were, as openings touch them, "
                   << federated.no_area_removed << " faces with no area removed\n";
         if (federated.no_area_left) std::cout << "  warning: " << federated.no_area_left << " faces with no area kept, as all their set had\n";
         if (!federated.rounded) std::cout << "  warning: the model's length unit isn't plain SI, so coordinates weren't rounded\n";
@@ -770,6 +811,7 @@ std::string worker_command(const fs::path& model, const SplitOptions& options, c
     if (!options.rules_path.empty()) command << " --rules " << quote(options.rules_path);
     command << " --transparent " << options.transparent << " --precision-mm " << options.precision_mm;
     if (!options.merge) command << " --no-merge";
+    command << " --merge-gap " << options.merge_gap_m;
     if (!options.instance) command << " --no-instance";
     if (!options.compact) command << " --no-compact";
     if (!options.zip) command << " --no-zip";

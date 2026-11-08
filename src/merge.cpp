@@ -1,11 +1,16 @@
 #include "merge.h"
 
+#include "extent.h"
 #include "rigid.h"
 #include "site.h"
 
 #include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <limits>
 #include <map>
 #include <optional>
+#include <string_view>
 #include <unordered_set>
 
 namespace bimpass {
@@ -28,18 +33,25 @@ struct Member {
     uint32_t id = 0;
     Rigid placement;
     std::vector<uint32_t> bodies;
+    bool can_merge = false;  // placed in a way a mapped item can repeat
+    bool placed = false;
 };
 
 class Planner {
   public:
-    Planner(const SpfFile& spf, const std::function<bool(uint32_t)>& gone, const std::string& stem, MergePlan& plan)
-        : spf_(spf), gone_(gone), stem_(stem), plan_(plan), emitter_(spf.max_id()) {}
+    Planner(const SpfFile& spf, const std::function<bool(uint32_t)>& gone, const std::string& stem, double gap_m, MergePlan& plan)
+        : spf_(spf), gone_(gone), stem_(stem), plan_(plan), emitter_(spf.max_id()), extents_(spf) {
+        const double unit = length_unit(spf);
+        plan_.gap_checked = gap_m <= 0 || unit > 0;
+        gap_ = unit > 0 ? gap_m / unit : 0;
+    }
 
     void run(const std::vector<uint32_t>& candidates) {
         const std::unordered_set<uint32_t> candidate(candidates.begin(), candidates.end());
         read_relationships(candidate);
 
-        // Ordered, so that a run writes the same file every time
+        // Ordered, so that a run writes the same file every time. Parts that can't merge stay in, as what
+        // can join the rest.
         std::map<std::string, std::vector<Member>> sites;
         for (const uint32_t id : candidates) {
             const std::string site = site_of(id);
@@ -50,20 +62,21 @@ class Planner {
             member.id = id;
             member.bodies = bodies_of(attributes[6]);
             if (member.bodies.empty()) continue;  // an assembly goes with its parts, later
-            if (cut_.count(id)) {
-                ++plan_.left_out_openings;
-                continue;
-            }
             const auto placed = placement_of(attributes[5]);
-            if (!placed) {
-                ++plan_.left_out_other;
-                continue;
-            }
-            member.placement = *placed;
+            if (placed) member.placement = *placed;
+            member.placed = placed.has_value();
+            member.can_merge = placed.has_value();
+            if (!placed) ++plan_.left_out_other;
             sites[site].push_back(std::move(member));
         }
         for (auto& [site, members] : sites) {
-            if (members.size() > 1) merge(site, members);
+            if (std::count_if(members.begin(), members.end(), [](const Member& m) { return m.can_merge; }) < 2) continue;
+            const auto groups = groups_of(site, members);
+            if (groups.size() > 1) ++plan_.sites_apart;
+            for (size_t i = 0; i < groups.size(); ++i) {
+                const std::string note = groups.size() > 1 ? ", group " + std::to_string(i + 1) + " of " + std::to_string(groups.size()) + ", far apart" : "";
+                merge(site, i == 0 ? site : site + "/" + std::to_string(i + 1), note, groups[i]);
+            }
         }
         // Finish what's only known once every asset has been made
         for (const auto& [structure, elements] : contained_) {
@@ -88,6 +101,61 @@ class Planner {
     }
 
   private:
+    // A site's parts that can merge, in groups that are each one thing: every part is within the gap of
+    // another part of its group, merging or not. A part on its own stays as it is.
+    std::vector<std::vector<Member>> groups_of(const std::string& site, const std::vector<Member>& members) {
+        std::vector<std::vector<Member>> out;
+        if (gap_ <= 0) {
+            out.emplace_back();
+            for (const Member& m : members) {
+                if (m.can_merge) out.back().push_back(m);
+            }
+            return out;
+        }
+        std::vector<Box> boxes(members.size());
+        std::vector<bool> known(members.size(), false);
+        for (size_t i = 0; i < members.size(); ++i) {
+            if (!members[i].placed) continue;
+            known[i] = true;
+            for (const uint32_t body : members[i].bodies) {
+                for (const uint32_t item : refs_in(attributes_of(spf_.line(body))[3])) {
+                    if (!extents_.item(item, members[i].placement, boxes[i])) known[i] = false;
+                }
+            }
+            if (boxes[i].empty()) known[i] = false;
+        }
+        std::vector<size_t> parent(members.size());
+        for (size_t i = 0; i < parent.size(); ++i) parent[i] = i;
+        const auto find = [&](size_t i) {
+            while (parent[i] != i) i = parent[i] = parent[parent[i]];
+            return i;
+        };
+        for (size_t i = 0; i < members.size(); ++i) {
+            if (!known[i]) continue;
+            for (size_t j = i + 1; j < members.size(); ++j) {
+                if (known[j] && find(i) != find(j) && gap_between(boxes[i], boxes[j]) <= gap_) parent[find(i)] = find(j);
+            }
+        }
+        // Groups in the order of their first part
+        std::map<size_t, size_t> group_of_root;
+        std::vector<std::vector<Member>> all;
+        for (size_t i = 0; i < members.size(); ++i) {
+            if (!members[i].can_merge) continue;
+            if (!known[i]) {
+                ++plan_.left_out_extent;
+                continue;
+            }
+            const auto [at, added] = group_of_root.emplace(find(i), all.size());
+            if (added) all.emplace_back();
+            all[at->second].push_back(members[i]);
+        }
+        for (auto& group : all) {
+            if (group.size() > 1) out.push_back(std::move(group));
+            else if (all.size() > 1) plan_.apart[group[0].id] = site;
+        }
+        return out;
+    }
+
     void read_relationships(const std::unordered_set<uint32_t>& candidate) {
         for (uint32_t id = 0; id < spf_.max_id(); ++id) {
             const auto type = spf_.type(id);
@@ -102,7 +170,7 @@ class Planner {
             } else if (type == "IFCRELVOIDSELEMENT") {
                 const auto attributes = attributes_of(spf_.line(id));
                 if (attributes.size() == 6) {
-                    for (const uint32_t element : refs_in(attributes[4])) cut_.insert(element);
+                    for (const uint32_t element : refs_in(attributes[4])) voids_of_[element].push_back(id);
                 }
             } else if (type == "IFCRELCONTAINEDINSPATIALSTRUCTURE") {
                 const auto attributes = attributes_of(spf_.line(id));
@@ -169,26 +237,7 @@ class Planner {
     }
 
     // Where an element's placement puts it in the world; none for a grid placement
-    std::optional<Rigid> placement_of(std::string_view reference_text) {
-        const auto ids = refs_in(reference_text);
-        if (ids.size() != 1) return std::nullopt;
-        const auto seen = placements_.find(ids[0]);
-        if (seen != placements_.end()) return seen->second;
-        std::optional<Rigid> out;
-        if (spf_.type(ids[0]) == "IFCLOCALPLACEMENT") {
-            const auto attributes = attributes_of(spf_.line(ids[0]));
-            if (attributes.size() == 2) {
-                const auto axes = refs_in(attributes[1]);
-                const auto local = axes.size() == 1 ? axis_placement(spf_, axes[0]) : std::nullopt;
-                if (local) {
-                    if (attributes[0] == "$") out = local;
-                    else if (const auto parent = placement_of(attributes[0])) out = compose(*parent, *local);
-                }
-            }
-        }
-        placements_[ids[0]] = out;
-        return out;
-    }
+    std::optional<Rigid> placement_of(std::string_view reference_text) { return extents_.placement(reference_text); }
 
     // A map that shows a whole representation as it is, so that it can be placed by a mapped item
     uint32_t map_of(uint32_t representation) {
@@ -232,7 +281,8 @@ class Planner {
         return !out.empty();
     }
 
-    void merge(const std::string& site, const std::vector<Member>& candidates) {
+    // asset_key is the site, or the site and its group if the site is in groups, and makes the asset's GUIDs
+    void merge(const std::string& site, const std::string& asset_key, const std::string& note, const std::vector<Member>& candidates) {
         const Rigid world_to_asset = inverse(candidates[0].placement);
         std::vector<const Member*> members;
         std::vector<std::pair<uint32_t, Rigid>> items;
@@ -264,8 +314,24 @@ class Planner {
 
         const uint32_t representation = emitter_.emit("IFCSHAPEREPRESENTATION(" + std::string(context) + ",'Body','MappedRepresentation'," + list_of(mapped_items) + ");");
         const uint32_t shape = emitter_.emit("IFCPRODUCTDEFINITIONSHAPE($,$,(" + reference(representation) + "));");
-        const std::string guid = derived_guid(site + "@" + stem_);
+        const std::string guid = derived_guid(asset_key + "@" + stem_);
         const uint32_t element = emitter_.emit("IFCBUILDINGELEMENTPROXY('" + guid + "'," + owner + ",'" + site + "',$,'" + site + "'," + std::string(first[5]) + "," + reference(shape) + ",$,$);");
+
+        // An opening cuts the asset now, as what it cut is part of it. It reaches into other parts only where
+        // they meet what it cut, such as a bolt in its hole, which was measured to be all it takes on gantries.
+        for (const Member* member : members) {
+            const auto voids = voids_of_.find(member->id);
+            if (voids == voids_of_.end()) continue;
+            for (const uint32_t relationship : voids->second) {
+                const auto parts = attributes_of(spf_.line(relationship));
+                const auto opening = refs_in(parts[5]);
+                if (opening.size() != 1 || gone_(opening[0])) continue;
+                emitter_.emit("IFCRELVOIDSELEMENT('" + derived_guid(quoted_in(parts[0]) + "@" + stem_ + "/" + asset_key) + "'," + std::string(parts[1]) + "," + std::string(parts[2]) + "," +
+                              std::string(parts[3]) + "," + reference(element) + "," + reference(opening[0]) + ");");
+                for (const uint32_t id : refs_in(parts[1])) plan_.keep.push_back(id);
+                ++plan_.openings_moved;
+            }
+        }
 
         // The asset keeps what's true of all of it
         std::map<std::string, size_t> counted;
@@ -292,7 +358,7 @@ class Planner {
             if (counted[key] == members.size()) kept[name].push_back(property);
         }
         for (const auto& [name, properties] : kept) {
-            const std::string base = site + "@" + stem_ + "/" + quoted_in(name);
+            const std::string base = asset_key + "@" + stem_ + "/" + quoted_in(name);
             const uint32_t set = emitter_.emit("IFCPROPERTYSET('" + derived_guid(base) + "'," + owner + "," + std::string(name) + ",$," + list_of(properties) + ");");
             emitter_.emit("IFCRELDEFINESBYPROPERTIES('" + derived_guid(base + "/defines") + "'," + owner + ",$,$,(" + reference(element) + ")," + reference(set) + ");");
             plan_.keep.insert(plan_.keep.end(), properties.begin(), properties.end());
@@ -309,7 +375,7 @@ class Planner {
         }
 
         const size_t asset = plan_.assets.size();
-        plan_.assets.push_back({site, guid});
+        plan_.assets.push_back({site, guid, note});
         for (const Member* member : members) plan_.merged_into[member->id] = asset;
     }
 
@@ -318,20 +384,22 @@ class Planner {
     const std::string& stem_;
     MergePlan& plan_;
     Emitter emitter_;
+    Extents extents_;
+    double gap_ = 0;  // in the model's length unit; 0 doesn't check
     std::string owner_ = "$";
     std::unordered_map<uint32_t, std::vector<uint32_t>> sets_of_, parts_of_;
     std::unordered_map<uint32_t, uint32_t> container_, whole_of_, maps_;
-    std::unordered_set<uint32_t> cut_;
+    std::unordered_map<uint32_t, std::vector<uint32_t>> voids_of_;  // element, and the relationships of the openings that cut it
     std::unordered_map<uint32_t, PropertySet> property_sets_;
-    std::unordered_map<uint32_t, std::optional<Rigid>> placements_;
     std::map<uint32_t, std::vector<uint32_t>> contained_;
 };
 
 }  // namespace
 
-MergePlan plan_merge(const SpfFile& spf, const std::vector<uint32_t>& candidates, const std::function<bool(uint32_t)>& gone, const std::string& stem) {
+MergePlan plan_merge(const SpfFile& spf, const std::vector<uint32_t>& candidates, const std::function<bool(uint32_t)>& gone, const std::string& stem,
+                     double gap_m) {
     MergePlan plan;
-    Planner(spf, gone, stem, plan).run(candidates);
+    Planner(spf, gone, stem, gap_m, plan).run(candidates);
     std::sort(plan.keep.begin(), plan.keep.end());
     plan.keep.erase(std::unique(plan.keep.begin(), plan.keep.end()), plan.keep.end());
     return plan;

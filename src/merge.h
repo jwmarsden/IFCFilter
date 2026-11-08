@@ -17,6 +17,7 @@ namespace bimpass {
 
 struct MergedAsset {
     std::string site, guid;
+    std::string note;  // which group it is, if its site's parts are far apart
 };
 
 struct MergePlan {
@@ -24,11 +25,17 @@ struct MergePlan {
     std::vector<uint32_t> keep;                        // instances of the input that they refer to
     std::vector<MergedAsset> assets;
     std::unordered_map<uint32_t, size_t> merged_into;  // element, and the asset it's now part of
-    uint64_t left_out_openings = 0;                    // a void on a merged element would cut all of it
+    uint64_t openings_moved = 0;                       // openings that cut a merged part, and now cut its asset
     uint64_t left_out_other = 0;                       // placed in a way a mapped item can't repeat
+    uint64_t left_out_extent = 0;                      // where its shape reaches couldn't be worked out
+    uint64_t sites_apart = 0;                          // sites whose parts are in groups too far apart to be one thing
+    std::unordered_map<uint32_t, std::string> apart;   // element, and its site, left as it is as nothing of its site is near it
+    bool gap_checked = true;                           // false if the model's length unit isn't known
 };
 
-// candidates are the elements that could merge; gone says what isn't in the file being written
-MergePlan plan_merge(const SpfFile& spf, const std::vector<uint32_t>& candidates, const std::function<bool(uint32_t)>& gone, const std::string& stem);
+// candidates are the elements that could merge; gone says what isn't in the file being written. Parts of a site
+// are only merged if they're within gap_m of each other, through any chain of its parts; 0 doesn't check.
+MergePlan plan_merge(const SpfFile& spf, const std::vector<uint32_t>& candidates, const std::function<bool(uint32_t)>& gone, const std::string& stem,
+                     double gap_m);
 
 }  // namespace bimpass

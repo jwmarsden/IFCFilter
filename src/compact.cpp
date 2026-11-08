@@ -1,5 +1,6 @@
 #include "compact.h"
 
+#include "extent.h"
 #include "spf.h"
 #include "system.h"
 
@@ -320,6 +321,17 @@ CompactStats compact(const std::string& path, double precision_mm) {
             }
         }
 
+        // Face sets an opening cuts, or is made of, are left exactly as they are. Taking a solid from a mesh is
+        // fragile: rounding or triangles were seen to change what IfcOpenShell cuts, and even to leave nothing.
+        const auto cut = sets_openings_touch(spf);
+        stats.sets_cut = cut.size();
+        std::unordered_set<uint32_t> exact_points;
+        for (const uint32_t id : cut) {
+            const auto attributes = attributes_of(spf.line(id));
+            if (attributes.empty()) continue;
+            for (const uint32_t list : refs_in(attributes[0])) exact_points.insert(list);
+        }
+
         std::unordered_map<std::string_view, uint32_t> first_value;
         first_value.reserve(values.size() / 8);
         for (const uint32_t id : values) {
@@ -438,6 +450,12 @@ CompactStats compact(const std::string& path, double precision_mm) {
         for (const uint32_t id : face_sets) {
             const auto attributes = attributes_of(spf.line(id));
             const auto face_ids = attributes.size() == 4 ? refs_in(attributes[2]) : std::vector<uint32_t>{};
+            if (cut.count(id)) {
+                for (const uint32_t face : face_ids) {
+                    if (face < max_id) face_needed[face] = true;
+                }
+                continue;
+            }
             bool usable = attributes.size() == 4 && !face_ids.empty() && !textured.count(id);
             const auto colours = colour_count.find(id);
             if (usable && colours != colour_count.end() && colours->second != face_ids.size()) usable = false;
@@ -539,7 +557,7 @@ CompactStats compact(const std::string& path, double precision_mm) {
         // Sets that were triangles already. A texture map or colours that don't line up leave one as it is.
         for (const uint32_t id : triangle_sets) {
             const auto attributes = attributes_of(spf.line(id));
-            if (attributes.size() < 4 || textured.count(id)) continue;
+            if (attributes.size() < 4 || textured.count(id) || cut.count(id)) continue;
             const std::string_view pn_index = attributes.size() > 4 ? attributes[4] : std::string_view("$");
             const auto indices = integers_in(attributes[3]);
             if (indices.empty() || indices.size() % 3) continue;
@@ -574,7 +592,7 @@ CompactStats compact(const std::string& path, double precision_mm) {
                 continue;
             }
             const auto type = spf.type(id);
-            if (type == "IFCCARTESIANPOINTLIST3D" && stats.rounded) {
+            if (type == "IFCCARTESIANPOINTLIST3D" && stats.rounded && !exact_points.count(id)) {
                 text.clear();
                 const auto open = line.find('(');
                 text.append(line.substr(0, open));
