@@ -157,7 +157,8 @@ class Planner {
 
   private:
     // Each site is a level of its own, named after it, beside the levels its elements were on, which keep
-    // what has no site. Levels are listed in alphabetical order, and a level left with nothing goes.
+    // what has no site. A site that's one element or asset is that element on the building instead,
+    // renamed after it. Levels are listed in alphabetical order, and a level left with nothing goes.
     void make_levels() {
         std::map<uint32_t, std::vector<uint32_t>> new_levels_of;  // building, and its site levels
         std::map<uint32_t, std::string> names;
@@ -177,6 +178,25 @@ class Planner {
             for (const auto& [element, structure] : entries) {
                 elements.push_back(element);
                 if (element < spf_.max_id()) moved.insert(element);
+            }
+            // A site that's one element or asset needs no level: it goes on the building, named after its site
+            if (elements.size() == 1) {
+                const uint32_t element = elements[0];
+                if (element < spf_.max_id()) {
+                    const auto line = spf_.line(element);
+                    auto attributes = attributes_of(line);
+                    if (attributes.size() > 2) {
+                        const std::string name = "'" + site + "'";
+                        attributes[2] = name;
+                        std::string text(line.substr(0, line.find('(') + 1));
+                        for (size_t i = 0; i < attributes.size(); ++i) text.append(i ? "," : "").append(attributes[i]);
+                        plan_.replace[element] = text + ");";
+                    }
+                }
+                contained_[building].push_back(element);
+                new_levels_of[building];  // so that levels left empty still go
+                ++plan_.on_building;
+                continue;
             }
             const uint32_t level = emitter_.emit("IFCBUILDINGSTOREY('" + derived_guid("level/" + site + "@" + stem_) + "'," + owner + ",'" + site + "',$,$," + std::string(first[5]) +
                                                  ",$,$,.ELEMENT.,$);");

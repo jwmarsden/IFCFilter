@@ -801,9 +801,9 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
                   << " openings now cutting the asset, " << merge.left_out_other << " left out as they're placed in a way that can't be repeated, "
                   << merge.left_out_extent << " left out as where they reach couldn't be worked out\n";
         if (merge.quantities_combined) std::cout << "  " << merge.quantities_combined << " Quantities values worked out for assets as a whole\n";
-        if (merge.levels) {
-            std::cout << "  " << merge.levels << " site levels, named after their sites, holding " << merge.on_levels << " elements and assets; " << merge.dropped.size()
-                      << " levels left empty, so left out\n";
+        if (merge.levels || merge.on_building) {
+            std::cout << "  " << merge.levels << " site levels, named after their sites, holding " << merge.on_levels << " elements and assets; " << merge.on_building
+                      << " sites of one element or asset on the building, named after their sites; " << merge.dropped.size() << " levels left empty, so left out\n";
         }
         if (merge.by_design || merge.tags_not_ids) {
             std::cout << "  " << merge.by_design << " elements with no site ID merged by design tag, " << merge.joined_by_design << " of them joining the one site their tag is on; "
