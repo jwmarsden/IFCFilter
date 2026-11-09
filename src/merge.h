@@ -38,7 +38,9 @@ struct MergePlan {
     std::unordered_map<uint32_t, std::string> replace; // lines of the input written as this instead; empty to leave one out
     std::vector<uint32_t> dropped;                     // levels left with nothing on them, left out
     uint64_t levels = 0, on_levels = 0;                // site levels made, and the elements and assets on them
-    uint64_t on_building = 0;                          // sites of one element or asset, on the building instead of a level
+    uint64_t on_building = 0;                          // sites of one element or asset, on their type's level as themselves
+    uint64_t type_levels = 0, unmanaged = 0;
+    uint64_t placed_on_levels = 0;                     // elements and assets placed from the level they're now on           // levels for asset types, and what's on the level for no site ID
     uint64_t quantities_combined = 0;                  // Quantities values worked out for assets as a whole
 };
 

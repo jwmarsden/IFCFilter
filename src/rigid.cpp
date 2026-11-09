@@ -166,6 +166,13 @@ uint32_t Emitter::emit_operator(const Rigid& target) {
     return emit_once("IFCCARTESIANTRANSFORMATIONOPERATOR3D(" + reference(x) + "," + reference(y) + "," + reference(origin) + ",1.," + reference(z) + ");");
 }
 
+uint32_t Emitter::emit_placement(const Rigid& placement) {
+    const uint32_t origin = emit_vector("IFCCARTESIANPOINT", placement.origin, 6);
+    const uint32_t z = emit_vector("IFCDIRECTION", placement.axes[2], 12);
+    const uint32_t x = emit_vector("IFCDIRECTION", placement.axes[0], 12);
+    return emit_once("IFCAXIS2PLACEMENT3D(" + reference(origin) + "," + reference(z) + "," + reference(x) + ");");
+}
+
 uint32_t Emitter::emit_identity() {
     if (!identity_) identity_ = emit("IFCAXIS2PLACEMENT3D(" + reference(emit_vector("IFCCARTESIANPOINT", {0, 0, 0}, 6)) + ",$,$);");
     return identity_;

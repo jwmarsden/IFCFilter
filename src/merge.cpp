@@ -26,6 +26,16 @@ std::string quoted_in(std::string_view value) {
     return open == std::string_view::npos || close <= open ? std::string() : std::string(value.substr(open + 1, close - open - 1));
 }
 
+// A string as STEP writes it, quotes and all
+std::string quoted(const std::string& text) {
+    std::string out = "'";
+    for (const char c : text) {
+        out += c;
+        if (c == '\'') out += '\'';
+    }
+    return out + "'";
+}
+
 struct PropertySet {
     std::string_view name;  // with its quotes, as it's written
     std::vector<std::pair<std::string_view, uint32_t>> properties;  // each one's text, and its id
@@ -131,6 +141,19 @@ class Planner {
                 if (!plan_.merged_into.count(member.id) && structure != container_.end()) levels_[asset.name].emplace_back(member.id, structure->second);
             }
         }
+        // What has a site but couldn't be a member, such as an assembly, goes on its site too
+        std::unordered_set<uint32_t> placed;
+        for (const auto& [site, entries] : levels_) {
+            for (const auto& [element, structure] : entries) placed.insert(element);
+        }
+        std::vector<std::pair<uint32_t, uint32_t>> contained(container_.begin(), container_.end());
+        std::sort(contained.begin(), contained.end());
+        for (const auto& [element, structure] : contained) {
+            if (placed.count(element) || plan_.merged_into.count(element) || !candidate.count(element)) continue;
+            const std::string site = site_of(element);
+            if (!is_one_site(site)) continue;
+            levels_[site].emplace_back(element, structure);
+        }
         make_levels();
 
         // Finish what's only known once every asset has been made
@@ -156,13 +179,24 @@ class Planner {
     }
 
   private:
-    // Each site is a level of its own, named after it, beside the levels its elements were on, which keep
-    // what has no site. A site that's one element or asset is that element on the building instead,
-    // renamed after it. Levels are listed in alphabetical order, and a level left with nothing goes.
+    // Under each building, a level for each asset type holding its sites, and one last level for what has
+    // no site ID. A site that's one element or asset is that element, renamed after its site; one still in
+    // several pieces is a level of its own on its type's level. The building's own levels go once they're
+    // empty, as everything on them has moved.
     void make_levels() {
-        std::map<uint32_t, std::vector<uint32_t>> new_levels_of;  // building, and its site levels
-        std::map<uint32_t, std::string> names;
+        struct Levels {
+            std::map<std::string, std::vector<std::pair<std::string, uint32_t>>> elements_of_type;  // type, and its sites' elements, by site
+            std::map<std::string, std::vector<std::pair<std::string, uint32_t>>> sites_of_type;     // type, and the levels of its sites in pieces
+            std::vector<uint32_t> unmanaged;
+        };
+        std::map<uint32_t, Levels> of_building;
         std::unordered_set<uint32_t> moved;
+        const auto owner_of = [&](uint32_t building) { return owner_ != "$" ? owner_ : std::string(attributes_of(spf_.line(building))[1]); };
+        // Each level is placed where its building is, by a placement of its own: a viewer goes from what's clicked
+        // to what it's on by placements, and one shared by a building and its levels can't say which
+        const auto placement_of_building = [&](uint32_t building) {
+            return reference(emitter_.emit("IFCLOCALPLACEMENT(" + std::string(attributes_of(spf_.line(building))[5]) + "," + reference(emitter_.emit_identity()) + ");"));
+        };
         for (const auto& [site, entries] : levels_) {
             const uint32_t building = building_of(entries[0].second);
             if (!building) {
@@ -172,14 +206,13 @@ class Planner {
                 }
                 continue;
             }
-            const auto first = attributes_of(spf_.line(building));
-            const std::string owner = owner_ != "$" ? owner_ : std::string(first[1]);
+            Levels& levels = of_building[building];
+            const std::string type = asset_type_of(site);
             std::vector<uint32_t> elements;
             for (const auto& [element, structure] : entries) {
                 elements.push_back(element);
                 if (element < spf_.max_id()) moved.insert(element);
             }
-            // A site that's one element or asset needs no level: it goes on the building, named after its site
             if (elements.size() == 1) {
                 const uint32_t element = elements[0];
                 if (element < spf_.max_id()) {
@@ -193,32 +226,45 @@ class Planner {
                         plan_.replace[element] = text + ");";
                     }
                 }
-                contained_[building].push_back(element);
-                new_levels_of[building];  // so that levels left empty still go
+                levels.elements_of_type[type].emplace_back(site, element);
                 ++plan_.on_building;
                 continue;
             }
-            const uint32_t level = emitter_.emit("IFCBUILDINGSTOREY('" + derived_guid("level/" + site + "@" + stem_) + "'," + owner + ",'" + site + "',$,$," + std::string(first[5]) +
-                                                 ",$,$,.ELEMENT.,$);");
+            const std::string owner = owner_of(building);
+            const std::string site_placement = placement_of_building(building);
+            const uint32_t level = emitter_.emit("IFCBUILDINGSTOREY('" + derived_guid("level/" + site + "@" + stem_) + "'," + owner + ",'" + site + "',$,$," +
+                                                 site_placement + ",$,$,.PARTIAL.,$);");
+            for (const uint32_t element : elements) place_on(element, site_placement, building);
             emitter_.emit("IFCRELCONTAINEDINSPATIALSTRUCTURE('" + derived_guid("level/" + site + "@" + stem_ + "/contains") + "'," + owner + ",$,$," + list_of(elements) + "," +
                           reference(level) + ");");
-            new_levels_of[building].push_back(level);
-            names[level] = site;
+            levels.sites_of_type[type].emplace_back(site, level);
             ++plan_.levels;
             plan_.on_levels += elements.size();
         }
 
-        // What moved leaves the relationships that held it
+        // On a building that's been given levels, what's on its own levels, or on it, and has no site, goes on
+        // the level for that. What moved, or went with a merge, just leaves the relationship that held it.
+        const auto planned_building = [&](uint32_t structure) -> Levels* {
+            const auto type = spf_.type(structure);
+            if (type != "IFCBUILDINGSTOREY" && type != "IFCBUILDING") return nullptr;
+            const auto found = of_building.find(building_of(structure));
+            return found == of_building.end() ? nullptr : &found->second;
+        };
         std::map<uint32_t, size_t> left_on;  // structure, and what's still on it
         for (const uint32_t relationship : containments_) {
             const auto attributes = attributes_of(spf_.line(relationship));
-            std::vector<uint32_t> kept;
             const auto elements = refs_in(attributes[4]);
+            const auto structure = refs_in(attributes[5]);
+            Levels* levels = structure.size() == 1 ? planned_building(structure[0]) : nullptr;
+            std::vector<uint32_t> kept;
             for (const uint32_t element : elements) {
                 if (moved.count(element)) continue;
+                if (levels) {
+                    if (!gone_(element) && !plan_.merged_into.count(element)) levels->unmanaged.push_back(element);
+                    continue;
+                }
                 kept.push_back(element);
             }
-            const auto structure = refs_in(attributes[5]);
             for (const uint32_t element : kept) {
                 if (!gone_(element) && !plan_.merged_into.count(element) && structure.size() == 1) ++left_on[structure[0]];
             }
@@ -227,34 +273,128 @@ class Planner {
                 : reference(relationship) + "=IFCRELCONTAINEDINSPATIALSTRUCTURE(" + std::string(attributes[0]) + "," + std::string(attributes[1]) + "," + std::string(attributes[2]) + "," +
                       std::string(attributes[3]) + "," + list_of(kept) + "," + std::string(attributes[5]) + ");";
         }
-        for (const auto& [structure, assets] : contained_) left_on[structure] += assets.size();
+        // Assets with no site, merged by design tag, go with them
+        for (auto at = contained_.begin(); at != contained_.end();) {
+            Levels* levels = planned_building(at->first);
+            if (!levels) {
+                left_on[at->first] += at->second.size();
+                ++at;
+                continue;
+            }
+            levels->unmanaged.insert(levels->unmanaged.end(), at->second.begin(), at->second.end());
+            at = contained_.erase(at);
+        }
 
-        for (const auto& [building, levels] : new_levels_of) {
-            std::vector<uint32_t> children = levels;
+        for (auto& [building, levels] : of_building) {
+            const std::string owner = owner_of(building);
+            std::vector<uint32_t> children;
+            std::set<std::string> types;
+            for (const auto& [type, elements] : levels.elements_of_type) types.insert(type);
+            for (const auto& [type, sites] : levels.sites_of_type) types.insert(type);
+            for (const std::string& type : types) {
+                const std::string base = "type/" + type + "@" + stem_;
+                const std::string placement = placement_of_building(building);
+                const uint32_t level = emitter_.emit("IFCBUILDINGSTOREY('" + derived_guid(base) + "'," + owner + "," + quoted(type) + ",$,$," + placement + ",$,$,.ELEMENT.,$);");
+                auto elements = levels.elements_of_type[type];
+                std::sort(elements.begin(), elements.end());
+                if (!elements.empty()) {
+                    std::vector<uint32_t> ids;
+                    for (const auto& [site, element] : elements) {
+                        ids.push_back(element);
+                        place_on(element, placement, building);
+                    }
+                    emitter_.emit("IFCRELCONTAINEDINSPATIALSTRUCTURE('" + derived_guid(base + "/contains") + "'," + owner + ",$,$," + list_of(ids) + "," + reference(level) + ");");
+                }
+                auto sites = levels.sites_of_type[type];
+                std::sort(sites.begin(), sites.end());
+                if (!sites.empty()) {
+                    std::vector<uint32_t> ids;
+                    for (const auto& [site, site_level] : sites) ids.push_back(site_level);
+                    emitter_.emit("IFCRELAGGREGATES('" + derived_guid(base + "/sites") + "'," + owner + ",$,$," + reference(level) + "," + list_of(ids) + ");");
+                }
+                children.push_back(level);
+                ++plan_.type_levels;
+            }
+            if (!levels.unmanaged.empty()) {
+                const std::string base = "unmanaged@" + stem_;
+                const std::string placement = placement_of_building(building);
+                for (const uint32_t element : levels.unmanaged) place_on(element, placement, building);
+                const uint32_t level = emitter_.emit("IFCBUILDINGSTOREY('" + derived_guid(base) + "'," + owner + "," + quoted(UNMANAGED_LEVEL) + ",$,$," + placement +
+                                                     ",$,$,.ELEMENT.,$);");
+                emitter_.emit("IFCRELCONTAINEDINSPATIALSTRUCTURE('" + derived_guid(base + "/contains") + "'," + owner + ",$,$," + list_of(levels.unmanaged) + "," + reference(level) + ");");
+                children.push_back(level);
+                plan_.unmanaged += levels.unmanaged.size();
+            }
+            // The building's own levels stay only if something's still on them, or they're made of something, such as spaces
+            std::vector<std::pair<std::string, uint32_t>> others;
             const auto existing = parts_of_.find(building);
             if (existing != parts_of_.end()) {
                 for (const uint32_t child : existing->second) {
-                    // A level that only held what moved goes
-                    const bool held = held_.count(child) > 0;
-                    if (spf_.type(child) == "IFCBUILDINGSTOREY" && held && !left_on[child] && !parts_of_.count(child)) {
+                    if (spf_.type(child) == "IFCBUILDINGSTOREY" && !left_on[child] && !parts_of_.count(child)) {
                         plan_.dropped.push_back(child);
                         continue;
                     }
-                    children.push_back(child);
-                    names[child] = quoted_in(attributes_of(spf_.line(child))[2]);
+                    others.emplace_back(quoted_in(attributes_of(spf_.line(child))[2]), child);
                 }
             }
-            std::stable_sort(children.begin(), children.end(), [&](uint32_t a, uint32_t b) { return names[a] < names[b]; });
+            std::stable_sort(others.begin(), others.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+            for (const auto& [name, child] : others) children.push_back(child);
             const auto aggregation = aggregation_of_.find(building);
             if (aggregation != aggregation_of_.end()) {
                 const auto attributes = attributes_of(spf_.line(aggregation->second));
                 plan_.replace[aggregation->second] = reference(aggregation->second) + "=IFCRELAGGREGATES(" + std::string(attributes[0]) + "," + std::string(attributes[1]) + "," +
                                                      std::string(attributes[2]) + "," + std::string(attributes[3]) + "," + reference(building) + "," + list_of(children) + ");";
+                // Its levels may all be new now, and a relationship is otherwise only kept for what it held
+                plan_.keep.push_back(aggregation->second);
             } else {
-                const std::string owner(attributes_of(spf_.line(building))[1]);
                 emitter_.emit("IFCRELAGGREGATES('" + derived_guid("levels" + reference(building) + "@" + stem_) + "'," + owner + ",$,$," + reference(building) + "," + list_of(children) + ");");
             }
         }
+    }
+
+    // Places an element relative to the level it's now on, where it was: IFC places what's on a level from the
+    // level, and the levels it was placed from are gone. Its own placement is changed, so that what's placed from
+    // it, such as its ports and openings, still is; one that other products share is left, and it gets a new
+    // one. One placed in a way that can't be read stays as it was.
+    void place_on(uint32_t element, const std::string& level_placement, uint32_t building) {
+        std::string* emitted = emitter_.line_of(element);
+        const auto replaced = plan_.replace.find(element);
+        const std::string line = emitted ? *emitted : replaced != plan_.replace.end() ? replaced->second : std::string(spf_.line(element));
+        if (line.empty()) return;
+        auto attributes = attributes_of(line);
+        if (attributes.size() < 6) return;
+        const auto world = placement_of(attributes[5]);
+        const auto origin = placement_of(attributes_of(spf_.line(building))[5]);
+        const auto own = refs_in(attributes[5]);
+        if (!world || !origin || own.size() != 1) return;
+        const uint32_t axes = emitter_.emit_placement(compose(inverse(*origin), *world));
+        const std::string text = "IFCLOCALPLACEMENT(" + level_placement + "," + reference(axes) + ");";
+        if (products_placed_by(own[0]) <= 1 && !plan_.replace.count(own[0])) {
+            plan_.replace[own[0]] = reference(own[0]) + "=" + text;
+        } else {
+            attributes[5] = reference(emitter_.emit(text));
+            std::string rewritten(line.substr(0, line.find('(') + 1));
+            for (size_t i = 0; i < attributes.size(); ++i) rewritten.append(i ? "," : "").append(attributes[i]);
+            rewritten += ");";
+            if (emitted) *emitted = rewritten;
+            else plan_.replace[element] = rewritten;
+        }
+        ++plan_.placed_on_levels;
+    }
+
+    // How many lines that aren't placements refer to a placement: products, mostly
+    size_t products_placed_by(uint32_t placement) {
+        if (placed_by_.empty()) {
+            placed_by_.assign(spf_.max_id(), 0);
+            for (uint32_t id = 0; id < spf_.max_id(); ++id) {
+                const auto line = spf_.line(id);
+                if (line.empty() || spf_.type(id) == "IFCLOCALPLACEMENT") continue;
+                for_each_ref(line, [&](uint32_t next) {
+                    if (next < placed_by_.size() && spf_.type(next) == "IFCLOCALPLACEMENT") ++placed_by_[next];
+                });
+            }
+        }
+        return placement < placed_by_.size() ? placed_by_[placement] : 0;
     }
 
     // The building a structure is in, or is; 0 if none
@@ -668,6 +808,7 @@ class Planner {
     std::unordered_set<uint32_t> by_design_;  // elements that are in their asset by their design tag
     bool by_site_ = false;                    // the asset being made is a site's
     std::map<std::string, std::vector<std::pair<uint32_t, uint32_t>>> levels_;  // site, and what goes on its level, with where it was
+    std::vector<uint32_t> placed_by_;  // placement, and how many products and the like it places
     std::vector<uint32_t> containments_;      // relationships that hold elements on levels
     std::unordered_set<uint32_t> held_;       // structures they hold elements on
     std::unordered_map<uint32_t, uint32_t> aggregation_of_;  // whole, and the relationship of its parts

@@ -44,18 +44,23 @@ std::string list_of(const std::vector<uint32_t>& ids);
 // New instances, numbered up from the input's last
 class Emitter {
   public:
-    explicit Emitter(uint32_t next_id) : next_id_(next_id) {}
+    explicit Emitter(uint32_t next_id) : first_id_(next_id), next_id_(next_id) {}
 
     uint32_t emit(const std::string& text);
     uint32_t emit_once(const std::string& text);  // for what repeats a lot, such as directions
     uint32_t emit_operator(const Rigid& target);
     uint32_t emit_identity();                     // an axis placement that changes nothing
+    uint32_t emit_placement(const Rigid& placement);  // an axis placement that puts things there
+
+    // A line emitted already, to change; null if this didn't emit it
+    std::string* line_of(uint32_t id) { return id >= first_id_ && id < next_id_ ? &lines_[id - first_id_] : nullptr; }
 
     std::vector<std::string>& lines() { return lines_; }
 
   private:
     uint32_t emit_vector(const char* type, const Vector& v, int places);
 
+    uint32_t first_id_;
     uint32_t next_id_;
     uint32_t identity_ = 0;
     std::vector<std::string> lines_;

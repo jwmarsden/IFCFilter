@@ -6,8 +6,10 @@
 #include "instance.h"
 #include "merge.h"
 #include "register.h"
+#include "site.h"
 #include "spf.h"
 #include "system.h"
+#include "tidy.h"
 #include "upgrade.h"
 #include "zip.h"
 
@@ -724,9 +726,11 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     std::array<BrepStats, 3> converted{};
     std::array<CompactStats, 3> compacted{};
     std::array<InstanceStats, 3> instanced{};
+    std::array<TidyStats, 3> tidied{};
     for (const Output output : {FEDERATION, HIDDEN, ENVELOPES}) {
         const auto path = output_path(output);
         writers[output]->write(path.string(), layers);
+        tidied[output] = tidy(path.string(), input.string());
         if (options.compact) converted[output] = breps_to_face_sets(path.string());
         if (options.instance) instanced[output] = instance(path.string(), options.precision_mm);
         if (options.compact) compacted[output] = compact(path.string(), options.precision_mm);
@@ -801,9 +805,11 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
                   << " openings now cutting the asset, " << merge.left_out_other << " left out as they're placed in a way that can't be repeated, "
                   << merge.left_out_extent << " left out as where they reach couldn't be worked out\n";
         if (merge.quantities_combined) std::cout << "  " << merge.quantities_combined << " Quantities values worked out for assets as a whole\n";
-        if (merge.levels || merge.on_building) {
-            std::cout << "  " << merge.levels << " site levels, named after their sites, holding " << merge.on_levels << " elements and assets; " << merge.on_building
-                      << " sites of one element or asset on the building, named after their sites; " << merge.dropped.size() << " levels left empty, so left out\n";
+        if (merge.placed_on_levels) std::cout << "  " << merge.placed_on_levels << " elements and assets placed from the level they're on\n";
+        if (merge.type_levels || merge.unmanaged) {
+            std::cout << "  " << merge.type_levels << " asset type levels, holding " << merge.on_building << " sites of one element or asset, named after their sites, and "
+                      << merge.levels << " sites still in pieces as levels of their own (" << merge.on_levels << " pieces); " << merge.unmanaged << " elements with no site ID on "
+                      << UNMANAGED_LEVEL << "; " << merge.dropped.size() << " levels left empty, so left out\n";
         }
         if (merge.by_design || merge.tags_not_ids) {
             std::cout << "  " << merge.by_design << " elements with no site ID merged by design tag, " << merge.joined_by_design << " of them joining the one site their tag is on; "
@@ -814,6 +820,13 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
                       << " elements left as they are, as nothing of their site is near them\n";
         }
         if (!merge.gap_checked) std::cout << "  warning: the model's length unit isn't plain SI, so parts of a site weren't checked for being far apart\n";
+    }
+    {
+        const TidyStats& federated = tidied[FEDERATION];
+        std::cout << "  federate tidied: " << federated.sets_dropped << " Quantities and Data sets left out, " << federated.repeats_dropped
+                  << " properties left out of Data as other sets have them, " << federated.named << " elements renamed, " << federated.described
+                  << " described as their asset component, " << federated.types_corrected << " AssetType values corrected to their site ID ("
+                  << federated.types_mixed << " sets on elements of different types left), " << federated.histories << " owner histories marked as changed by BIMPass\n";
     }
     if (options.compact) {
         const BrepStats& federated = converted[FEDERATION];

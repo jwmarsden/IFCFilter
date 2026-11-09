@@ -243,11 +243,33 @@ class Instancer {
         }
     }
 
+    // Shapes in a representation, counting what's in the maps it places
+    size_t shapes_in(uint32_t representation, int depth = 0) {
+        size_t count = 0;
+        for (const uint32_t item : items_of(representation)) {
+            if (item < max_id_ && kinds_[item] == Kind::Mapped && depth < 8) {
+                const auto parts = attributes_of(spf_.line(item));
+                const auto maps = parts.size() == 2 ? refs_in(parts[0]) : std::vector<uint32_t>{};
+                count += maps.size() == 1 ? shapes_in(representation_of(maps[0]), depth + 1) : 1;
+            } else {
+                ++count;
+            }
+        }
+        return count;
+    }
+
     // Mapped items get flattened, so what's under one that scales or has its own style has to stay
     void exclude_what_cannot_be_flattened() {
         std::unordered_set<uint32_t> visited;
         // What an opening cuts stays as it is, as taking a solid from a mesh is fragile
         for (const uint32_t id : sets_openings_touch(spf_)) excluded_[id] = true;
+        // A body of several shapes stays as it is: flattened, it would be one mapped item for each, and Open IFC
+        // Viewer won't select an element whose body is many mapped items by clicking it until it's been opened
+        // from the tree. A body of one shape becomes one mapped item, which it selects straight away.
+        std::unordered_set<uint32_t> several;
+        for (uint32_t id = 0; id < max_id_; ++id) {
+            if (kinds_[id] == Kind::Representation && top_[id] && shapes_in(id) > 1) exclude_under(id, several);
+        }
         for (uint32_t id = 0; id < max_id_; ++id) {
             if (kinds_[id] != Kind::Mapped) continue;
             if (placement_of(id) && !styled_mapped_.count(id)) continue;
