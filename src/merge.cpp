@@ -1,5 +1,6 @@
 #include "merge.h"
 
+#include "bake.h"
 #include "extent.h"
 #include "rigid.h"
 #include "site.h"
@@ -133,6 +134,20 @@ class Planner {
                 merge(asset.name, asset.label, i == 0 ? key : key + "/" + std::to_string(i + 1), note, groups[i]);
             }
         }
+        // An assembly has no shape of its own, so it's nothing once all its parts have gone. This goes before
+        // the levels, so none holds it.
+        for (const auto& [assembly, parts] : parts_of_) {
+            if (!candidate.count(assembly) || parts.empty()) continue;
+            const auto first = plan_.merged_into.find(parts[0]);
+            if (first == plan_.merged_into.end()) continue;
+            const size_t asset = first->second;
+            const bool together = std::all_of(parts.begin(), parts.end(), [&](uint32_t part) {
+                const auto at = plan_.merged_into.find(part);
+                return at != plan_.merged_into.end() && at->second == asset;
+            });
+            const auto attributes = attributes_of(spf_.line(assembly));
+            if (together && attributes.size() >= 7 && bodies_of(attributes[6]).empty()) plan_.merged_into[assembly] = asset;
+        }
         // What has a site and wasn't merged goes on its site's level too
         for (const auto& [key, asset] : sites) {
             if (asset.label.rfind("site ID ", 0) != 0) continue;
@@ -161,19 +176,6 @@ class Planner {
             emitter_.emit("IFCRELCONTAINEDINSPATIALSTRUCTURE('" + derived_guid("contains" + reference(structure) + "@" + stem_) + "'," + owner_ + ",$,$," + list_of(elements) + "," +
                           reference(structure) + ");");
             plan_.keep.push_back(structure);
-        }
-        // An assembly has no shape of its own, so it's nothing once all its parts have gone
-        for (const auto& [assembly, parts] : parts_of_) {
-            if (!candidate.count(assembly) || parts.empty()) continue;
-            const auto first = plan_.merged_into.find(parts[0]);
-            if (first == plan_.merged_into.end()) continue;
-            const size_t asset = first->second;
-            const bool together = std::all_of(parts.begin(), parts.end(), [&](uint32_t part) {
-                const auto at = plan_.merged_into.find(part);
-                return at != plan_.merged_into.end() && at->second == asset;
-            });
-            const auto attributes = attributes_of(spf_.line(assembly));
-            if (together && attributes.size() >= 7 && bodies_of(attributes[6]).empty()) plan_.merged_into[assembly] = asset;
         }
         plan_.lines = std::move(emitter_.lines());
     }
@@ -287,12 +289,15 @@ class Planner {
 
         for (auto& [building, levels] : of_building) {
             const std::string owner = owner_of(building);
+            // Each building has a level of each type, so where there are several, a level's GUID is made from its
+            // building's too. A model of one building keeps the GUIDs it had.
+            const std::string in_building = of_building.size() > 1 ? "/" + quoted_in(attributes_of(spf_.line(building))[0]) : std::string();
             std::vector<uint32_t> children;
             std::set<std::string> types;
             for (const auto& [type, elements] : levels.elements_of_type) types.insert(type);
             for (const auto& [type, sites] : levels.sites_of_type) types.insert(type);
             for (const std::string& type : types) {
-                const std::string base = "type/" + type + "@" + stem_;
+                const std::string base = "type/" + type + "@" + stem_ + in_building;
                 const std::string placement = placement_of_building(building);
                 const uint32_t level = emitter_.emit("IFCBUILDINGSTOREY('" + derived_guid(base) + "'," + owner + "," + quoted(type) + ",$,$," + placement + ",$,$,.ELEMENT.,$);");
                 auto elements = levels.elements_of_type[type];
@@ -316,7 +321,7 @@ class Planner {
                 ++plan_.type_levels;
             }
             if (!levels.unmanaged.empty()) {
-                const std::string base = "unmanaged@" + stem_;
+                const std::string base = "unmanaged@" + stem_ + in_building;
                 const std::string placement = placement_of_building(building);
                 for (const uint32_t element : levels.unmanaged) place_on(element, placement, building);
                 const uint32_t level = emitter_.emit("IFCBUILDINGSTOREY('" + derived_guid(base) + "'," + owner + "," + quoted(UNMANAGED_LEVEL) + ",$,$," + placement +
@@ -576,12 +581,20 @@ class Planner {
         return map;
     }
 
-    // The mapped items that put a member's body where it was. False if they can't.
-    bool place_body(const Member& member, const Rigid& relative, std::vector<std::pair<uint32_t, Rigid>>& out) {
+    // A representation of a member's, and where it goes in the asset
+    struct Placed {
+        uint32_t map = 0;             // the map that placed it, if the member's body was mapped items; 0 for the body itself
+        uint32_t representation = 0;  // what's placed
+        Rigid target;                 // for a mapped item of the map, or of the body
+        std::optional<Rigid> to;      // what moves the representation's own coordinates there; none if its map's origin can't be read
+    };
+
+    // What puts a member's body where it was. False if it can't be.
+    bool place_body(const Member& member, const Rigid& relative, std::vector<Placed>& out) {
         for (const uint32_t body : member.bodies) {
             const auto attributes = attributes_of(spf_.line(body));
             bool mapped = attributes[2] == "'MappedRepresentation'";
-            std::vector<std::pair<uint32_t, Rigid>> items;
+            std::vector<Placed> items;
             // Items that are already mapped are placed directly, as maps inside maps aren't reliably read
             if (mapped) {
                 for (const uint32_t item : refs_in(attributes[3])) {
@@ -595,12 +608,18 @@ class Planner {
                     const auto target = parts.size() == 2 ? refs_in(parts[1]) : std::vector<uint32_t>{};
                     const auto placed = map.size() == 1 && target.size() == 1 ? operator_of(spf_, target[0]) : std::nullopt;
                     if (!placed) return false;
-                    items.emplace_back(map[0], compose(relative, *placed));
+                    const auto held = attributes_of(spf_.line(map[0]));
+                    const auto origin_ids = held.size() == 2 ? refs_in(held[0]) : std::vector<uint32_t>{};
+                    const auto origin = origin_ids.size() == 1 ? axis_placement(spf_, origin_ids[0]) : std::nullopt;
+                    const auto representation = held.size() == 2 ? refs_in(held[1]) : std::vector<uint32_t>{};
+                    if (representation.size() != 1) return false;
+                    const Rigid target_here = compose(relative, *placed);
+                    items.push_back({map[0], representation[0], target_here, origin ? std::optional<Rigid>(compose(target_here, inverse(*origin))) : std::nullopt});
                 }
             }
             if (!mapped) {
                 items.clear();
-                items.emplace_back(map_of(body), relative);
+                items.push_back({0, body, relative, relative});
             }
             out.insert(out.end(), items.begin(), items.end());
         }
@@ -695,9 +714,9 @@ class Planner {
     void merge(const std::string& site, const std::string& label, const std::string& asset_key, const std::string& note, const std::vector<Member>& candidates) {
         const Rigid world_to_asset = inverse(candidates[0].placement);
         std::vector<const Member*> members;
-        std::vector<std::pair<uint32_t, Rigid>> items;
+        std::vector<Placed> items;
         for (const Member& member : candidates) {
-            std::vector<std::pair<uint32_t, Rigid>> placed;
+            std::vector<Placed> placed;
             if (!place_body(member, compose(world_to_asset, member.placement), placed)) {
                 ++plan_.left_out_other;
                 continue;
@@ -707,11 +726,28 @@ class Planner {
         }
         if (members.size() < 2) return;
 
-        std::vector<uint32_t> mapped_items;
-        for (const auto& [map, target] : items) {
-            const uint32_t place = emitter_.emit_operator(target);
-            mapped_items.push_back(emitter_.emit("IFCMAPPEDITEM(" + reference(map) + "," + reference(place) + ");"));
-            if (map < spf_.max_id()) plan_.keep.push_back(map);
+        // The body is the parts' shapes, moved to where they were, so that clicking any of it selects the asset.
+        // If anything can't be moved, it's a mapped item of each part's body instead, as it was.
+        std::string why_not;
+        for (const Placed& placed : items) {
+            if (!placed.to) why_not = "a map placed from an origin that isn't a 3D axis placement";
+            else if (!baker_.can_move(placed.representation)) why_not = baker_.why_not();
+            if (!why_not.empty()) break;
+        }
+        std::vector<uint32_t> body_items;
+        std::string representation_type = "MappedRepresentation";
+        if (why_not.empty()) {
+            for (const Placed& placed : items) baker_.move(placed.representation, *placed.to, body_items, plan_.keep);
+            representation_type = baker_.representation_type(body_items);
+            ++plan_.assets_plain;
+        } else {
+            for (const Placed& placed : items) {
+                const uint32_t map = placed.map ? placed.map : map_of(placed.representation);
+                const uint32_t place = emitter_.emit_operator(placed.target);
+                body_items.push_back(emitter_.emit("IFCMAPPEDITEM(" + reference(map) + "," + reference(place) + ");"));
+                if (map < spf_.max_id()) plan_.keep.push_back(map);
+            }
+            ++plan_.assets_mapped[why_not];
         }
 
         const auto first = attributes_of(spf_.line(members[0]->id));
@@ -722,7 +758,8 @@ class Planner {
         for (const uint32_t id : refs_in(first[1])) plan_.keep.push_back(id);
         for (const uint32_t id : refs_in(first[5])) plan_.keep.push_back(id);
 
-        const uint32_t representation = emitter_.emit("IFCSHAPEREPRESENTATION(" + std::string(context) + ",'Body','MappedRepresentation'," + list_of(mapped_items) + ");");
+        const uint32_t representation =
+            emitter_.emit("IFCSHAPEREPRESENTATION(" + std::string(context) + ",'Body','" + representation_type + "'," + list_of(body_items) + ");");
         const uint32_t shape = emitter_.emit("IFCPRODUCTDEFINITIONSHAPE($,$,(" + reference(representation) + "));");
         const std::string guid = derived_guid(asset_key + "@" + stem_);
         const uint32_t element = emitter_.emit("IFCBUILDINGELEMENTPROXY('" + guid + "'," + owner + ",'" + site + "',$,'" + site + "'," + std::string(first[5]) + "," + reference(shape) + ",$,$);");
@@ -799,6 +836,7 @@ class Planner {
     const std::string& stem_;
     MergePlan& plan_;
     Emitter emitter_;
+    Baker baker_{spf_, emitter_, gone_};
     Extents extents_;
     double unit_ = 0;  // metres in the model's length unit; 0 if not known
     double gap_ = 0;  // in the model's length unit; 0 doesn't check

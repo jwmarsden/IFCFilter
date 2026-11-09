@@ -157,9 +157,24 @@ std::vector<std::string> csv_fields(const std::string& line) {
     return out;
 }
 
-constexpr const char* HEADER = "model,path,size_bytes,modified_utc,ifc_timestamp,sha256,previous_sha256,first_seen_utc,last_changed_utc,last_processed_utc";
+constexpr const char* HEADER = "model,path,size_bytes,modified_utc,ifc_timestamp,sha256,previous_sha256,first_seen_utc,last_changed_utc,last_processed_utc,build_sha256,shared_sha256";
 
 }  // namespace
+
+std::string sha256_of(std::string_view data) {
+    Sha256 hash;
+    hash.add(data.data(), data.size());
+    return hash.finish();
+}
+
+std::string sha256_of_file(const fs::path& path) {
+    std::ifstream in(path, std::ios::binary);
+    if (!in) return {};
+    Sha256 hash;
+    std::vector<char> buffer(1 << 20);
+    while (in.read(buffer.data(), static_cast<std::streamsize>(buffer.size())) || in.gcount() > 0) hash.add(buffer.data(), static_cast<size_t>(in.gcount()));
+    return hash.finish();
+}
 
 Source read_source(const fs::path& path) {
     Source source;
@@ -212,7 +227,8 @@ Register load_register(const fs::path& path) {
     if (!std::getline(in, line)) return sources;
     while (std::getline(in, line)) {
         const auto fields = csv_fields(line);
-        if (fields.size() != 10) throw std::runtime_error(path.string() + ": a line doesn't have 10 fields: " + line);
+        // A register from before builds were recorded has 10
+        if (fields.size() != 10 && fields.size() != 12) throw std::runtime_error(path.string() + ": a line doesn't have 12 fields: " + line);
         Source source;
         source.model = fields[0];
         source.path = fields[1];
@@ -224,6 +240,10 @@ Register load_register(const fs::path& path) {
         source.first_seen = fields[7];
         source.last_changed = fields[8];
         source.last_processed = fields[9];
+        if (fields.size() == 12) {
+            source.build = fields[10];
+            source.shared = fields[11];
+        }
         sources[source.model] = std::move(source);
     }
     return sources;
@@ -238,7 +258,7 @@ void save_register(const fs::path& path, const Register& sources) {
         out << HEADER << '\n';
         for (const auto& [model, s] : sources) {
             out << csv_field(s.model) << ',' << csv_field(s.path) << ',' << s.size << ',' << s.modified << ',' << csv_field(s.ifc_timestamp) << ',' << s.sha256 << ','
-                << s.previous_sha256 << ',' << s.first_seen << ',' << s.last_changed << ',' << s.last_processed << '\n';
+                << s.previous_sha256 << ',' << s.first_seen << ',' << s.last_changed << ',' << s.last_processed << ',' << s.build << ',' << s.shared << '\n';
         }
     }
     replace_file(temporary.string(), path.string());

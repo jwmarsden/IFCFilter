@@ -15,13 +15,15 @@ inline const std::string UNMANAGED_LEVEL = "Non-Managed Types";  // the level fo
 inline const std::set<std::string> NOT_A_SITE = {"", "N/A", "PLACEHOLDER", "Placeholder", "placeholder", "No Linear Assets Req", "-", "TBA", "TBC"};
 
 // An ID ending in xx, such as WSU398xx, stands for a range of sites, not one asset. One ending in six zeros,
-// such as ECL000000, is a class of asset with no site given yet: in LV, one covers a whole model.
+// such as ECL000000, is a class of asset with no site given yet: in LV, one covers a whole model. One with
+// no digits, such as HSP, PRF or WPNXXXXXX, is a class of asset too, as is a design tag such as LO or BOLLARD.
 inline bool is_one_site(const std::string& site) {
     const auto ends_with = [&](const char* end) {
         const std::string e(end);
         return site.size() > e.size() && site.compare(site.size() - e.size(), e.size(), e) == 0;
     };
-    return !NOT_A_SITE.count(site) && !ends_with("xx") && !ends_with("000000");
+    const bool numbered = std::any_of(site.begin(), site.end(), [](unsigned char c) { return std::isdigit(c); });
+    return numbered && !NOT_A_SITE.count(site) && !ends_with("xx") && !ends_with("000000");
 }
 
 // A site's asset type is how its ID starts: its letters, as in PU290101, LAR2909100 or GLT290001, and RC1, RC2

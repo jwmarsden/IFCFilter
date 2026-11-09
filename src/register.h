@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <map>
 #include <string>
+#include <string_view>
 
 namespace bimpass {
 
@@ -20,6 +21,8 @@ struct Source {
     std::string sha256;
     std::string previous_sha256;  // before it last changed
     std::string first_seen, last_changed, last_processed;
+    std::string build;            // a hash of what the outputs were made with: bimpass.exe, rules, mapping and options
+    std::string shared;           // a hash of the GUIDs it shared with other models in the run, which change in all of them
 };
 
 using Register = std::map<std::string, Source>;  // by model
@@ -28,6 +31,9 @@ enum class SourceState { New, Changed, Unchanged };
 
 // Reads the whole file, for its hash
 Source read_source(const std::filesystem::path& path);
+
+std::string sha256_of(std::string_view data);
+std::string sha256_of_file(const std::filesystem::path& path);  // empty if it can't be read
 
 SourceState state_of(const Register& sources, const Source& source);
 

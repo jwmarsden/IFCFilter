@@ -1,14 +1,15 @@
 #pragma once
 
-// Elements with the same site ID are one asset, so they can be written as one element. Geometry is
-// left as it is: each element's body becomes a mapped item of the merged element, placed where the
-// element was.
+// Elements with the same site ID are one asset, so they can be written as one element. Its body is the
+// elements' shapes, moved to where they were (see bake.h), or if any can't be, a mapped item of each
+// element's body, placed where the element was.
 
 #include "spf.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -42,6 +43,8 @@ struct MergePlan {
     uint64_t type_levels = 0, unmanaged = 0;
     uint64_t placed_on_levels = 0;                     // elements and assets placed from the level they're now on           // levels for asset types, and what's on the level for no site ID
     uint64_t quantities_combined = 0;                  // Quantities values worked out for assets as a whole
+    uint64_t assets_plain = 0;                         // assets whose body is their parts' shapes, moved
+    std::map<std::string, uint64_t> assets_mapped;     // assets left as mapped items of their parts, by the kind of shape that couldn't be moved
 };
 
 // candidates are the elements that could merge; gone says what isn't in the file being written. Parts of a site

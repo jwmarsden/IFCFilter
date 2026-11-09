@@ -4,6 +4,7 @@
 #include "compact.h"
 #include "ifc_access.h"
 #include "instance.h"
+#include "mapping.h"
 #include "merge.h"
 #include "register.h"
 #include "site.h"
@@ -404,13 +405,27 @@ class Writer {
             for_each_ref(text, [&](uint32_t next) { elements += next < model_.is_product.size() && model_.is_product[next]; });
             if (output_ == FEDERATION || elements) include(id);
         }
-        // A follower can only be reached from what it points at; it needs that here
+        // A follower can only be reached from what it points at; it needs that here. A style or colour map goes
+        // with the shape it's on, not with its colours: a merged asset's moved shapes share those with the shapes
+        // they were moved from, which aren't here.
         for (int pass = 0; pass < 2; ++pass) {
             for (const uint32_t id : followers) {
                 if (included_[id] || !rewrite(spf_.line(id), is_gone, WhenEmpty::Drop, text)) continue;
+                const auto type = spf_.type(id);
+                const size_t on = type == "IFCSTYLEDITEM" || type == "IFCINDEXEDCOLOURMAP" ? 0
+                                  : type == "IFCINDEXEDTRIANGLETEXTUREMAP" || type == "IFCINDEXEDPOLYGONALTEXTUREMAP" ? 1
+                                                                                                                        : SIZE_MAX;
+                if (on != SIZE_MAX) {
+                    const auto attributes = attributes_of(spf_.line(id));
+                    const auto shape = attributes.size() > on ? refs_in(attributes[on]) : std::vector<uint32_t>{};
+                    if (shape.size() == 1) {
+                        if (included(shape[0])) include(id);
+                        continue;
+                    }
+                }
                 bool applies = false;
                 for_each_ref(text, [&](uint32_t next) { applies = applies || included(next); });
-                if (applies && spf_.type(id) != "IFCSHAPEASPECT") include(id);
+                if (applies && type != "IFCSHAPEASPECT") include(id);
                 else if (spf_.type(id) == "IFCSHAPEASPECT") {
                     // Its product definition is its last reference
                     uint32_t last = 0;
@@ -507,7 +522,12 @@ std::vector<fs::path> models_in(const std::vector<std::string>& inputs) {
 
 // GUIDs in more than one model. This goes by text, before anything is parsed, so it also picks up other
 // strings the length of a GUID; that's harmless, as only a root's GUID is ever looked up in the result.
-std::unordered_set<std::string> guids_in_several(const std::vector<fs::path>& models, unsigned jobs) {
+struct SharedGuids {
+    std::unordered_set<std::string> guids;
+    std::vector<std::string> by_model;  // a hash of each model's GUIDs that are in another model too
+};
+
+SharedGuids guids_in_several(const std::vector<fs::path>& models, unsigned jobs) {
     std::vector<std::vector<std::string>> found(models.size());
     std::vector<std::string> errors(models.size());
     std::atomic<size_t> next{0};
@@ -533,16 +553,48 @@ std::unordered_set<std::string> guids_in_several(const std::vector<fs::path>& mo
     }
 
     std::unordered_map<std::string, size_t> first_model;
-    std::unordered_set<std::string> shared;
+    SharedGuids out;
     for (size_t model = 0; model < models.size(); ++model) {
-        for (std::string& guid : found[model]) {
+        for (const std::string& guid : found[model]) {
             const auto at = first_model.find(guid);
-            if (at == first_model.end()) first_model.emplace(std::move(guid), model);
-            else if (at->second != model) shared.insert(std::move(guid));
+            if (at == first_model.end()) first_model.emplace(guid, model);
+            else if (at->second != model) out.guids.insert(guid);
+        }
+    }
+    for (size_t model = 0; model < models.size(); ++model) {
+        std::vector<std::string> mine;
+        for (std::string& guid : found[model]) {
+            if (out.guids.count(guid)) mine.push_back(std::move(guid));
         }
         found[model] = {};
+        std::sort(mine.begin(), mine.end());
+        mine.erase(std::unique(mine.begin(), mine.end()), mine.end());
+        std::string joined;
+        for (const std::string& guid : mine) joined.append(guid).append(1, '\n');
+        out.by_model.push_back(sha256_of(joined));
     }
-    return shared;
+    return out;
+}
+
+// Where a model's outputs go
+std::vector<fs::path> outputs_of(const fs::path& model, const SplitOptions& options) {
+    const std::string stem = model.stem().string();
+    const std::string discipline = fs::absolute(model).parent_path().filename().string();
+    const auto out = fs::path(options.out_dir);
+    const std::string zipped = options.zip ? ZIPPED : "";
+    return {out / FOLDERS[FEDERATION] / discipline / (stem + SUFFIXES[FEDERATION]), out / FOLDERS[HIDDEN] / (stem + SUFFIXES[HIDDEN] + zipped),
+            out / FOLDERS[ENVELOPES] / (stem + SUFFIXES[ENVELOPES] + zipped), out / "manifest" / (stem + ".manifest.csv")};
+}
+
+// What a model's outputs depend on, apart from the model and the others in the run: this program, its rules
+// and mapping, and the options that change what it writes
+std::string build_of(const SplitOptions& options) {
+    std::ostringstream key;
+    key.precision(17);
+    key << sha256_of_file(program_path()) << '|' << (options.rules_path.empty() ? "" : sha256_of_file(options.rules_path)) << '|'
+        << (options.mapping_path.empty() ? "" : sha256_of_file(options.mapping_path)) << '|' << options.transparent << '|' << options.merge << '|' << options.instance << '|'
+        << options.compact << '|' << options.precision_mm << '|' << options.merge_gap_m << '|' << options.zip;
+    return sha256_of(key.str());
 }
 
 int split_model(const fs::path& input, const SplitOptions& options, const Rules& rules, const std::unordered_set<std::string>& shared) {
@@ -661,6 +713,26 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
                 gone[level] = true;
                 in_output[FEDERATION][level] = false;
             }
+            // A type whose elements were all merged goes with them, and its shapes, which the asset has its own
+            // copies of: otherwise the project's declaration of its types would keep it
+            std::unordered_map<uint32_t, bool> type_used;
+            for (const uint32_t id : relationships) {
+                if (spf.type(id) != "IFCRELDEFINESBYTYPE") continue;
+                const auto attributes = attributes_of(spf.line(id));
+                if (attributes.size() != 6) continue;
+                const auto type = refs_in(attributes[5]);
+                if (type.size() != 1) continue;
+                bool used = false, merged = false;
+                for (const uint32_t object : refs_in(attributes[4])) {
+                    if (merge.merged_into.count(object)) merged = true;
+                    else if (!gone[object]) used = true;
+                }
+                auto& known = type_used.emplace(type[0], false).first->second;
+                known = known || used || !merged;
+            }
+            for (const auto& [type, used] : type_used) {
+                if (!used) gone[type] = true;
+            }
         }
         writers[output] = std::make_unique<Writer>(spf, model, output, std::move(gone));
         Writer& writer = *writers[output];
@@ -727,6 +799,8 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     std::array<CompactStats, 3> compacted{};
     std::array<InstanceStats, 3> instanced{};
     std::array<TidyStats, 3> tidied{};
+    const Mapping mapping = options.mapping_path.empty() ? Mapping{} : load_mapping(options.mapping_path);
+    MappingStats mapped;
     for (const Output output : {FEDERATION, HIDDEN, ENVELOPES}) {
         const auto path = output_path(output);
         writers[output]->write(path.string(), layers);
@@ -734,6 +808,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         if (options.compact) converted[output] = breps_to_face_sets(path.string());
         if (options.instance) instanced[output] = instance(path.string(), options.precision_mm);
         if (options.compact) compacted[output] = compact(path.string(), options.precision_mm);
+        if (output == FEDERATION) mapped = apply_mapping(path.string(), mapping);
         const auto zipped = fs::path(path.string() + ZIPPED);
         // The federation file stays plain, as that's the format Bentley's list names
         if (!options.zip || output == FEDERATION) {
@@ -804,6 +879,16 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         std::cout << "  " << merge.merged_into.size() << " elements merged into " << merge.assets.size() << " by site ID or design tag, " << merge.openings_moved
                   << " openings now cutting the asset, " << merge.left_out_other << " left out as they're placed in a way that can't be repeated, "
                   << merge.left_out_extent << " left out as where they reach couldn't be worked out\n";
+        if (!merge.assets.empty()) {
+            uint64_t left_mapped = 0;
+            std::string why;
+            for (const auto& [type, count] : merge.assets_mapped) {
+                left_mapped += count;
+                why += (why.empty() ? "" : ", ") + std::to_string(count) + " for " + type;
+            }
+            std::cout << "  " << merge.assets_plain << " assets with their parts' shapes moved into them, " << left_mapped << " left as mapped items of their parts"
+                      << (why.empty() ? "" : " (" + why + ")") << "\n";
+        }
         if (merge.quantities_combined) std::cout << "  " << merge.quantities_combined << " Quantities values worked out for assets as a whole\n";
         if (merge.placed_on_levels) std::cout << "  " << merge.placed_on_levels << " elements and assets placed from the level they're on\n";
         if (merge.type_levels || merge.unmanaged) {
@@ -850,6 +935,12 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         if (federated.no_area_left) std::cout << "  warning: " << federated.no_area_left << " faces with no area kept, as all their set had\n";
         if (!federated.rounded) std::cout << "  warning: the model's length unit isn't plain SI, so coordinates weren't rounded\n";
     }
+    if (!mapping.empty()) {
+        std::cout << "  federate mapped: " << mapped.sets_deleted << " sets deleted, " << mapped.sets_renamed << " renamed, " << mapped.sets_emptied << " left empty so gone; "
+                  << mapped.properties_deleted << " properties deleted, " << mapped.properties_renamed << " renamed; " << mapped.blanked << " attributes left empty, "
+                  << mapped.retyped << " elements given another class\n";
+        for (const std::string& warning : mapped.warnings) std::cout << "  warning: " << warning << "\n";
+    }
     uint64_t dropped = 0;
     for (const auto& writer : writers) dropped += writer->dropped();
     if (dropped) std::cout << "  warning: " << dropped << " lines couldn't be written without what they refer to\n";
@@ -867,6 +958,7 @@ std::string worker_command(const fs::path& model, const SplitOptions& options, c
     command << quote(program_path()) << " split " << quote(model.string()) << " --out " << quote(options.out_dir) << " --worker-shared " << quote(shared.string());
     if (!options.rules_path.empty()) command << " --rules " << quote(options.rules_path);
     command << " --transparent " << options.transparent << " --precision-mm " << options.precision_mm;
+    if (!options.mapping_path.empty()) command << " --mapping " << quote(options.mapping_path);
     if (!options.merge) command << " --no-merge";
     command << " --merge-gap " << options.merge_gap_m;
     if (!options.instance) command << " --no-instance";
@@ -1010,24 +1102,61 @@ int split(const SplitOptions& options) {
     }
 
     const Rules rules = Rules::load(options.rules_path);
+    if (!options.mapping_path.empty()) load_mapping(options.mapping_path);  // so a mistake in it stops the run before it starts
     const unsigned threads = std::max(1u, std::thread::hardware_concurrency());
     const unsigned jobs = static_cast<unsigned>(std::min<size_t>(options.jobs > 0 ? static_cast<unsigned>(options.jobs) : threads, models.size()));
-    const auto shared = models.size() > 1 ? guids_in_several(models, jobs) : std::unordered_set<std::string>{};
+    const SharedGuids found = models.size() > 1 ? guids_in_several(models, jobs) : SharedGuids{{}, std::vector<std::string>(models.size(), sha256_of(""))};
+    const auto& shared = found.guids;
     const auto register_path = fs::path(options.out_dir) / "register.csv";
     Register sources = load_register(register_path);
+
+    // A model whose input, build and shared GUIDs are as they were when its outputs were written, and whose
+    // outputs are all there, would come out the same, so it's left as it is
+    const std::string build = build_of(options);
+    std::unordered_map<std::string, std::string> shared_of;
+    for (size_t i = 0; i < models.size(); ++i) shared_of[models[i].string()] = found.by_model[i];
+    std::vector<fs::path> to_do;
+    {
+        std::vector<std::string> hashes(models.size());
+        std::atomic<size_t> next{0};
+        const auto hash_models = [&]() {
+            for (size_t i = next++; i < models.size(); i = next++) {
+                const auto known = sources.find(models[i].stem().string());
+                if (options.all || known == sources.end() || known->second.build != build || known->second.shared != found.by_model[i]) continue;
+                hashes[i] = sha256_of_file(models[i]);
+            }
+        };
+        std::vector<std::thread> hashing;
+        for (unsigned i = 1; i < jobs; ++i) hashing.emplace_back(hash_models);
+        hash_models();
+        for (auto& thread : hashing) thread.join();
+        for (size_t i = 0; i < models.size(); ++i) {
+            const auto known = sources.find(models[i].stem().string());
+            const auto outputs = outputs_of(models[i], options);
+            const bool same = !hashes[i].empty() && known != sources.end() && known->second.sha256 == hashes[i] &&
+                              std::all_of(outputs.begin(), outputs.end(), [](const fs::path& p) { return fs::exists(p); });
+            if (!same) to_do.push_back(models[i]);
+        }
+    }
+    std::cout << to_do.size() << " of " << models.size() << " models to do; the rest have the same input, build and shared GUIDs as their outputs"
+              << (options.all ? "" : " (--all does them all)") << "\n" << std::flush;
+    if (to_do.empty()) return 0;
     int result = 0;
     size_t failed = 0;
     std::array<size_t, 3> states{};
     bool register_saved = true;
     // The source is read first, so that the register says what was there when the model was read
-    const auto finished = [&](const fs::path&, const Source& source, int code) {
+    const auto finished = [&](const fs::path& model, const Source& source, int code) {
         if (code) {
             result = code;
             ++failed;
             return;
         }
         ++states[static_cast<size_t>(state_of(sources, source))];
-        record(sources, source);
+        Source done = source;
+        done.build = build;
+        done.shared = shared_of[model.string()];
+        record(sources, std::move(done));
         // As it goes, so that a stopped run still counts. The next save has everything, so this can't lose the run.
         try {
             save_register(register_path, sources);
@@ -1037,9 +1166,9 @@ int split(const SplitOptions& options) {
         }
     };
     if (jobs > 1) {
-        run_in_parallel(models, options, jobs, shared, finished);
+        run_in_parallel(to_do, options, jobs, shared, finished);
     } else {
-        for (const fs::path& model : models) {
+        for (const fs::path& model : to_do) {
             // One bad model shouldn't lose the rest of a long run
             int code = 1;
             Source source;
@@ -1057,7 +1186,7 @@ int split(const SplitOptions& options) {
     }
     std::cout << "register: " << states[static_cast<size_t>(SourceState::New)] << " new, " << states[static_cast<size_t>(SourceState::Changed)] << " changed, "
               << states[static_cast<size_t>(SourceState::Unchanged)] << " unchanged\n";
-    if (failed) std::cerr << failed << " of " << models.size() << " models failed\n";
+    if (failed) std::cerr << failed << " of " << to_do.size() << " models failed\n";
     return result;
 }
 

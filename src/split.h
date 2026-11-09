@@ -9,6 +9,7 @@ struct SplitOptions {
     std::vector<std::string> inputs;  // models, and folders of them
     std::string out_dir;
     std::string rules_path;      // see rules.txt; none if empty
+    std::string mapping_path;    // see mapping.h: what to do with classes, attributes, sets and properties in the federation file; none if empty
     double transparent = 0.7;    // as AMISChatter's ifc_geometry: at least this see-through is an envelope
     bool merge = true;           // see merge.h
     bool instance = true;        // see instance.h
@@ -16,6 +17,7 @@ struct SplitOptions {
     double precision_mm = 0.1;
     double merge_gap_m = 5;      // parts of a site further apart than this aren't one thing; 0 doesn't check
     bool zip = true;             // the hidden and envelope files as .ifczip, not .ifc; the federation file is always .ifc
+    bool all = false;            // do every model, even those that would come out the same
     int jobs = 0;                // models at once, as memory allows; 0 for as many as there are processors
     std::string worker_shared;   // for one model of a parallel run: the file of GUIDs in several models
 };
