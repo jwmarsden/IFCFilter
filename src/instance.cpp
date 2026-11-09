@@ -14,7 +14,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 namespace {
 
 // A smaller shape takes about as much to place as it does to write out
@@ -531,4 +531,4 @@ InstanceStats instance(const std::string& path, double precision_mm) {
     return stats;
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

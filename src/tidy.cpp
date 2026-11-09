@@ -17,20 +17,12 @@
 #include <unordered_set>
 #include <vector>
 
-#ifndef BIMPASS_VERSION
-#define BIMPASS_VERSION "dev"
+#ifndef IFCFILTER_VERSION
+#define IFCFILTER_VERSION "dev"
 #endif
 
-namespace bimpass {
+namespace ifcfilter {
 namespace {
-
-// Used to work out what merges, and not wanted after
-const std::set<std::string> CULLED_PSETS = {"Quantities"};
-const std::string COMPONENT_PROPERTY = "AssetComponent";
-const std::string TYPE_PROPERTY = "AssetType";
-const std::string DUPLICATE_PSET = "Data";  // Revit's, mostly repeating Asset, Location and the others
-const std::string PROJECT_PSET = "Project";
-const std::string SITE_NAME = "Site";  // the project's, rather than Revit's "Default"
 
 std::string_view trimmed(std::string_view text) {
     while (!text.empty() && std::isspace(static_cast<unsigned char>(text.front()))) text.remove_prefix(1);
@@ -92,7 +84,7 @@ std::string new_header(std::string_view header, const std::string& file_name, co
         const auto attributes = attributes_of(std::string_view(out).substr(name_at, name_size));
         if (attributes.size() == 7) {
             const std::string before = raw_string(attributes[4]);
-            const std::string preprocessor = std::string("BIMPass ") + BIMPASS_VERSION + (before.empty() ? "" : " (from " + before + ")");
+            const std::string preprocessor = std::string("IFCFilter ") + IFCFILTER_VERSION + (before.empty() ? "" : " (from " + before + ")");
             const std::string text = "FILE_NAME(" + quoted(file_name) + "," + quoted(now) + "," + std::string(trimmed(attributes[2])) + "," + std::string(trimmed(attributes[3])) + "," +
                                      quoted(preprocessor) + "," + std::string(trimmed(attributes[5])) + "," + std::string(trimmed(attributes[6])) + ");";
             out.replace(name_at, name_size, text);
@@ -103,7 +95,7 @@ std::string new_header(std::string_view header, const std::string& file_name, co
         const auto attributes = attributes_of(std::string_view(out).substr(description_at, description_size));
         const auto list = attributes.empty() ? std::string_view() : trimmed(attributes[0]);
         if (attributes.size() == 2 && list.size() >= 2 && list.front() == '(' && list.back() == ')') {
-            const std::string note = quoted("BIMPass [Source: " + source + ", " + now + "]");
+            const std::string note = quoted("IFCFilter [Source: " + source + ", " + now + "]");
             const std::string inner(list.substr(1, list.size() - 2));
             const std::string text = "FILE_DESCRIPTION((" + inner + (trimmed(inner).empty() ? "" : ",") + note + ")," + std::string(trimmed(attributes[1])) + ");";
             out.replace(description_at, description_size, text);
@@ -136,7 +128,7 @@ TidyStats tidy(const std::string& path, const std::string& source) {
                 const auto attributes = attributes_of(spf.line(id));
                 if (attributes.size() != 5) continue;
                 set_names[id] = raw_string(attributes[2]);
-                if (CULLED_PSETS.count(set_names[id])) {
+                if (schema().culled_sets.count(set_names[id])) {
                     culled[id] = true;
                     ++stats.sets_dropped;
                 }
@@ -195,7 +187,7 @@ TidyStats tidy(const std::string& path, const std::string& source) {
             if (sets == sets_of.end()) return false;
             for (const uint32_t set : sets->second) {
                 const auto set_name = set_names.find(set);
-                if (set == except || set_name == set_names.end() || set_name->second == DUPLICATE_PSET || culled[set]) continue;
+                if (set == except || set_name == set_names.end() || set_name->second == schema().duplicate_set || culled[set]) continue;
                 for (const uint32_t property : refs_in(attributes_of(spf.line(set))[4])) {
                     const auto parts = attributes_of(spf.line(property));
                     if (parts.size() > 2 && raw_string(parts[0]) == name && trimmed(parts[2]) == value) return true;
@@ -205,7 +197,7 @@ TidyStats tidy(const std::string& path, const std::string& source) {
         };
         for (const auto& [set, objects] : objects_of) {
             const auto name = set_names.find(set);
-            if (name == set_names.end() || name->second != DUPLICATE_PSET || culled[set] || objects.empty()) continue;
+            if (name == set_names.end() || schema().duplicate_set.empty() || name->second != schema().duplicate_set || culled[set] || objects.empty()) continue;
             const auto attributes = attributes_of(spf.line(set));
             const auto properties = refs_in(attributes[4]);
             std::vector<uint32_t> kept;
@@ -279,7 +271,7 @@ TidyStats tidy(const std::string& path, const std::string& source) {
             std::vector<std::string> attributes;
             for (const auto a : attributes_of(line)) attributes.emplace_back(a);
             if (attributes.size() < 4) continue;
-            const std::string site = value_of(id, SITE_PSETS, SITE_PROPERTY);
+            const std::string site = value_of(id, schema().site_sets, schema().site_property);
             bool changed = false;
             if (is_one_site(site)) {
                 // An asset's part is named after its site, and described as its component
@@ -288,7 +280,7 @@ TidyStats tidy(const std::string& path, const std::string& source) {
                     changed = true;
                     ++stats.named;
                 }
-                const std::string component = value_of(id, SITE_PSETS, COMPONENT_PROPERTY);
+                const std::string component = value_of(id, schema().site_sets, schema().component_property);
                 if (!NOT_A_SITE.count(component) && raw_string(attributes[3]) != component) {
                     attributes[3] = "'" + component + "'";
                     changed = true;
@@ -315,14 +307,14 @@ TidyStats tidy(const std::string& path, const std::string& source) {
         uint32_t next_id = max_id + 2;  // after the organization and application below
         for (const auto& [set, objects] : objects_of) {
             const auto name = set_names.find(set);
-            if (name == set_names.end() || !SITE_PSETS.count(name->second) || culled[set]) continue;
+            if (name == set_names.end() || !schema().site_sets.count(name->second) || culled[set]) continue;
             const std::string set_line(current(set));
             const auto set_attributes = attributes_of(set_line);
             uint32_t wrong = 0;
             std::string written;
             for (const uint32_t property : refs_in(set_attributes[4])) {
                 const auto parts = attributes_of(spf.line(property));
-                if (parts.size() > 2 && raw_string(parts[0]) == TYPE_PROPERTY) {
+                if (parts.size() > 2 && raw_string(parts[0]) == schema().type_property) {
                     wrong = property;
                     written = raw_string(parts[2]);
                 }
@@ -330,7 +322,7 @@ TidyStats tidy(const std::string& path, const std::string& source) {
             if (!wrong) continue;
             std::set<std::string> types;
             for (const uint32_t object : objects) {
-                const std::string site = value_of(object, SITE_PSETS, SITE_PROPERTY);
+                const std::string site = value_of(object, schema().site_sets, schema().site_property);
                 types.insert(is_one_site(site) ? asset_type_of(site) : std::string());
             }
             if (types.size() != 1 || types.begin()->empty() || *types.begin() == written) {
@@ -365,9 +357,9 @@ TidyStats tidy(const std::string& path, const std::string& source) {
         // The project is named after the model and its package, the site after the project, buildings after the zone; levels have no Revit level type
         std::map<std::string, size_t> packages, zones;
         for (const auto& [object, sets] : sets_of) {
-            const std::string package = value_of(object, {PROJECT_PSET}, "PackageName");
+            const std::string package = value_of(object, {schema().project_set}, schema().long_name_property);
             if (!package.empty()) ++packages[package];
-            const std::string zone = value_of(object, {PROJECT_PSET}, "Zone");
+            const std::string zone = value_of(object, {schema().project_set}, schema().building_property);
             if (!zone.empty()) ++zones[zone];
         }
         const auto most = [](const std::map<std::string, size_t>& counts) {
@@ -389,8 +381,9 @@ TidyStats tidy(const std::string& path, const std::string& source) {
             if (type == "IFCPROJECT" && attributes.size() == 9) {
                 attributes[2] = quoted(model);
                 if (!package.empty()) attributes[5] = "'" + package + "'";
-            } else if (type == "IFCSITE" && attributes.size() >= 3) {
-                attributes[2] = quoted(SITE_NAME);
+            } else if (type == "IFCSITE" && attributes.size() >= 3 && !schema().site_name.empty()) {
+                const std::string& site_name = schema().site_name;
+                attributes[2] = quoted(site_name);
             } else if (type == "IFCBUILDING" && attributes.size() >= 8 && !zone.empty()) {
                 attributes[2] = "'" + zone + "'";
             } else if (type == "IFCBUILDINGSTOREY" && attributes.size() >= 5) {
@@ -401,7 +394,7 @@ TidyStats tidy(const std::string& path, const std::string& source) {
             rewritten[id] = with_attributes(line, attributes);
         }
 
-        // Owner histories say BIMPass changed what they're on, now
+        // Owner histories say IFCFilter changed what they're on, now
         const uint32_t organization = max_id, application = max_id + 1;
         for (const uint32_t id : histories) {
             const auto line = spf.line(id);
@@ -440,8 +433,8 @@ TidyStats tidy(const std::string& path, const std::string& source) {
             out << (done != rewritten.end() ? std::string_view(done->second) : line) << '\n';
         }
         if (stats.histories) {
-            out << "#" << organization << "=IFCORGANIZATION($,'BIMPass',$,$,$);\n";
-            out << "#" << application << "=IFCAPPLICATION(#" << organization << "," << quoted(BIMPASS_VERSION) << ",'BIMPass','BIMPass');\n";
+            out << "#" << organization << "=IFCORGANIZATION($,'IFCFilter',$,$,$);\n";
+            out << "#" << application << "=IFCAPPLICATION(#" << organization << "," << quoted(IFCFILTER_VERSION) << ",'IFCFilter','IFCFilter');\n";
         }
         for (const std::string& line : added) out << line << '\n';
         for (const auto& [name, id] : relationships) {
@@ -454,4 +447,4 @@ TidyStats tidy(const std::string& path, const std::string& source) {
     return stats;
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

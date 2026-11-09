@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 namespace {
 
 std::string_view trimmed(std::string_view text) {
@@ -263,4 +263,4 @@ BrepStats breps_to_face_sets(const std::string& path) {
     return stats;
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

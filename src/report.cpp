@@ -20,7 +20,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 namespace {
 
 double megabytes(uint64_t bytes) { return bytes / 1048576.0; }
@@ -185,6 +185,7 @@ void write_csv(const std::string& path, const std::map<std::pair<std::string, st
 
 int report(const ReportOptions& options) {
     const auto start = std::chrono::steady_clock::now();
+    load_schema(options.rules_path);
     const FileBytes bytes(options.ifc_path);
 
     ifcopenshell::file file(options.ifc_path);
@@ -229,7 +230,7 @@ int report(const ReportOptions& options) {
 
     std::map<std::string, PsetTotals> psets;
     std::unordered_set<uint32_t> properties_seen;
-    std::unordered_map<uint32_t, std::string> site_of;  // an element can hold one in both Asset and Data
+    std::unordered_map<uint32_t, std::string> site_of;  // an element can hold one in more than one site-set
     uint64_t property_bytes = 0;
     for (const auto& instance : all_of(file, "IfcRelDefinesByProperties")) {
         const auto relation = instance.as<express::entity>();
@@ -245,7 +246,7 @@ int report(const ReportOptions& options) {
             totals.bytes += bytes.of(definition.id());
             property_bytes += bytes.of(definition.id());
         }
-        const bool holds_site = SITE_PSETS.count(name) != 0;
+        const bool holds_site = schema().site_sets.count(name) != 0;
         for (const auto& p : links(definition, "HasProperties")) {
             const auto property = p.as<express::entity>();
             if (first && properties_seen.insert(property.id()).second) {
@@ -253,7 +254,7 @@ int report(const ReportOptions& options) {
                 totals.bytes += bytes.of(property.id());
                 property_bytes += bytes.of(property.id());
             }
-            if (holds_site && text(property, "Name") == SITE_PROPERTY) {
+            if (holds_site && text(property, "Name") == schema().site_property) {
                 const std::string site = nominal_text(property);
                 for (const auto& element : related) {
                     auto& held = site_of[element.id()];
@@ -366,4 +367,4 @@ int report(const ReportOptions& options) {
     return 0;
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

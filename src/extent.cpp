@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 namespace {
 
 bool number_in(std::string_view text, double& out) {
@@ -275,4 +275,4 @@ std::unordered_set<uint32_t> sets_openings_touch(const SpfFile& spf) {
     return sets;
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

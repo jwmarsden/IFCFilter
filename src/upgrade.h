@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 
 // The schema a model's header names, without reading the rest of it
 std::string schema_in_header(const std::filesystem::path& path);
@@ -23,4 +23,4 @@ struct Upgrade {
 // type, what its attributes are called, and that each value fits, down to the type of what it refers to.
 Upgrade upgrade_to_ifc4(const SpfFile& spf, const std::filesystem::path& path);
 
-}  // namespace bimpass
+}  // namespace ifcfilter

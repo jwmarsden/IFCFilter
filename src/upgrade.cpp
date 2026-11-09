@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace bimpass {
+namespace ifcfilter {
 namespace fs = std::filesystem;
 namespace {
 
@@ -292,4 +292,4 @@ Upgrade upgrade_to_ifc4(const SpfFile& spf, const fs::path& path) {
     return Upgrader(spf).run(path);
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

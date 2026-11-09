@@ -14,7 +14,7 @@
 #include <system_error>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 namespace {
 
 namespace fs = std::filesystem;
@@ -264,4 +264,4 @@ void save_register(const fs::path& path, const Register& sources) {
     replace_file(temporary.string(), path.string());
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

@@ -4,13 +4,81 @@
 
 #include <algorithm>
 #include <cctype>
+#include <fstream>
 #include <set>
+#include <stdexcept>
 #include <string>
 
-namespace bimpass {
+namespace ifcfilter {
 
-inline const std::set<std::string> SITE_PSETS = {"Asset", "Data"};  // the FD models keep everything in Data
-inline const std::string SITE_PROPERTY = "SiteID";
+// What a project calls the sets and properties IFCFilter reads and writes. None are named here: they come from
+// the rules file (see rules.txt.example), and what isn't given is left alone.
+struct Schema {
+    std::set<std::string> site_sets;    // site-set: the sets that hold an element's site ID
+    std::string site_set_preferred;     // the first site-set, if they differ
+    std::string site_property;          // site-id
+    std::string type_property;          // asset-type: corrected to what the site ID starts with
+    std::string component_property;     // asset-component: an asset's parts are described as it
+    std::set<std::string> design_sets;  // design-set: the sets that hold the design tag
+    std::string design_set_preferred;   // the first design-set, if they differ
+    std::string design_property;        // design-tag
+    std::string quantity_set;           // quantity-set: sizes worked out for an asset as a whole
+    std::string length_property, width_property, height_property;  // quantity-length, -width, -height
+    std::set<std::string> culled_sets;  // cull-set: used to work out what merges, and not wanted after
+    std::string duplicate_set;          // duplicate-set: what it repeats from other sets is left out
+    std::string project_set;            // project-set: where the next two are
+    std::string long_name_property;     // project-long-name: the project's long name
+    std::string building_property;      // building-name: the building's name
+    std::string site_name;              // site-name: the site's name, rather than Revit's "Default"
+};
+
+inline Schema& schema() {
+    static Schema s;
+    return s;
+}
+
+// Takes one line of the rules file into the schema; false if it's another kind of rule
+inline bool schema_rule(const std::string& action, const std::string& text) {
+    Schema& s = schema();
+    const auto add = [&](std::set<std::string>& sets, std::string& preferred) {
+        if (sets.empty()) preferred = text;
+        sets.insert(text);
+    };
+    if (action == "site-set") add(s.site_sets, s.site_set_preferred);
+    else if (action == "site-id") s.site_property = text;
+    else if (action == "asset-type") s.type_property = text;
+    else if (action == "asset-component") s.component_property = text;
+    else if (action == "design-set") add(s.design_sets, s.design_set_preferred);
+    else if (action == "design-tag") s.design_property = text;
+    else if (action == "quantity-set") s.quantity_set = text;
+    else if (action == "quantity-length") s.length_property = text;
+    else if (action == "quantity-width") s.width_property = text;
+    else if (action == "quantity-height") s.height_property = text;
+    else if (action == "cull-set") s.culled_sets.insert(text);
+    else if (action == "duplicate-set") s.duplicate_set = text;
+    else if (action == "project-set") s.project_set = text;
+    else if (action == "project-long-name") s.long_name_property = text;
+    else if (action == "building-name") s.building_property = text;
+    else if (action == "site-name") s.site_name = text;
+    else return false;
+    return true;
+}
+
+// The schema lines of a rules file, for commands that don't split
+inline void load_schema(const std::string& path) {
+    if (path.empty()) return;
+    std::ifstream in(path);
+    if (!in) throw std::runtime_error(path + ": can't be read");
+    std::string line;
+    while (std::getline(in, line)) {
+        if (line.empty() || line[0] == '#') continue;
+        const auto space = line.find(' ');
+        if (space == std::string::npos) continue;
+        const auto start = line.find_first_not_of(' ', space);
+        if (start != std::string::npos) schema_rule(line.substr(0, space), line.substr(start));
+    }
+}
+
 inline const std::string UNMANAGED_LEVEL = "Non-Managed Types";  // the level for what has no site ID
 inline const std::set<std::string> NOT_A_SITE = {"", "N/A", "PLACEHOLDER", "Placeholder", "placeholder", "No Linear Assets Req", "-", "TBA", "TBC"};
 
@@ -41,11 +109,8 @@ inline std::string asset_type_of(const std::string& site) {
 
 // Where there's no site ID, the design tag can say what goes together, if it's an ID: some models give
 // every element the same one, or a description, and those aren't
-inline const std::set<std::string> DESIGN_PSETS = {"Quantities", "Data", "General", "Model Properties"};
-inline const std::string DESIGN_PROPERTY = "DesignTag";
-
 inline bool looks_like_an_id(const std::string& tag) {
     return is_one_site(tag) && std::none_of(tag.begin(), tag.end(), [](unsigned char c) { return std::isspace(c); });
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-project(BIMPass VERSION 0.1.0 LANGUAGES CXX)
+project(IFCFilter VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -33,28 +33,28 @@ else()
     add_library(IfcOpenShell::parse_schema_ifc4 ALIAS parse_schema_ifc4)
 endif()
 
-add_executable(bimpass src/main.cpp src/report.cpp src/split.cpp src/merge.cpp src/bake.cpp src/extent.cpp src/mapping.cpp src/instance.cpp src/rigid.cpp src/register.cpp src/system.cpp src/upgrade.cpp src/spf.cpp src/breps.cpp src/compact.cpp src/tidy.cpp src/zip.cpp)
+add_executable(ifcfilter src/main.cpp src/report.cpp src/split.cpp src/merge.cpp src/bake.cpp src/extent.cpp src/mapping.cpp src/instance.cpp src/rigid.cpp src/register.cpp src/system.cpp src/upgrade.cpp src/spf.cpp src/breps.cpp src/compact.cpp src/tidy.cpp src/zip.cpp)
 # The schemas are plugins, loaded when a file is opened, so nothing links to them
-add_dependencies(bimpass IfcOpenShell::parse_schema_ifc2x3 IfcOpenShell::parse_schema_ifc4)
-target_compile_definitions(bimpass PRIVATE BOOST_OPTIONAL_USE_OLD_DEFINITION_OF_NONE BIMPASS_VERSION="${PROJECT_VERSION}")
+add_dependencies(ifcfilter IfcOpenShell::parse_schema_ifc2x3 IfcOpenShell::parse_schema_ifc4)
+target_compile_definitions(ifcfilter PRIVATE BOOST_OPTIONAL_USE_OLD_DEFINITION_OF_NONE IFCFILTER_VERSION="${PROJECT_VERSION}")
 if(MSVC)
-    target_compile_options(bimpass PRIVATE /W4 /bigobj /utf-8)
+    target_compile_options(ifcfilter PRIVATE /W4 /bigobj /utf-8)
 else()
-    target_compile_options(bimpass PRIVATE -Wall -Wextra)
+    target_compile_options(ifcfilter PRIVATE -Wall -Wextra)
 endif()
-target_link_libraries(bimpass PRIVATE IfcOpenShell::IfcParse Boost::headers ZLIB::ZLIB)
+target_link_libraries(ifcfilter PRIVATE IfcOpenShell::IfcParse Boost::headers ZLIB::ZLIB)
 if(WIN32)
-    target_compile_definitions(bimpass PRIVATE NOMINMAX)
+    target_compile_definitions(ifcfilter PRIVATE NOMINMAX)
     # IfcOpenShell only builds as shared libraries, so its DLLs go beside the program. Schema plugins
     # are looked for beside the parser's DLL, and aren't linked, so they have to be named.
-    add_custom_command(TARGET bimpass POST_BUILD
+    add_custom_command(TARGET ifcfilter POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_RUNTIME_DLLS:bimpass>
+            $<TARGET_RUNTIME_DLLS:ifcfilter>
             $<TARGET_FILE:IfcOpenShell::parse_schema_ifc2x3>
             $<TARGET_FILE:IfcOpenShell::parse_schema_ifc4>
-            $<TARGET_FILE_DIR:bimpass>
+            $<TARGET_FILE_DIR:ifcfilter>
         COMMAND_EXPAND_LISTS)
 endif()
 
 include(GNUInstallDirs)
-install(TARGETS bimpass RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS ifcfilter RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

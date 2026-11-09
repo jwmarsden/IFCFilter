@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 
 class Baker {
   public:
@@ -53,4 +53,4 @@ class Baker {
     std::unordered_map<uint32_t, std::vector<uint32_t>> followers_;  // item, and its styled items, colour maps and texture maps
 };
 
-}  // namespace bimpass
+}  // namespace ifcfilter

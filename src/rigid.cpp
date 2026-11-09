@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-namespace bimpass {
+namespace ifcfilter {
 namespace {
 
 std::optional<Vector> direction(const SpfFile& spf, std::string_view reference_text, const Vector& otherwise) {
@@ -178,4 +178,4 @@ uint32_t Emitter::emit_identity() {
     return identity_;
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

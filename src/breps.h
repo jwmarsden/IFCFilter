@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <string>
 
-namespace bimpass {
+namespace ifcfilter {
 
 struct BrepStats {
     uint64_t bytes_before = 0, bytes_after = 0;
@@ -23,4 +23,4 @@ struct BrepStats {
 // Goes before instance() and compact().
 BrepStats breps_to_face_sets(const std::string& path);
 
-}  // namespace bimpass
+}  // namespace ifcfilter

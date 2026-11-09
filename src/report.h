@@ -3,11 +3,12 @@
 #include <cstddef>
 #include <string>
 
-namespace bimpass {
+namespace ifcfilter {
 
 struct ReportOptions {
     std::string ifc_path;
     std::string csv_path;     // per-family table, skipped if empty
+    std::string rules_path;     // for its site-set and site-id; none if empty
     std::string suspects_path;  // per-element list of suspiciously large geometry, to look at; skipped if empty
     size_t top_families = 15;
     size_t heavy_faces = 5000;    // faces on an element that count as a tessellation explosion
@@ -18,4 +19,4 @@ struct ReportOptions {
 // site IDs are used. Writes nothing but the optional CSV. Returns a process exit code.
 int report(const ReportOptions& options);
 
-}  // namespace bimpass
+}  // namespace ifcfilter

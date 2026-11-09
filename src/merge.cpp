@@ -17,7 +17,7 @@
 #include <string_view>
 #include <unordered_set>
 
-namespace bimpass {
+namespace ifcfilter {
 namespace {
 
 // What's between a string's quotes, wherever it is in a value such as IFCTEXT('X')
@@ -516,17 +516,18 @@ class Planner {
             const auto line = spf_.line(property);
             if (line.empty()) continue;
             set.properties.emplace_back(line.substr(line.find('=')), property);
-            if (!SITE_PSETS.count(name) && !DESIGN_PSETS.count(name)) continue;
+            const Schema& s = schema();
+            if (!s.site_sets.count(name) && !s.design_sets.count(name)) continue;
             const auto parts = attributes_of(line);
             if (parts.size() <= 2) continue;
             const std::string property_name = quoted_in(parts[0]);
-            if (SITE_PSETS.count(name) && property_name == SITE_PROPERTY) set.site = quoted_in(parts[2]);
-            if (DESIGN_PSETS.count(name) && property_name == DESIGN_PROPERTY) set.design = quoted_in(parts[2]);
+            if (s.site_sets.count(name) && property_name == s.site_property) set.site = quoted_in(parts[2]);
+            if (s.design_sets.count(name) && property_name == s.design_property) set.design = quoted_in(parts[2]);
         }
         return set;
     }
 
-    // Blank if it has none. Asset is preferred to Data, though they've not been seen to differ.
+    // Blank if it has none. The first site-set is preferred, though they've not been seen to differ.
     std::string site_of(uint32_t element) {
         std::string site;
         const auto sets = sets_of_.find(element);
@@ -534,13 +535,13 @@ class Planner {
         for (const uint32_t id : sets->second) {
             const PropertySet& set = property_set(id);
             if (set.site.empty()) continue;
-            if (set.name == "'Asset'") return set.site;
+            if (quoted_in(set.name) == schema().site_set_preferred) return set.site;
             site = set.site;
         }
         return site;
     }
 
-    // Blank if it has none. Quantities is preferred, though they've not been seen to differ.
+    // Blank if it has none. The first design-set is preferred, though they've not been seen to differ.
     std::string design_of(uint32_t element) {
         std::string design;
         const auto sets = sets_of_.find(element);
@@ -548,7 +549,7 @@ class Planner {
         for (const uint32_t id : sets->second) {
             const PropertySet& set = property_set(id);
             if (set.design.empty()) continue;
-            if (set.name == "'Quantities'") return set.design;
+            if (quoted_in(set.name) == schema().design_set_preferred) return set.design;
             design = set.design;
         }
         return design;
@@ -626,10 +627,12 @@ class Planner {
         return !out.empty();
     }
 
-    // Quantities for the asset as a whole: its height, width and length are those of all of it, in metres, as
+    // The quantity set for the asset as a whole: its height, width and length are those of all of it, in metres, as
     // for a gantry, the structure's, and other numbers that differ part to part are added up. Length is the
     // longer way across in plan, width the shorter, height up. What isn't a number, and differs, is left out.
     void combine_quantities(const std::vector<const Member*>& members, std::map<std::string_view, std::vector<uint32_t>>& kept) {
+        const Schema& s = schema();
+        if (s.quantity_set.empty()) return;
         std::string_view set_name;
         std::map<std::string, std::vector<std::string>> values;  // property, and its value on each part that has it
         std::map<std::string, std::string> wrapper;              // property, and the type its value is written as
@@ -638,7 +641,7 @@ class Planner {
             if (sets == sets_of_.end()) continue;
             for (const uint32_t id : sets->second) {
                 const PropertySet& set = property_set(id);
-                if (set.name != "'Quantities'") continue;
+                if (quoted_in(set.name) != s.quantity_set) continue;
                 set_name = set.name;
                 for (const auto& [text, property] : set.properties) {
                     const auto parts = attributes_of(spf_.line(property));
@@ -665,7 +668,7 @@ class Planner {
         }
         const double across_x = (box.high[0] - box.low[0]) * unit_, across_y = (box.high[1] - box.low[1]) * unit_;
         const std::map<std::string, double> sizes = {
-            {"Length", std::max(across_x, across_y)}, {"Width", std::min(across_x, across_y)}, {"Height", (box.high[2] - box.low[2]) * unit_}};
+            {s.length_property, std::max(across_x, across_y)}, {s.width_property, std::min(across_x, across_y)}, {s.height_property, (box.high[2] - box.low[2]) * unit_}};
 
         auto& list = kept[set_name];
         std::map<std::string, uint32_t> kept_by_name;
@@ -866,4 +869,4 @@ MergePlan plan_merge(const SpfFile& spf, const std::vector<uint32_t>& candidates
     return plan;
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

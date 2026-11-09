@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 
 using Vector = std::array<double, 3>;
 
@@ -67,4 +67,4 @@ class Emitter {
     std::unordered_map<std::string, uint32_t> written_;
 };
 
-}  // namespace bimpass
+}  // namespace ifcfilter

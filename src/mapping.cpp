@@ -23,7 +23,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace bimpass {
+namespace ifcfilter {
 namespace fs = std::filesystem;
 namespace {
 
@@ -665,4 +665,4 @@ int inventory(const std::vector<std::string>& inputs, const std::string& csv_pat
     return 0;
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

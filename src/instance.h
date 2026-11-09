@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <string>
 
-namespace bimpass {
+namespace ifcfilter {
 
 struct InstanceStats {
     uint64_t sets = 0;       // face sets in the file
@@ -20,4 +20,4 @@ struct InstanceStats {
 // A copy has the same faces and colours as what it's placed from, and all its points are within precision_mm
 InstanceStats instance(const std::string& path, double precision_mm);
 
-}  // namespace bimpass
+}  // namespace ifcfilter

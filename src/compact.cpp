@@ -19,7 +19,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 namespace {
 
 constexpr size_t MAX_POLYGON = 4096;  // ear clipping is slow past this, and a set this odd can stay as it is
@@ -665,4 +665,4 @@ CompactStats compact(const std::string& path, double precision_mm) {
     return stats;
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

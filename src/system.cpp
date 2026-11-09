@@ -16,7 +16,7 @@
 #include <thread>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 
 uint64_t available_memory() {
 #ifdef _WIN32
@@ -50,4 +50,4 @@ std::string program_path() {
 #endif
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

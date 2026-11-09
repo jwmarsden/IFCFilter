@@ -1,0 +1,50 @@
+# ifcfilter split rules. Copy to rules.txt and change to suit the models. One rule a line: an action, a space, then its text.
+# Lines starting with # are comments.
+
+# Where a thing goes, by text its family's name holds:
+# keep-largest  the largest solid is the thing, and the rest is detail inside it, for the hidden file
+# physical      transparent, but really there, so not an envelope
+# envelope      opaque, but not really there, so an envelope
+# hidden        really there, but out of sight, so all of it goes in the hidden file
+keep-largest HUME SLAB
+physical Grating
+physical Stair
+envelope Clearance
+hidden Pile Cap
+
+# For when the family doesn't say what a thing is, as with a road's meshes, by a property's value: SET.PROPERTY=VALUE
+hidden-if Corridor_Mesh_ID.Asset_Identifier_Label=Subbase
+envelope-if Corridor_Mesh_ID.Asset_Identifier_Label=Vehicle Envelope
+
+# Where the models keep their asset data. Anything left out is left alone: without site-set and site-id,
+# nothing merges by site.
+# site-set           a property set holding the site ID; the first is preferred where an element has several
+# site-id            the site ID property
+# asset-type         corrected to what the site ID starts with
+# asset-component    an asset's parts are described as this
+# design-set         a property set holding the design tag, for elements with no site ID; first preferred
+# design-tag         the design tag property
+# quantity-set       sizes are worked out for a merged asset as a whole in this set, as these three:
+# quantity-length, quantity-width, quantity-height
+# cull-set           left out of every output once merging has used it
+# duplicate-set      what it repeats from other sets on the same elements is left out of it
+# project-set        the set holding the next two
+# project-long-name  the project's long name, as most of the model has it
+# building-name      the building's name, as most of the model has it
+# site-name          the site's name, rather than Revit's "Default"
+site-set Asset
+site-id SiteID
+asset-type AssetType
+asset-component AssetComponent
+design-set Quantities
+design-tag DesignTag
+quantity-set Quantities
+quantity-length Length
+quantity-width Width
+quantity-height Height
+cull-set Quantities
+duplicate-set Data
+project-set Project
+project-long-name PackageName
+building-name Zone
+site-name Site

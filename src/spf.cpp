@@ -18,7 +18,7 @@
 #include <filesystem>
 #include <stdexcept>
 
-namespace bimpass {
+namespace ifcfilter {
 
 SpfFile::SpfFile(const std::string& path) {
 #ifdef _WIN32
@@ -256,4 +256,4 @@ bool rewrite(std::string_view line, const std::function<bool(uint32_t)>& gone, W
     return true;
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

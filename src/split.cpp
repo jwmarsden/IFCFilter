@@ -36,7 +36,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 namespace fs = std::filesystem;
 namespace {
 
@@ -81,7 +81,8 @@ struct Rules {
             const auto space = line.find(' ');
             const std::string action = line.substr(0, space);
             const std::string family = space == std::string::npos ? "" : line.substr(line.find_first_not_of(' ', space));
-            if (action == "keep-largest") rules.keep_largest.push_back(family);
+            if (schema_rule(action, family)) continue;
+            else if (action == "keep-largest") rules.keep_largest.push_back(family);
             else if (action == "physical") rules.physical.push_back(family);
             else if (action == "envelope") rules.envelope.push_back(family);
             else if (action == "hidden") rules.hidden.push_back(family);
@@ -889,7 +890,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
             std::cout << "  " << merge.assets_plain << " assets with their parts' shapes moved into them, " << left_mapped << " left as mapped items of their parts"
                       << (why.empty() ? "" : " (" + why + ")") << "\n";
         }
-        if (merge.quantities_combined) std::cout << "  " << merge.quantities_combined << " Quantities values worked out for assets as a whole\n";
+        if (merge.quantities_combined) std::cout << "  " << merge.quantities_combined << " " << schema().quantity_set << " values worked out for assets as a whole\n";
         if (merge.placed_on_levels) std::cout << "  " << merge.placed_on_levels << " elements and assets placed from the level they're on\n";
         if (merge.type_levels || merge.unmanaged) {
             std::cout << "  " << merge.type_levels << " asset type levels, holding " << merge.on_building << " sites of one element or asset, named after their sites, and "
@@ -908,10 +909,10 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     }
     {
         const TidyStats& federated = tidied[FEDERATION];
-        std::cout << "  federate tidied: " << federated.sets_dropped << " Quantities and Data sets left out, " << federated.repeats_dropped
+        std::cout << "  federate tidied: " << federated.sets_dropped << " culled and duplicate sets left out, " << federated.repeats_dropped
                   << " properties left out of Data as other sets have them, " << federated.named << " elements renamed, " << federated.described
-                  << " described as their asset component, " << federated.types_corrected << " AssetType values corrected to their site ID ("
-                  << federated.types_mixed << " sets on elements of different types left), " << federated.histories << " owner histories marked as changed by BIMPass\n";
+                  << " described as their asset component, " << federated.types_corrected << " " << schema().type_property << " values corrected to their site ID ("
+                  << federated.types_mixed << " sets on elements of different types left), " << federated.histories << " owner histories marked as changed by IFCFilter\n";
     }
     if (options.compact) {
         const BrepStats& federated = converted[FEDERATION];
@@ -1223,4 +1224,4 @@ int check(const std::vector<std::string>& inputs, const std::string& out_dir) {
     return added || changed || missing ? 1 : 0;
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

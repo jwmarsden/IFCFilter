@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 
 using Instances = std::vector<express::base>;
 
@@ -130,4 +130,4 @@ inline std::string family_of(const express::entity& product) {
     return std::regex_replace(name, trailing_id, "");
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

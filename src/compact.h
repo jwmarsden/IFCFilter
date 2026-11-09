@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 
-namespace bimpass {
+namespace ifcfilter {
 
 struct CompactStats {
     uint64_t bytes_before = 0, bytes_after = 0;
@@ -20,4 +20,4 @@ struct CompactStats {
 // relationships written once.
 CompactStats compact(const std::string& path, double precision_mm);
 
-}  // namespace bimpass
+}  // namespace ifcfilter

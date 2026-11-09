@@ -1,8 +1,8 @@
 #pragma once
 
 // mapping.csv: every class, text attribute, property set and property in the models, with what to do with
-// each in the federation file. `bimpass inventory` writes it from the inputs, keeping any actions already in
-// it, and `bimpass split --mapping` carries them out.
+// each in the federation file. `ifcfilter inventory` writes it from the inputs, keeping any actions already in
+// it, and `ifcfilter split --mapping` carries them out.
 
 #include <cstdint>
 #include <map>
@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 
 struct Mapping {
     std::map<std::string, std::string> retype;                         // class, in capitals, and the class it becomes
@@ -40,4 +40,4 @@ MappingStats apply_mapping(const std::string& path, const Mapping& mapping);
 // rows already in it; rows the models no longer have stay, with no count
 int inventory(const std::vector<std::string>& inputs, const std::string& csv_path, unsigned jobs);
 
-}  // namespace bimpass
+}  // namespace ifcfilter

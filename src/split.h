@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 
 struct SplitOptions {
     std::vector<std::string> inputs;  // models, and folders of them
@@ -33,4 +33,4 @@ int split(const SplitOptions& options);
 // the outputs are up to date with them, and 1 if something is new, changed or missing.
 int check(const std::vector<std::string>& inputs, const std::string& out_dir);
 
-}  // namespace bimpass
+}  // namespace ifcfilter

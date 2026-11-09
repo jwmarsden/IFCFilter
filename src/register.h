@@ -10,7 +10,7 @@
 #include <string>
 #include <string_view>
 
-namespace bimpass {
+namespace ifcfilter {
 
 struct Source {
     std::string model;            // the file's name, without its extension
@@ -21,7 +21,7 @@ struct Source {
     std::string sha256;
     std::string previous_sha256;  // before it last changed
     std::string first_seen, last_changed, last_processed;
-    std::string build;            // a hash of what the outputs were made with: bimpass.exe, rules, mapping and options
+    std::string build;            // a hash of what the outputs were made with: ifcfilter.exe, rules, mapping and options
     std::string shared;           // a hash of the GUIDs it shared with other models in the run, which change in all of them
 };
 
@@ -44,4 +44,4 @@ void record(Register& sources, Source source);
 Register load_register(const std::filesystem::path& path);
 void save_register(const std::filesystem::path& path, const Register& sources);
 
-}  // namespace bimpass
+}  // namespace ifcfilter

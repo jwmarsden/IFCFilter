@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace bimpass {
+namespace ifcfilter {
 
 // An axis-aligned box in the world, in the model's length unit
 struct Box {
@@ -53,4 +53,4 @@ class Extents {
 // cut. Taking a solid from a mesh is fragile, so these are left exactly as they are.
 std::unordered_set<uint32_t> sets_openings_touch(const SpfFile& spf);
 
-}  // namespace bimpass
+}  // namespace ifcfilter

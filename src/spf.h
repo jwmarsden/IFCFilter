@@ -10,7 +10,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 
 class SpfFile {
   public:
@@ -59,4 +59,4 @@ enum class WhenEmpty { Drop, Null };
 // whole line has to go, and this returns false. Lines with nothing to change are copied unchanged.
 bool rewrite(std::string_view line, const std::function<bool(uint32_t)>& gone, WhenEmpty when_empty, std::string& out);
 
-}  // namespace bimpass
+}  // namespace ifcfilter

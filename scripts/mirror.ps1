@@ -1,8 +1,8 @@
 # Keeps a copy of an output folder up to date somewhere else, such as a synced folder. Files that are
 # gone from the output go from the copy too, so -To has to be a folder that's only for this.
 #
-#   .\scripts\mirror.ps1 -From C:\Apps\BIMPass -To C:\Users\jwmar\OneDrive\Work\BIMPass
-#   .\scripts\mirror.ps1 -From C:\Apps\BIMPass -To C:\Users\jwmar\OneDrive\Work\BIMPass -List
+#   .\scripts\mirror.ps1 -From C:\Apps\IFCFilter -To C:\Users\jwmar\OneDrive\Work\IFCFilter
+#   .\scripts\mirror.ps1 -From C:\Apps\IFCFilter -To C:\Users\jwmar\OneDrive\Work\IFCFilter -List
 #
 # Run it after a run has been checked. -List says what would change, and changes nothing.
 param(

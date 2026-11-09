@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <set>
 
-namespace bimpass {
+namespace ifcfilter {
 namespace {
 
 // Solids placed by a Position, which everything else in them is relative to, and where it is
@@ -352,4 +352,4 @@ std::string Baker::representation_type(const std::vector<uint32_t>& items) const
     return "SolidModel";
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

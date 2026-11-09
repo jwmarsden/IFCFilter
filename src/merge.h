@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 
 struct MergedAsset {
     std::string site, guid;  // site: its site ID, or its design tag
@@ -42,7 +42,7 @@ struct MergePlan {
     uint64_t on_building = 0;                          // sites of one element or asset, on their type's level as themselves
     uint64_t type_levels = 0, unmanaged = 0;
     uint64_t placed_on_levels = 0;                     // elements and assets placed from the level they're now on           // levels for asset types, and what's on the level for no site ID
-    uint64_t quantities_combined = 0;                  // Quantities values worked out for assets as a whole
+    uint64_t quantities_combined = 0;                  // quantity-set values worked out for assets as a whole
     uint64_t assets_plain = 0;                         // assets whose body is their parts' shapes, moved
     std::map<std::string, uint64_t> assets_mapped;     // assets left as mapped items of their parts, by the kind of shape that couldn't be moved
 };
@@ -52,4 +52,4 @@ struct MergePlan {
 MergePlan plan_merge(const SpfFile& spf, const std::vector<uint32_t>& candidates, const std::function<bool(uint32_t)>& gone, const std::string& stem,
                      double gap_m);
 
-}  // namespace bimpass
+}  // namespace ifcfilter

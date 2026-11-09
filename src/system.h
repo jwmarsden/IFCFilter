@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <string>
 
-namespace bimpass {
+namespace ifcfilter {
 
 uint64_t available_memory();  // in bytes; 0 if it can't be told
 std::string program_path();   // this program, for running more of it
@@ -14,4 +14,4 @@ std::string program_path();   // this program, for running more of it
 // a virus scanner or a sync tool has either open, so this tries for some seconds before it gives up.
 void replace_file(const std::string& from, const std::string& to);
 
-}  // namespace bimpass
+}  // namespace ifcfilter

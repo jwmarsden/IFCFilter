@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace bimpass {
+namespace ifcfilter {
 namespace {
 
 // Zip's fields are little-endian, whatever the machine
@@ -101,4 +101,4 @@ void zip_file(const std::string& path, const std::string& zip_path, const std::s
     if (!out) throw std::runtime_error(zip_path + ": couldn't be written");
 }
 
-}  // namespace bimpass
+}  // namespace ifcfilter

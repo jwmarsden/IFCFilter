@@ -3,3 +3,6 @@ result
 result-*
 out/
 .direnv/
+EXAMPLES.md
+rules.txt
+mapping.csv

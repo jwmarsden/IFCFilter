@@ -11,10 +11,10 @@ namespace {
 
 int usage(int code) {
     (code ? std::cerr : std::cout)
-        << "usage: bimpass report MODEL.ifc [--csv FAMILIES.csv] [--suspects ELEMENTS.csv] [--top N] [--heavy-faces N] [--transparent T]\n"
-        << "       bimpass split MODEL.ifc|FOLDER... --out DIR [--rules rules.txt] [--transparent T] [--mapping mapping.csv] [--no-merge] [--merge-gap M] [--no-instance] [--no-compact] [--precision-mm MM] [--no-zip] [--jobs N] [--all]\n"
-        << "       bimpass check MODEL.ifc|FOLDER... --out DIR\n"
-        << "       bimpass inventory MODEL.ifc|FOLDER... --mapping mapping.csv [--jobs N]\n";
+        << "usage: ifcfilter report MODEL.ifc [--csv FAMILIES.csv] [--suspects ELEMENTS.csv] [--rules rules.txt] [--top N] [--heavy-faces N] [--transparent T]\n"
+        << "       ifcfilter split MODEL.ifc|FOLDER... --out DIR [--rules rules.txt] [--transparent T] [--mapping mapping.csv] [--no-merge] [--merge-gap M] [--no-instance] [--no-compact] [--precision-mm MM] [--no-zip] [--jobs N] [--all]\n"
+        << "       ifcfilter check MODEL.ifc|FOLDER... --out DIR\n"
+        << "       ifcfilter inventory MODEL.ifc|FOLDER... --mapping mapping.csv [--jobs N]\n";
     return code;
 }
 
@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     const std::string command = argv[1];
     if (command == "-h" || command == "--help") return usage(0);
     if (command == "split") {
-        bimpass::SplitOptions options;
+        ifcfilter::SplitOptions options;
         for (int i = 2; i < argc; ++i) {
             const std::string arg = argv[i];
             const auto value = [&]() -> std::string {
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
         }
         if (options.inputs.empty() || options.out_dir.empty()) return usage(2);
         try {
-            return bimpass::split(options);
+            return ifcfilter::split(options);
         } catch (const std::exception& e) {
             std::cerr << e.what() << "\n";
             return 1;
@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
         }
         if (inputs.empty() || out_dir.empty()) return usage(2);
         try {
-            return bimpass::check(inputs, out_dir);
+            return ifcfilter::check(inputs, out_dir);
         } catch (const std::exception& e) {
             std::cerr << e.what() << "\n";
             return 2;
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
         }
         if (inputs.empty() || csv_path.empty()) return usage(2);
         try {
-            return bimpass::inventory(inputs, csv_path, jobs);
+            return ifcfilter::inventory(inputs, csv_path, jobs);
         } catch (const std::exception& e) {
             std::cerr << e.what() << "\n";
             return 1;
@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
     }
     if (command != "report") return usage(2);
 
-    bimpass::ReportOptions options;
+    ifcfilter::ReportOptions options;
     for (int i = 2; i < argc; ++i) {
         const std::string arg = argv[i];
         const auto value = [&]() -> std::string {
@@ -109,6 +109,7 @@ int main(int argc, char** argv) {
         };
         if (arg == "--csv") options.csv_path = value();
         else if (arg == "--suspects") options.suspects_path = value();
+        else if (arg == "--rules") options.rules_path = value();
         else if (arg == "--top") options.top_families = std::stoul(value());
         else if (arg == "--heavy-faces") options.heavy_faces = std::stoul(value());
         else if (arg == "--transparent") options.transparent = std::stod(value());
@@ -117,5 +118,5 @@ int main(int argc, char** argv) {
         else return usage(2);
     }
     if (options.ifc_path.empty()) return usage(2);
-    return bimpass::report(options);
+    return ifcfilter::report(options);
 }

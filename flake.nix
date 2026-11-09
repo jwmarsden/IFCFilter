@@ -1,5 +1,5 @@
 {
-  description = "BIMPass: prepares IFC models for federation";
+  description = "IFCFilter: prepares IFC models for federation";
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   outputs = { self, nixpkgs }:
     let
@@ -30,15 +30,15 @@
           "-DHDF5_SUPPORT=OFF"
         ];
       };
-      bimpass = pkgs.stdenv.mkDerivation {
-        pname = "bimpass";
+      ifcfilter = pkgs.stdenv.mkDerivation {
+        pname = "ifcfilter";
         version = "0.1.0";
         src = ./.;
         nativeBuildInputs = [ pkgs.cmake ];
         buildInputs = [ ifcparse pkgs.boost pkgs.eigen pkgs.zlib ];
       };
     in {
-      packages.x86_64-linux = { inherit ifcparse bimpass; default = bimpass; };
+      packages.x86_64-linux = { inherit ifcparse ifcfilter; default = ifcfilter; };
       devShells.x86_64-linux.default = pkgs.mkShell {
         nativeBuildInputs = [ pkgs.cmake pkgs.gdb ];
         buildInputs = [ ifcparse pkgs.boost pkgs.eigen pkgs.zlib ];
