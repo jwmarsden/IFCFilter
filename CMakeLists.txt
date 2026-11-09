@@ -11,6 +11,7 @@ endif()
 find_package(Boost CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 
+
 # An installed IfcOpenShell if there is one, as the flake provides. Otherwise the submodule, built
 # here with the same options: the parser only, and just the schemas the models use.
 find_package(IfcOpenShell CONFIG QUIET)

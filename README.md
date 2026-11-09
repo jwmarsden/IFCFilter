@@ -147,3 +147,5 @@ cmake --build build --config Release
 The parser's schemas are plugin DLLs, loaded from beside `bimpass.exe`, so keep the DLLs in `build\Release` with it.
 
 Paths are safest in plain ASCII, as command line arguments come in using the system's code page.
+
+./build/bimpass split ~/OneDrive/Work/IFC/FS/MODEL.ifc --out ~/OneDrive/Work/BIMPass/test --rules rules.txt
