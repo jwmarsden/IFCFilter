@@ -295,6 +295,21 @@ void append_list(const std::vector<uint32_t>& ids, std::string& out) {
 
 }  // namespace
 
+std::vector<uint32_t> indices_in(std::string_view text) { return integers_in(text); }
+
+std::vector<std::array<double, 3>> point_list(std::string_view list) { return points_in(list); }
+
+bool triangulate_polygon(std::vector<uint32_t> ring, const std::vector<std::vector<uint32_t>>& holes, const std::vector<std::array<double, 3>>& points,
+                         std::vector<std::array<uint32_t, 3>>& out) {
+    if (!holes.empty() && !bridge(ring, holes, points)) return false;
+    if (ring.size() == 3) {
+        if (!in_range(ring, points)) return false;
+        out.push_back({ring[0], ring[1], ring[2]});
+        return true;
+    }
+    return ring.size() <= MAX_POLYGON && triangulate(ring, points, out);
+}
+
 CompactStats compact(const std::string& path, double precision_mm) {
     namespace fs = std::filesystem;
     CompactStats stats;

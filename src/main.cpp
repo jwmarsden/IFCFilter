@@ -1,9 +1,11 @@
+#include "cache.h"
 #include "combine.h"
 #include "mapping.h"
 #include "report.h"
 #include "split.h"
 
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -15,6 +17,7 @@ int usage(int code) {
         << "usage: ifcfilter report MODEL.ifc [--csv FAMILIES.csv] [--suspects ELEMENTS.csv] [--rules rules.txt] [--top N] [--heavy-faces N] [--transparent T]\n"
         << "       ifcfilter split MODEL.ifc|FOLDER... --out DIR [--rules rules.txt] [--transparent T] [--mapping mapping.csv] [--combine combine.csv] [--no-merge] [--merge-gap M] [--no-instance] [--no-compact] [--precision-mm MM] [--simplify-mm MM] [--no-zip] [--jobs N] [--all]\n"
         << "       ifcfilter check MODEL.ifc|FOLDER... --out DIR\n"
+        << "       ifcfilter cache MODEL.ifc [--out MODEL.ifcc]\n"
         << "       ifcfilter inventory MODEL.ifc|FOLDER... --mapping mapping.csv [--jobs N]\n"
         << "       ifcfilter combine FEDERATE.ifc|FOLDER... --out DIR [--register combine.csv] [--name-part N]\n";
     return code;
@@ -62,6 +65,19 @@ int main(int argc, char** argv) {
             std::cerr << e.what() << "\n";
             return 1;
         }
+    }
+    if (command == "cache") {
+        std::string input, output;
+        for (int i = 2; i < argc; ++i) {
+            const std::string arg = argv[i];
+            if (arg == "--out" && i + 1 < argc) output = argv[++i];
+            else if (!arg.empty() && arg[0] == '-') return usage(2);
+            else if (input.empty()) input = arg;
+            else return usage(2);
+        }
+        if (input.empty()) return usage(2);
+        if (output.empty()) output = std::filesystem::path(input).replace_extension(".ifcc").string();
+        return ifcfilter::cache(input, output);
     }
     if (command == "check") {
         std::vector<std::string> inputs;

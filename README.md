@@ -44,6 +44,12 @@ While a run goes, `OUT/progress.html` says how it's going: models done and runni
 ifcfilter check MODELS_FOLDER --out OUTPUT_FOLDER
 ```
 
+`ifcfilter cache` writes a viewing cache of a model, an `.ifcc` file a viewer can load in pieces: its meshes once each, placed where they're used, in spatial tiles, with the tree and properties in indexed tables. It's a prototype, for a viewer that doesn't exist yet; `docs/cache-format.md` is the format.
+
+```sh
+ifcfilter cache MODEL.ifc --out MODEL.ifcc
+```
+
 `scripts\mirror.ps1` keeps a copy of the output folder up to date elsewhere, such as in a synced folder. It won't run on a folder with a run going on, and `-List` says what would change.
 
 No GUID is written twice in a run, across all its outputs:
@@ -165,7 +171,7 @@ This builds with Visual Studio 2022. Dependencies come from [vcpkg](https://vcpk
 
 ```powershell
 git submodule update --init
-vcpkg install boost-algorithm boost-config boost-dll boost-dynamic-bitset boost-filesystem boost-lexical-cast boost-locale boost-logic boost-math boost-multi-index boost-optional boost-property-tree boost-uuid boost-variant zlib openmesh --triplet x64-windows
+vcpkg install boost-algorithm boost-config boost-dll boost-dynamic-bitset boost-filesystem boost-lexical-cast boost-locale boost-logic boost-math boost-multi-index boost-optional boost-property-tree boost-uuid boost-variant zlib openmesh sqlite3[fts5] zstd --triplet x64-windows
 
 cmake -B build "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
 cmake --build build --config Release

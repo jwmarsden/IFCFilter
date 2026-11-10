@@ -1,6 +1,6 @@
 # IFCFilter cache format (.ifcc)
 
-Draft 0.1, 2026-11-09. Not built yet.
+Draft 0.2, 2026-11-09. `ifcfilter cache` (`src/cache.cpp`) writes it, as a prototype: see Prototype, at the end.
 
 A viewing cache made from one IFC model, the way Navisworks makes an `.nwc`: the IFC is read once, by `ifcfilter cache`, and the viewer only ever reads caches. Everything a viewer needs is laid out to be loaded in pieces: geometry in spatial tiles, each shape stored once, and the tree and properties in indexed tables.
 
@@ -17,7 +17,7 @@ Not goals: editing, writing IFC back, exact geometry (it's triangles), drawings,
 
 ## Container
 
-One SQLite 3 file. Its own page size of 64 KiB suits the large blobs. A viewer can open it read-only, and several viewers can share it.
+One SQLite 3 file, with SQLite's usual 4 KiB pages: 64 KiB pages made the FS model's cache 70% bigger, as the small tables and indexes waste most of theirs, and blobs bigger than a page are fine in a chain of them. A viewer can open it read-only, and several viewers can share it.
 
 SQLite because it's one file, it's indexed, every language reads it, and it can be looked into with `sqlite3` while this format is young. If blob reads ever become the bottleneck, geometry can move to a second file of plain blocks, addressed by offset, without changing anything else.
 
@@ -71,7 +71,7 @@ Every `IfcProduct` and spatial structure element, the project included. `id` is 
 | `type_name` | string id of its type object's name, or NULL |
 | `minx` … `maxz` | REAL, its box relative to the origin; NULL if it has no geometry |
 | `tile` | the tile its instances are in, or NULL |
-| `flags` | bit 0 has geometry; 1 hidden by default (spaces, openings); 2 envelope; 3 merged asset |
+| `flags` | bit 0 has geometry; 1 hidden by default (spaces); 2 envelope; 3 merged asset; 4 drawn approximately (boxes, or what an opening or clipping takes away left on) |
 
 Indexes: `(parent, sort)`, `(class)`, `(guid)`.
 
@@ -84,17 +84,17 @@ Property sets are stored once and shared, as IFCFilter's compact writing does: m
 | table | columns |
 |---|---|
 | `psets` | `id`, `name` (string id), `kind` (0 property set, 1 quantity set, 2 type's set, 3 attributes and materials) |
-| `pset_values` | `pset`, `name` (string id), `value` |
+| `pset_values` | `pset`, `name` (string id), `value`; keyed on all three, without a rowid, so a set's values are stored together |
 | `values` | `id`, `type` (0 text, 1 real, 2 integer, 3 boolean, 4 enumeration), `text` (string id), `number` (REAL), `unit` (string id) |
-| `element_psets` | `element`, `pset` |
+| `element_psets` | `element`, `pset`; keyed on both, without a rowid |
 
-Indexes: `element_psets(element)`, `element_psets(pset)`, `pset_values(name, value)`, `values(text)`, `values(number)`.
+Indexes: `element_psets(pset)`, `pset_values(name, value)`, `values(text)`, `values(number)`. A table keyed on its columns is its own index for them, so these are all the lookups need.
 
 A filter such as `SiteID = PU290101` is: the string id of each, then `pset_values` by `(name, value)`, then `element_psets` by `pset`. That's three index lookups, whatever the model's size.
 
 An element's materials, type and classification go in a set of kind 3, so the viewer shows them the same way as properties.
 
-A full-text index (`fts5`) over names, tags and text values gives the search box.
+A full-text index over `strings`, `strings_fts` (`fts5`, with `strings` as its content), gives the search box: it finds string ids, and names, tags and values lead from them to elements.
 
 ### materials
 
@@ -125,7 +125,7 @@ A loose octree over the model's box. An element goes in the deepest node whose b
 | `id` | INTEGER PRIMARY KEY; 0 is the root |
 | `parent` | INTEGER, NULL for the root |
 | `level` | INTEGER |
-| `minx` … `maxz` | REAL, the box of what's in it, which can be smaller than its node |
+| `minx` … `maxz` | REAL, the box of everything in it and below it, so a branch out of view can be skipped whole |
 | `size` | REAL, the largest element's diagonal in it: the viewer uses this to decide what's too small on screen to load yet |
 | `instances`, `triangles` | INTEGER |
 | `meshes` | BLOB, the mesh ids its instances use, u32 each, uncompressed |
@@ -147,9 +147,10 @@ u32  count
 then count times, 64 bytes each:
 u32  element      element id
 u32  mesh         mesh id
-u32  material     material id, or 0xFFFFFFFF to use the mesh's own
+u32  material     material id, or 0xFFFFFFFF for the default
 u32  reserved
-f32  transform[12]  3 columns of rotation and scale, then the translation, relative to the origin
+f32  transform[12]  3 columns of rotation and scale, then the translation, relative to the origin; the mesh's
+                    centre is already in the translation
 ```
 
 A shape that appears in only one element is still a mesh with one instance. What isn't instanced costs 64 bytes more, and it keeps one path through the viewer.
@@ -175,6 +176,8 @@ indices: u16 or u32 (flag 0), three per triangle
 edges (flag 3): u32 count, then pairs of vertex indices
 ```
 
+- A triangle's colour is its part's material, unless that's 0xFFFFFFFF, then its instance's, and then the default (material 0). Colour maps make parts; a style on the shape or on the mapped item that places it makes the instance's.
+- Each mesh is centred on its box, and the centre goes into its instances' translations, so a mesh written in a projected grid still has small coordinates.
 - Positions are quantized to 16 bits on the mesh's box, unless that would be coarser than 0.5 mm, in which case they're float. Below about 30 m across, a mesh is quantized; long road meshes are float. The viewer dequantizes in the vertex shader, from the box.
 - Normals are only stored for curved shapes, where the faces around a vertex aren't all in one plane. Flat shapes are shaded flat in the fragment shader, from screen-space derivatives, which most of a BIM model is.
 - Parts are what a colour map or several styled items make: each part is a run of triangles in one material.
@@ -192,7 +195,8 @@ ifcfilter cache MODEL.ifc [--out MODEL.ifcc]
 2. Tessellate each element's body:
    - Triangulated and polygonal face sets, and faceted breps, as they are: polygons are cut into triangles as compact writing does.
    - Mapped items become instances, with the mapping's transform composed with the element's placement. Shapes that are the same moved and turned are found as instancing does now, so models not run through `split` instance too.
-   - Anything else (extrusions, sweeps, booleans, openings) needs a geometry engine. See open questions.
+   - Anything else (extrusions, sweeps) needs a geometry engine. See open questions. Until then it's an instance of one shared unit box, scaled to the item's extent.
+   - A boolean is drawn as its first operand, without what's taken away.
 3. Assign elements to tiles, then write meshes, tiles, elements and properties.
 4. Write `meta` last, so a cache cut short doesn't look finished.
 
@@ -233,3 +237,14 @@ The frontend loads the tiles in view, largest `size` on screen first, and asks f
 4. **The hidden and envelope outputs**: separate caches the viewer layers, or one cache from all three, with the `flags` saying which.
 5. **Simplified meshes** (`lod` above 0) for far-away tiles, once IFCFilter's simplification exists.
 6. **Manifest links**: whether the cache keeps each element's original GUIDs from the manifest, so the viewer can jump from a merged asset to the original model's elements.
+
+## Prototype
+
+`ifcfilter cache MODEL.ifc [--out MODEL.ifcc]` writes all of the above but what's marked reserved, and the viewer and backend don't exist yet. On this laptop:
+
+| Model | IFC | Cache | Time | Meshes | Instances | Triangles | Boxes |
+|---|---|---|---|---|---|---|---|
+| FS, the federate output | 8.0 MB | 3.7 MB | 1.1 s | 573 | 2,693 | 453,708 | 374 extrusions |
+| LT, the raw model, faceted breps | 28.1 MB | 1.4 MB | 1.3 s | 874 | 4,470 | 188,800 | none |
+
+Geometry is about 1 MB of each: meshes with zstd 1.0 MB, instances 0.04 MB. In FS the rest is properties: Revit gives most elements sets of their own, so there are 4,797 sets and 40,107 values on 718 elements.

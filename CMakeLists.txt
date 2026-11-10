@@ -13,6 +13,21 @@ find_package(ZLIB REQUIRED)
 # Decimating meshes (simplify.cpp)
 find_package(OpenMesh CONFIG REQUIRED)
 
+# For the viewing cache
+find_package(SQLite3 REQUIRED)
+if(TARGET SQLite3::SQLite3)
+    set(SQLITE_LIBRARY SQLite3::SQLite3)
+else()
+    set(SQLITE_LIBRARY SQLite::SQLite3)
+endif()
+find_package(zstd CONFIG REQUIRED)
+if(TARGET zstd::libzstd)
+    set(ZSTD_LIBRARY zstd::libzstd)
+elseif(TARGET zstd::libzstd_shared)
+    set(ZSTD_LIBRARY zstd::libzstd_shared)
+else()
+    set(ZSTD_LIBRARY zstd::libzstd_static)
+endif()
 
 # An installed IfcOpenShell if there is one, as the flake provides. Otherwise the submodule, built
 # here with the same options: the parser only, and just the schemas the models use.
@@ -36,7 +51,7 @@ else()
     add_library(IfcOpenShell::parse_schema_ifc4x3_add2 ALIAS parse_schema_ifc4x3_add2)
 endif()
 
-add_executable(ifcfilter src/main.cpp src/report.cpp src/split.cpp src/merge.cpp src/progress.cpp src/combine.cpp src/bake.cpp src/extent.cpp src/mapping.cpp src/instance.cpp src/rigid.cpp src/register.cpp src/system.cpp src/upgrade.cpp src/spf.cpp src/breps.cpp src/compact.cpp src/simplify.cpp src/tidy.cpp src/zip.cpp)
+add_executable(ifcfilter src/main.cpp src/report.cpp src/split.cpp src/merge.cpp src/progress.cpp src/combine.cpp src/bake.cpp src/extent.cpp src/mapping.cpp src/instance.cpp src/rigid.cpp src/register.cpp src/system.cpp src/upgrade.cpp src/spf.cpp src/breps.cpp src/compact.cpp src/simplify.cpp src/tidy.cpp src/zip.cpp src/cache.cpp)
 # The schemas are plugins, loaded when a file is opened, so nothing links to them
 add_dependencies(ifcfilter IfcOpenShell::parse_schema_ifc2x3 IfcOpenShell::parse_schema_ifc4 IfcOpenShell::parse_schema_ifc4x3_add2)
 target_compile_definitions(ifcfilter PRIVATE BOOST_OPTIONAL_USE_OLD_DEFINITION_OF_NONE IFCFILTER_VERSION="${PROJECT_VERSION}")
@@ -45,7 +60,7 @@ if(MSVC)
 else()
     target_compile_options(ifcfilter PRIVATE -Wall -Wextra)
 endif()
-target_link_libraries(ifcfilter PRIVATE IfcOpenShell::IfcParse Boost::headers ZLIB::ZLIB OpenMeshCore OpenMeshTools)
+target_link_libraries(ifcfilter PRIVATE IfcOpenShell::IfcParse Boost::headers ZLIB::ZLIB OpenMeshCore OpenMeshTools ${SQLITE_LIBRARY} ${ZSTD_LIBRARY})
 if(WIN32)
     target_compile_definitions(ifcfilter PRIVATE NOMINMAX _USE_MATH_DEFINES)
     # IfcOpenShell only builds as shared libraries, so its DLLs go beside the program. Schema plugins

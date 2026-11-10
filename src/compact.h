@@ -1,7 +1,10 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace ifcfilter {
 
@@ -19,5 +22,16 @@ struct CompactStats {
 // precision_mm, polygon face sets as triangle lists, faces with no area left out, apart from face sets that openings touch, and identical property values, sets and their
 // relationships written once.
 CompactStats compact(const std::string& path, double precision_mm);
+
+// The numbers in a list, as written: a face's indices
+std::vector<uint32_t> indices_in(std::string_view text);
+
+// The points in a list of them, such as a point list's
+std::vector<std::array<double, 3>> point_list(std::string_view list);
+
+// Cuts a polygon, and any holes, into triangles of the same area. Indices count from 1, into points, and
+// the triangles face the way the polygon does. False if it can't be done.
+bool triangulate_polygon(std::vector<uint32_t> ring, const std::vector<std::vector<uint32_t>>& holes, const std::vector<std::array<double, 3>>& points,
+                         std::vector<std::array<uint32_t, 3>>& out);
 
 }  // namespace ifcfilter
