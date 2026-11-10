@@ -46,7 +46,7 @@ While a run goes, `OUT/progress.html` says how it's going: models done and runni
 ifcfilter check MODELS_FOLDER --out OUTPUT_FOLDER
 ```
 
-`ifcfilter cache` writes a viewing cache of a model, an `.ifcc` file a viewer can load in pieces: its meshes once each, placed where they're used, in spatial tiles, with the tree and properties in indexed tables. It's a prototype, for a viewer that doesn't exist yet; `docs/cache-format.md` is the format.
+`ifcfilter cache` writes a viewing cache of a model, an `.ifcc` file a viewer can load in pieces: its meshes once each, placed where they're used, in spatial tiles, with the tree and properties in indexed tables. Extrusions are meshed from their profiles, and each mesh has simplified versions for far away, its points snapped to 5 cm, 25 cm and 1 m grids. It's a prototype, read by [IFCViewer](https://github.com/jwmarsden/IFCViewer); `docs/cache-format.md` is the format.
 
 ```sh
 ifcfilter cache MODEL.ifc --out MODEL.ifcc

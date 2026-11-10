@@ -113,8 +113,20 @@ Each shape once. Blob layout below.
 | `id` | INTEGER PRIMARY KEY |
 | `vertices`, `triangles` | INTEGER |
 | `minx` … `maxz` | REAL, in the mesh's own coordinates |
-| `lod` | 0 for the full shape; reserved for simplified versions |
+| `lod` | always 0: simplified versions are in `mesh_lods` |
 | `blob` | BLOB, zstd |
+
+### mesh_lods
+
+Simplified versions of the meshes with 48 triangles or more, for far away. Each level snaps the full mesh's points to a grid, each cell's points to their average, and drops triangles left with no area or the same as another; meta `lod_cells` gives the grids, in metres, from level 1 (0.05, 0.25 and 1 m). A level is kept only where it has at most 70% of the triangles of the level before; one that isn't kept draws as the level before it. A level with no triangles has no blob: the mesh isn't drawn that far off. The points stay in the mesh's own frame, so the same instances place them.
+
+`mesh_lods(mesh INTEGER, lod INTEGER, triangles INTEGER, blob BLOB, PRIMARY KEY(mesh, lod)) WITHOUT ROWID`
+
+The blob is a mesh blob, as below, with no edges.
+
+### tile_lods
+
+What each tile draws at each level, so a viewer can budget for it: `tile_lods(tile INTEGER, lod INTEGER, triangles INTEGER, PRIMARY KEY(tile, lod)) WITHOUT ROWID`, for every tile and every level from 1.
 
 ### tiles
 
@@ -235,7 +247,7 @@ The frontend loads the tiles in view, largest `size` on screen first, and asks f
 2. **Tile thresholds**: 2,000 instances and 200,000 triangles are guesses, to be tuned on the large models (CC, LA).
 3. **Quantization**: whether 0.5 mm is the right point to switch to float, given IFCFilter rounds to 0.1 mm.
 4. **The hidden and envelope outputs**: separate caches the viewer layers, or one cache from all three, with the `flags` saying which.
-5. **Simplified meshes** (`lod` above 0) for far-away tiles, once IFCFilter's simplification exists.
+5. **Simplified meshes**: grid snapping is quick and takes any triangles, but quadric decimation keeps shapes better for the triangles; worth comparing on the large models.
 6. **Manifest links**: whether the cache keeps each element's original GUIDs from the manifest, so the viewer can jump from a merged asset to the original model's elements.
 
 ## Prototype

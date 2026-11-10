@@ -111,10 +111,18 @@ std::optional<Rigid> axis_placement(const SpfFile& spf, uint32_t id) {
 }
 
 std::optional<Rigid> operator_of(const SpfFile& spf, uint32_t id) {
-    if (spf.type(id) != "IFCCARTESIANTRANSFORMATIONOPERATOR3D") return std::nullopt;
+    // The non-uniform kind adds a scale for y and z; Bentley writes it for most of LA's planting, all scales 1
+    const auto type = spf.type(id);
+    const bool nonuniform = type == "IFCCARTESIANTRANSFORMATIONOPERATOR3DNONUNIFORM";
+    if (type != "IFCCARTESIANTRANSFORMATIONOPERATOR3D" && !nonuniform) return std::nullopt;
     const auto attributes = attributes_of(spf.line(id));
-    if (attributes.size() != 5) return std::nullopt;
-    if (attributes[3] != "$" && std::abs(numbers_in(attributes[3])[0] - 1) > 1e-9) return std::nullopt;
+    if (attributes.size() != (nonuniform ? 7u : 5u)) return std::nullopt;
+    // Within a part in a million of 1, as 0.99999999999999989 is common
+    const auto one = [](std::string_view scale) {
+        if (scale == "$") return true;
+        return std::abs(numbers_in(scale)[0] - 1) <= 1e-6;
+    };
+    if (!one(attributes[3]) || (nonuniform && (!one(attributes[5]) || !one(attributes[6])))) return std::nullopt;
     const auto x = direction(spf, attributes[0], {1, 0, 0});
     const auto y = direction(spf, attributes[1], {0, 1, 0});
     const auto location = point(spf, attributes[2]);

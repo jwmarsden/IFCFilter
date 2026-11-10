@@ -50,6 +50,10 @@ constexpr size_t TILE_INSTANCES = 2000, TILE_TRIANGLES = 200000;  // a tile is s
 constexpr int TILE_DEPTH = 12;
 constexpr int ZSTD_LEVEL = 12;
 constexpr int MAX_DEPTH = 8;  // of mapped items and booleans
+// Simplified meshes for far away: points snapped together on grids this many metres across, one level each
+constexpr std::array<double, 3> LOD_CELLS_M{0.05, 0.25, 1.0};
+constexpr size_t LOD_MIN_TRIANGLES = 48;  // smaller meshes are drawn as they are at any distance
+constexpr double LOD_WORTH = 0.7;         // a level is kept if it has at most this share of the triangles of the one before
 
 enum Flags : uint32_t { HAS_GEOMETRY = 1, HIDDEN = 2, ENVELOPE = 4, MERGED = 8, APPROXIMATE = 16 };
 
@@ -270,6 +274,8 @@ CREATE TABLE meshes(id INTEGER PRIMARY KEY, vertices INTEGER, triangles INTEGER,
     lod INTEGER, blob BLOB);
 CREATE TABLE tiles(id INTEGER PRIMARY KEY, parent INTEGER, level INTEGER, minx REAL, miny REAL, minz REAL, maxx REAL, maxy REAL, maxz REAL,
     size REAL, instances INTEGER, triangles INTEGER, meshes BLOB, blob BLOB);
+CREATE TABLE mesh_lods(mesh INTEGER, lod INTEGER, triangles INTEGER, blob BLOB, PRIMARY KEY(mesh, lod)) WITHOUT ROWID;
+CREATE TABLE tile_lods(tile INTEGER, lod INTEGER, triangles INTEGER, PRIMARY KEY(tile, lod)) WITHOUT ROWID;
 )";
 
 const char* const INDEXES = R"(
@@ -440,6 +446,58 @@ std::string encoded(const Mesh& mesh, const std::vector<uint32_t>& edges) {
     return out;
 }
 
+struct ArrayHash {
+    template <class T, size_t N>
+    size_t operator()(const std::array<T, N>& a) const {
+        size_t h = 0;
+        for (const T& v : a) h = h * 1000003u ^ std::hash<T>{}(v);
+        return h;
+    }
+};
+
+// The mesh with its points snapped together on a grid, each cell's points to their average, for far away where a
+// cell is a pixel or two: a pipe's 24 sides become a few, and what's smaller than a cell goes. Triangles left with
+// no area go, as do ones the same as another, such as a thin plate's two faces. It stays in the mesh's frame, so
+// the same instances place it.
+Mesh clustered(const Mesh& mesh, double cell) {
+    Mesh out;
+    std::unordered_map<std::array<int64_t, 3>, uint32_t, ArrayHash> at;
+    std::vector<uint32_t> to(mesh.points.size());
+    std::vector<uint32_t> counts;
+    for (size_t v = 0; v < mesh.points.size(); ++v) {
+        const Vector& p = mesh.points[v];
+        const std::array<int64_t, 3> key{static_cast<int64_t>(std::floor(p[0] / cell)), static_cast<int64_t>(std::floor(p[1] / cell)),
+                                         static_cast<int64_t>(std::floor(p[2] / cell))};
+        const auto [found, added] = at.try_emplace(key, static_cast<uint32_t>(out.points.size()));
+        if (added) {
+            out.points.push_back({0, 0, 0});
+            counts.push_back(0);
+        }
+        for (int axis = 0; axis < 3; ++axis) out.points[found->second][axis] += p[axis];
+        ++counts[found->second];
+        to[v] = found->second;
+    }
+    for (size_t v = 0; v < out.points.size(); ++v) {
+        for (double& c : out.points[v]) c /= counts[v];
+        out.box.add(out.points[v]);
+    }
+    std::unordered_set<std::array<uint32_t, 3>, ArrayHash> seen;
+    for (const Part& part : mesh.parts) {
+        Part kept{static_cast<uint32_t>(out.indices.size()), 0, part.material};
+        for (uint32_t i = part.first; i + 2 < part.first + part.count; i += 3) {
+            std::array<uint32_t, 3> t{to[mesh.indices[i]], to[mesh.indices[i + 1]], to[mesh.indices[i + 2]]};
+            if (t[0] == t[1] || t[1] == t[2] || t[0] == t[2]) continue;
+            std::array<uint32_t, 3> sorted = t;
+            std::sort(sorted.begin(), sorted.end());
+            if (!seen.insert(sorted).second) continue;
+            out.indices.insert(out.indices.end(), t.begin(), t.end());
+            kept.count += 3;
+        }
+        if (kept.count) out.parts.push_back(kept);
+    }
+    return out;
+}
+
 // A box from -0.5 to 0.5: what isn't a mesh is drawn as one, scaled to its extent
 Mesh unit_box() {
     Mesh mesh;
@@ -461,6 +519,7 @@ struct Instance {
 struct MeshInfo {
     Box box;
     uint32_t triangles = 0;
+    std::array<uint32_t, LOD_CELLS_M.size() + 1> lods{};  // triangles drawn at each level, the first the full mesh's
 };
 
 struct Element {
@@ -484,7 +543,8 @@ class Builder {
   public:
     Builder(const std::string& input, Database& db)
         : input_(input), spf_(input), extents_(spf_), db_(db), strings_(db),
-          insert_mesh_(db, "INSERT INTO meshes(id, vertices, triangles, minx, miny, minz, maxx, maxy, maxz, lod, blob) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)") {}
+          insert_mesh_(db, "INSERT INTO meshes(id, vertices, triangles, minx, miny, minz, maxx, maxy, maxz, lod, blob) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)"),
+          insert_lod_(db, "INSERT INTO mesh_lods(mesh, lod, triangles, blob) VALUES(?, ?, ?, ?)") {}
 
     void run() {
         const auto start = std::chrono::steady_clock::now();
@@ -534,6 +594,19 @@ class Builder {
         }
         out << "  " << elements_.size() << " elements, " << with_geometry << " with geometry, " << approximate << " of them drawn approximately\n";
         out << "  " << meshes_.size() << " meshes, " << instances << " instances, " << triangles << " triangles, " << tile_count_ << " tiles\n";
+        if (extruded_) out << "  " << extruded_ << " extrusions made into meshes\n";
+        if (lods_stored_) {
+            out << "  " << lods_stored_ << " simplified meshes for far away; triangles at each level:";
+            for (size_t level = 0; level <= LOD_CELLS_M.size(); ++level) {
+                uint64_t at_level = 0;
+                for (const Element& element : elements_) {
+                    for (const Instance& instance : element.instances) at_level += meshes_[instance.mesh].lods[level];
+                }
+                out << " " << at_level;
+            }
+            out << "\n";
+        }
+        if (empty_) out << "  " << empty_ << " extrusions of no length left out\n";
         if (boxes_) out << "  " << boxes_ << " items drawn as their box, as they aren't meshes:";
         for (const auto& [type, count] : boxed_types_) out << " " << type << " " << count;
         if (boxes_) out << "\n";
@@ -730,9 +803,33 @@ class Builder {
         insert_mesh_.integer(1, id).integer(2, static_cast<int64_t>(mesh.points.size())).integer(3, static_cast<int64_t>(mesh.indices.size() / 3));
         for (int axis = 0; axis < 3; ++axis) insert_mesh_.real(4 + axis, mesh.box.low[axis]).real(7 + axis, mesh.box.high[axis]);
         insert_mesh_.blob(10, compressed(raw)).run();
-        meshes_.push_back({mesh.box, static_cast<uint32_t>(mesh.indices.size() / 3)});
+        const uint32_t triangles = static_cast<uint32_t>(mesh.indices.size() / 3);
+        meshes_.push_back({mesh.box, triangles, {}});
+        meshes_.back().lods.fill(triangles);
         mesh_ids_.emplace(raw, id);
+        if (triangles >= LOD_MIN_TRIANGLES) store_lods(id, mesh);
         return id;
+    }
+
+    // Each level from the full mesh, kept where it's enough fewer triangles than the level before; one with none
+    // at all is kept with no blob, as the mesh isn't drawn at that distance. Levels not kept draw the one before.
+    void store_lods(uint32_t id, const Mesh& mesh) {
+        auto& lods = meshes_[id].lods;
+        for (size_t level = 1; level <= LOD_CELLS_M.size(); ++level) {
+            const Mesh coarse = clustered(mesh, LOD_CELLS_M[level - 1]);
+            const uint32_t triangles = static_cast<uint32_t>(coarse.indices.size() / 3);
+            if (triangles > LOD_WORTH * lods[level - 1]) {
+                lods[level] = lods[level - 1];
+                continue;
+            }
+            insert_lod_.integer(1, id).integer(2, static_cast<int64_t>(level)).integer(3, triangles);
+            if (triangles) insert_lod_.blob(4, compressed(encoded(coarse, {})));
+            else insert_lod_.null(4);
+            insert_lod_.run();
+            for (size_t rest = level; rest < lods.size(); ++rest) lods[rest] = triangles;
+            ++lods_stored_;
+            if (!triangles) break;  // nothing coarser than nothing
+        }
     }
 
     // Faces that can't be cut into triangles are fanned, and the mesh marked approximate
@@ -874,6 +971,246 @@ class Builder {
         return true;
     }
 
+    // Extrusions
+
+    static double number_of(std::string_view text) {
+        const std::string written(trimmed(text));
+        return std::strtod(written.c_str(), nullptr);
+    }
+
+    // A point, or a direction's ratios, from the line a reference leads to
+    Vector vector_at(std::string_view reference) {
+        const auto ids = refs_in(reference);
+        if (ids.size() != 1) return {};
+        const auto attributes = attributes_of(spf_.line(ids[0]));
+        return attributes.empty() ? Vector{} : numbers_in(attributes[0]);
+    }
+
+    // An IfcAxis2Placement2D's move and turn applied to a profile's loops; none leaves them as they are
+    void place_2d(std::string_view position, std::vector<std::vector<Vector>>& loops) {
+        const auto ids = refs_in(position);
+        if (ids.size() != 1 || spf_.type(ids[0]) != "IFCAXIS2PLACEMENT2D") return;
+        const auto attributes = attributes_of(spf_.line(ids[0]));
+        if (attributes.empty()) return;
+        const Vector origin = vector_at(attributes[0]);
+        Vector x{1, 0, 0};
+        if (attributes.size() > 1 && trimmed(attributes[1]) != "$") {
+            if (const auto turned = normalised(vector_at(attributes[1]))) x = *turned;
+        }
+        for (auto& loop : loops) {
+            for (Vector& p : loop) p = {origin[0] + x[0] * p[0] - x[1] * p[1], origin[1] + x[1] * p[0] + x[0] * p[1], 0};
+        }
+    }
+
+    // A circle or ellipse as a loop, with enough sides that it looks round at its size
+    std::vector<Vector> ellipse(double a, double b) {
+        const double around = 2 * M_PI * std::max(a, b) * unit_;
+        const int sides = std::clamp(static_cast<int>(std::ceil(around / 0.03)), 16, 64);
+        std::vector<Vector> loop;
+        for (int i = 0; i < sides; ++i) {
+            const double t = 2 * M_PI * i / sides;
+            loop.push_back({a * std::cos(t), b * std::sin(t), 0});
+        }
+        return loop;
+    }
+
+    static std::vector<Vector> rectangle(double x, double y) {
+        return {{-x / 2, -y / 2, 0}, {x / 2, -y / 2, 0}, {x / 2, y / 2, 0}, {-x / 2, y / 2, 0}};
+    }
+
+    // The arc from a through b to c, without a, as points
+    void arc(const Vector& a, const Vector& b, const Vector& c, std::vector<Vector>& out) {
+        // The centre is where the perpendicular bisectors of ab and bc meet
+        const double d = 2 * (a[0] * (b[1] - c[1]) + b[0] * (c[1] - a[1]) + c[0] * (a[1] - b[1]));
+        if (std::abs(d) < 1e-12) {
+            out.push_back(b);
+            out.push_back(c);
+            return;
+        }
+        const double aa = a[0] * a[0] + a[1] * a[1], bb = b[0] * b[0] + b[1] * b[1], cc = c[0] * c[0] + c[1] * c[1];
+        const double cx = (aa * (b[1] - c[1]) + bb * (c[1] - a[1]) + cc * (a[1] - b[1])) / d;
+        const double cy = (aa * (c[0] - b[0]) + bb * (a[0] - c[0]) + cc * (b[0] - a[0])) / d;
+        const double radius = std::hypot(a[0] - cx, a[1] - cy);
+        const auto angle = [&](const Vector& p) { return std::atan2(p[1] - cy, p[0] - cx); };
+        const double start = angle(a);
+        double through = angle(b) - start, end = angle(c) - start;
+        while (through < 0) through += 2 * M_PI;
+        while (end < 0) end += 2 * M_PI;
+        if (through > end) end -= 2 * M_PI;  // the other way round
+        const int sides = std::clamp(static_cast<int>(std::ceil(std::abs(end) * radius * unit_ / 0.03)), 2, 64);
+        for (int i = 1; i <= sides; ++i) {
+            const double t = start + end * i / sides;
+            out.push_back({cx + radius * std::cos(t), cy + radius * std::sin(t), 0});
+        }
+    }
+
+    // A closed curve's points, without the last repeating the first; empty for a kind not read yet
+    std::vector<Vector> curve_points(std::string_view reference) {
+        std::vector<Vector> loop;
+        const auto ids = refs_in(reference);
+        if (ids.size() != 1) return loop;
+        const auto type = spf_.type(ids[0]);
+        const auto attributes = attributes_of(spf_.line(ids[0]));
+        if (type == "IFCPOLYLINE" && !attributes.empty()) {
+            for (const uint32_t point : refs_in(attributes[0])) {
+                const auto coordinates = attributes_of(spf_.line(point));
+                if (!coordinates.empty()) loop.push_back(numbers_in(coordinates[0]));
+            }
+        } else if (type == "IFCINDEXEDPOLYCURVE" && !attributes.empty()) {
+            const auto list = refs_in(attributes[0]);
+            const auto list_attributes = list.size() == 1 ? attributes_of(spf_.line(list[0])) : std::vector<std::string_view>{};
+            const auto points = list_attributes.empty() ? std::vector<Vector>{} : point_list(list_attributes[0]);
+            const auto at = [&](uint32_t i) { return i >= 1 && i <= points.size() ? points[i - 1] : Vector{}; };
+            if (attributes.size() < 2 || trimmed(attributes[1]) == "$") {
+                loop = points;
+            } else {
+                // Each segment is IFCLINEINDEX((i,j,...)) or IFCARCINDEX((i,j,k))
+                const std::string_view segments = attributes[1];
+                for (size_t from = 0; (from = segments.find("IFC", from)) != std::string_view::npos;) {
+                    const bool is_arc = segments.substr(from, 11) == "IFCARCINDEX";
+                    const size_t open = segments.find('(', from), close = segments.find(')', open);
+                    if (open == std::string_view::npos || close == std::string_view::npos) break;
+                    const auto indices = indices_in(segments.substr(open, close - open + 1));
+                    if (loop.empty() && !indices.empty()) loop.push_back(at(indices[0]));
+                    if (is_arc && indices.size() == 3) arc(at(indices[0]), at(indices[1]), at(indices[2]), loop);
+                    else for (size_t i = 1; i < indices.size(); ++i) loop.push_back(at(indices[i]));
+                    from = close;
+                }
+            }
+        }
+        while (loop.size() > 1 && std::hypot(loop.front()[0] - loop.back()[0], loop.front()[1] - loop.back()[1]) < 1e-9) loop.pop_back();
+        for (Vector& p : loop) p[2] = 0;
+        return loop;
+    }
+
+    // A profile as loops in its plane: the outer first, then any holes; empty for a kind not read yet
+    std::vector<std::vector<Vector>> profile_loops(uint32_t profile) {
+        const auto type = spf_.type(profile);
+        const auto a = attributes_of(spf_.line(profile));
+        std::vector<std::vector<Vector>> loops;
+        if (type == "IFCCIRCLEPROFILEDEF" && a.size() == 4) {
+            loops.push_back(ellipse(number_of(a[3]), number_of(a[3])));
+        } else if (type == "IFCCIRCLEHOLLOWPROFILEDEF" && a.size() == 5) {
+            const double radius = number_of(a[3]), wall = number_of(a[4]);
+            loops.push_back(ellipse(radius, radius));
+            if (wall > 0 && wall < radius) loops.push_back(ellipse(radius - wall, radius - wall));
+        } else if (type == "IFCELLIPSEPROFILEDEF" && a.size() == 5) {
+            loops.push_back(ellipse(number_of(a[3]), number_of(a[4])));
+        } else if (type == "IFCRECTANGLEPROFILEDEF" && a.size() == 5) {
+            loops.push_back(rectangle(number_of(a[3]), number_of(a[4])));
+        } else if (type == "IFCRECTANGLEHOLLOWPROFILEDEF" && a.size() >= 6) {
+            const double x = number_of(a[3]), y = number_of(a[4]), wall = number_of(a[5]);
+            loops.push_back(rectangle(x, y));
+            if (wall > 0 && 2 * wall < std::min(x, y)) loops.push_back(rectangle(x - 2 * wall, y - 2 * wall));
+        } else if (type == "IFCARBITRARYCLOSEDPROFILEDEF" && a.size() == 3) {
+            loops.push_back(curve_points(a[2]));
+        } else if (type == "IFCARBITRARYPROFILEDEFWITHVOIDS" && a.size() == 4) {
+            loops.push_back(curve_points(a[2]));
+            for (const uint32_t inner : refs_in(a[3])) loops.push_back(curve_points(reference(inner)));
+        }
+        if (loops.empty() || loops[0].size() < 3) return {};
+        // Parameterised profiles have a position of their own, the third attribute
+        if (type != "IFCARBITRARYCLOSEDPROFILEDEF" && type != "IFCARBITRARYPROFILEDEFWITHVOIDS") place_2d(a[2], loops);
+        return loops;
+    }
+
+    // An IfcExtrudedAreaSolid as a mesh in its own position's coordinates, and that position
+    bool extruded(uint32_t item, Mesh& mesh, Rigid& position) {
+        const auto a = attributes_of(spf_.line(item));
+        if (a.size() != 4) return false;
+        const auto profile = refs_in(a[0]);
+        if (profile.size() != 1) return false;
+        auto loops = profile_loops(profile[0]);
+        if (loops.empty()) return false;
+        const auto placement = refs_in(a[1]);
+        if (!placement.empty()) {
+            const auto read = axis_placement(spf_, placement[0]);
+            if (!read) return false;
+            position = *read;
+        }
+        const auto direction = normalised(vector_at(a[2]));
+        const double depth = number_of(a[3]);
+        if (!direction || depth <= 0) return false;
+        const Vector along{(*direction)[0] * depth, (*direction)[1] * depth, (*direction)[2] * depth};
+
+        // The outer loop anticlockwise and holes clockwise, seen from where the extrusion goes
+        const auto area = [](const std::vector<Vector>& loop) {
+            double twice = 0;
+            for (size_t i = 0; i < loop.size(); ++i) {
+                const Vector& p = loop[i];
+                const Vector& q = loop[(i + 1) % loop.size()];
+                twice += p[0] * q[1] - q[0] * p[1];
+            }
+            return twice;
+        };
+        const bool upward = (*direction)[2] >= 0;
+        for (size_t l = 0; l < loops.size(); ++l) {
+            if (loops[l].size() < 3) continue;
+            const bool wrong_way = (area(loops[l]) > 0) != (l == 0);
+            if (wrong_way == upward) std::reverse(loops[l].begin(), loops[l].end());
+        }
+
+        // Each loop's points at the bottom, then at the top
+        std::vector<uint32_t> first;
+        for (const auto& loop : loops) {
+            first.push_back(static_cast<uint32_t>(mesh.points.size()));
+            for (const Vector& p : loop) mesh.points.push_back(p);
+            for (const Vector& p : loop) mesh.points.push_back({p[0] + along[0], p[1] + along[1], p[2] + along[2]});
+        }
+        // The ends, indices from 1 as add_polygon takes them; the bottom faces back down the extrusion
+        for (const bool top : {false, true}) {
+            std::vector<uint32_t> ring;
+            std::vector<std::vector<uint32_t>> holes;
+            for (size_t l = 0; l < loops.size(); ++l) {
+                if (loops[l].size() < 3) continue;
+                const uint32_t n = static_cast<uint32_t>(loops[l].size());
+                std::vector<uint32_t> loop;
+                for (uint32_t i = 0; i < n; ++i) loop.push_back(first[l] + (top ? n : 0) + i + 1);
+                if (!top) std::reverse(loop.begin(), loop.end());
+                if (l == 0) ring = std::move(loop);
+                else holes.push_back(std::move(loop));
+            }
+            add_polygon(mesh, ring, holes, NO_MATERIAL);
+        }
+        // The sides
+        for (size_t l = 0; l < loops.size(); ++l) {
+            const uint32_t n = static_cast<uint32_t>(loops[l].size());
+            if (n < 3) continue;
+            for (uint32_t i = 0; i < n; ++i) {
+                const uint32_t b0 = first[l] + i, b1 = first[l] + (i + 1) % n, t0 = b0 + n, t1 = b1 + n;
+                for (const uint32_t v : {b0, b1, t1, b0, t1, t0}) mesh.indices.push_back(v);
+                mesh.materials.push_back(NO_MATERIAL);
+                mesh.materials.push_back(NO_MATERIAL);
+            }
+        }
+        return true;
+    }
+
+    struct Swept {
+        int64_t mesh = -1;
+        Vector centre{};
+        Rigid position;
+        bool empty = false;  // no length, so nothing to draw
+    };
+
+    const Swept& swept_of(uint32_t item) {
+        const auto seen = swept_.find(item);
+        if (seen != swept_.end()) return seen->second;
+        Swept swept;
+        const auto attributes = attributes_of(spf_.line(item));
+        swept.empty = attributes.size() == 4 && number_of(attributes[3]) <= 0;
+        Mesh mesh;
+        if (!swept.empty && extruded(item, mesh, swept.position) && !mesh.indices.empty()) {
+            finish(mesh, unit_);
+            swept.centre = mesh.centre;
+            const bool approximate = mesh.approximate;
+            swept.mesh = stored(mesh);
+            if (approximate) approximate_meshes_.insert(static_cast<uint32_t>(swept.mesh));
+            ++extruded_;
+        }
+        return swept_.emplace(item, swept).first->second;
+    }
+
     void add_instance(Element& element, uint32_t mesh, const Rigid& placed, const Vector& centre, uint32_t material) {
         Instance instance;
         instance.element = index_[element.ifc];
@@ -925,6 +1262,17 @@ class Builder {
             const auto& [mesh, centre] = mesh_of(item, type);
             if (mesh >= 0) add_instance(element, static_cast<uint32_t>(mesh), placed, centre, material);
             return;
+        }
+        if (type == "IFCEXTRUDEDAREASOLID") {
+            const Swept& swept = swept_of(item);
+            if (swept.empty) {
+                ++empty_;
+                return;
+            }
+            if (swept.mesh >= 0) {
+                add_instance(element, static_cast<uint32_t>(swept.mesh), compose(placed, swept.position), swept.centre, material);
+                return;
+            }
         }
         box(element, item, placed, material, type);
     }
@@ -1280,6 +1628,7 @@ class Builder {
     void write_tiles() {
         Statement insert(db_, "INSERT INTO tiles(id, parent, level, minx, miny, minz, maxx, maxy, maxz, size, instances, triangles, meshes, blob) "
                               "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        Statement insert_lod(db_, "INSERT INTO tile_lods(tile, lod, triangles) VALUES(?, ?, ?)");
         // A tile's box takes in what's below it, so the viewer can skip a whole branch out of view
         for (size_t id = tiles_.size(); id-- > 1;) tiles_[static_cast<size_t>(tiles_[id].parent)].box.add(tiles_[id].box);
         for (size_t id = 0; id < tiles_.size(); ++id) {
@@ -1295,6 +1644,7 @@ class Builder {
             put<uint16_t>(blob, 0);
             put<uint32_t>(blob, static_cast<uint32_t>(instances.size()));
             uint64_t triangles = 0;
+            std::array<uint64_t, LOD_CELLS_M.size() + 1> lod_triangles{};
             int64_t last_mesh = -1;
             for (const Instance* instance : instances) {
                 put<uint32_t>(blob, instance->element);
@@ -1306,6 +1656,7 @@ class Builder {
                 }
                 for (const double c : instance->translation) put<float>(blob, static_cast<float>(c));
                 triangles += meshes_[instance->mesh].triangles;
+                for (size_t level = 0; level < lod_triangles.size(); ++level) lod_triangles[level] += meshes_[instance->mesh].lods[level];
                 if (static_cast<int64_t>(instance->mesh) != last_mesh) put<uint32_t>(meshes, instance->mesh);
                 last_mesh = instance->mesh;
             }
@@ -1316,6 +1667,9 @@ class Builder {
             bind_box(insert, 4, tile.box);
             insert.real(10, tile.size).integer(11, static_cast<int64_t>(instances.size())).integer(12, static_cast<int64_t>(triangles));
             insert.blob(13, meshes).blob(14, compressed(blob)).run();
+            for (size_t level = 1; level < lod_triangles.size(); ++level) {
+                insert_lod.integer(1, static_cast<int64_t>(id)).integer(2, static_cast<int64_t>(level)).integer(3, static_cast<int64_t>(lod_triangles[level])).run();
+            }
         }
     }
 
@@ -1356,6 +1710,7 @@ class Builder {
         set("mesh_count", std::to_string(meshes_.size()));
         set("tile_count", std::to_string(tiles_.size()));
         set("triangle_count", std::to_string(triangles));
+        set("lod_cells", numbers({LOD_CELLS_M[0], LOD_CELLS_M[1], LOD_CELLS_M[2]}));
     }
 
     const std::string input_;
@@ -1363,7 +1718,7 @@ class Builder {
     Extents extents_;
     Database& db_;
     Strings strings_;
-    Statement insert_mesh_;
+    Statement insert_mesh_, insert_lod_;
     Statement* insert_pset_ = nullptr;
     Statement* insert_pset_value_ = nullptr;
     Statement* insert_value_ = nullptr;
@@ -1398,7 +1753,8 @@ class Builder {
     std::unordered_set<uint32_t> written_psets_;
     std::unordered_map<std::string, int64_t> value_ids_;
 
-    size_t boxes_ = 0, unknown_ = 0, fanned_ = 0;
+    size_t boxes_ = 0, unknown_ = 0, fanned_ = 0, extruded_ = 0, empty_ = 0, lods_stored_ = 0;
+    std::unordered_map<uint32_t, Swept> swept_;
     std::map<std::string, size_t> boxed_types_;
     double seconds_ = 0;
 };

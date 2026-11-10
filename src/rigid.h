@@ -35,7 +35,7 @@ Vector numbers_in(std::string_view list);
 
 std::optional<Rigid> axis_placement(const SpfFile& spf, uint32_t id);
 
-// A mapped item's target. None if it scales or mirrors, as what's made from it couldn't do the same.
+// A mapped item's target, uniform or not. None if it scales or mirrors, as what's made from it couldn't do the same.
 std::optional<Rigid> operator_of(const SpfFile& spf, uint32_t id);
 
 std::string reference(uint32_t id);
