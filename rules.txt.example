@@ -15,6 +15,8 @@ hidden Pile Cap
 # For when the family doesn't say what a thing is, as with a road's meshes, by a property's value: SET.PROPERTY=VALUE
 hidden-if Corridor_Mesh_ID.Asset_Identifier_Label=Subbase
 envelope-if Corridor_Mesh_ID.Asset_Identifier_Label=Vehicle Envelope
+# An assembly with this property keeps its big parts; those under a quarter of its size go in the hidden file
+hidden-small-parts-if Corridor Data.IsSignFace=Yes
 
 # Where the models keep their asset data. Anything left out is left alone: without site-set and site-id,
 # nothing merges by site.
@@ -26,6 +28,9 @@ envelope-if Corridor_Mesh_ID.Asset_Identifier_Label=Vehicle Envelope
 # design-tag         the design tag property
 # mark-set           a property set holding the mark that tells pieces apart; first preferred
 # mark               the mark property: elements with a design tag but different marks are apart
+# zone-property      an element's zone, in any set, for the IFCFilter set; the model's file name says it if that doesn't
+# zone               one zone, a line each; anything else, such as a group of zones, isn't one
+# location-property  an element's location, in any set, for the IFCFilter set
 # quantity-set       sizes are worked out for a merged asset as a whole in this set, as these three:
 # quantity-length, quantity-width, quantity-height
 # cull-set           left out of every output once merging has used it
@@ -42,6 +47,10 @@ design-set Quantities
 design-tag DesignTag
 mark-set Identity
 mark Mark
+zone-property Zone
+zone NORTH
+zone SOUTH
+location-property LocationCode
 quantity-set Quantities
 quantity-length Length
 quantity-width Width

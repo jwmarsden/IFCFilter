@@ -19,6 +19,7 @@ The federation target is Bentley Infrastructure Cloud, under IFC4, so an IFC2X3 
 
 - Attributes IFC4 added to the end of a type are written as `$`.
 - `IfcRelConnectsPortToElement` becomes `IfcRelNests`, with the same GUID, as IFC4 only lets the old one relate to distribution elements, and ports are often on proxies.
+- A port goes in whichever file what it's on goes in, and when parts merge their ports are on the asset. A port on nothing, as some exporters leave, is left out.
 - A predefined type IFC4 doesn't have, such as `.TELEPHONE.`, becomes `.USERDEFINED.`, with the old value as the element type if there isn't one.
 
 Every instance is checked against the IFC4 schema first: its type, what its attributes are called, and that each value fits, down to the type of what it refers to. If anything doesn't fit, such as a type that's gone or an attribute that now means something else, the whole model is written as IFC2X3, with a warning saying why. The header's view definition isn't changed, nor are EXPRESS rules checked. Models in IFC4 or a later schema, such as IFC4X3_ADD2, which 12d writes for survey, go through in their own schema.
@@ -73,6 +74,19 @@ Elements with the same site ID (`site-id`, in the `site-set` sets) are one asset
 - An element with no site ID goes by its design tag (`design-tag`, in the `design-set` sets), if that's an ID: not a placeholder, with a digit in it, as `LO` or `BOLLARD` hasn't, with no spaces, as a description has, and not on more than half the model's tagged elements, as a code for the whole model is. If its tag is only on one site's parts, it joins that site; otherwise elements with the same tag are an asset, named after it, and the manifest says `design tag X`. A tag can still name a type rather than one thing, as TU's deck units' do: each has a mark of its own (`mark`, in the `mark-set` sets), so elements with a tag only go together if their marks are the same, or they have none. Where pieces of a type have no marks, as in BS, the 5 m gap keeps panels of one type apart only where they don't touch.
 - Parts of a site are only merged if each is within 5 m of another (`--merge-gap M`, and 0 doesn't check), as two things far apart with one site ID, such as two cameras, are a mistake in the data. The gap is between boxes around the parts, so it's never more than the real gap, and parts that can't merge still count as what joins the rest. Groups that are far apart are merged as separate assets, a part on its own stays as it is, and the manifest says which. A part whose reach can't be worked out stays as it is too.
 
+Every element of the federation file has an `IFCFilter` property set saying where it came from, so that what's found in a federated model can be traced back and sorted:
+
+| Property | Holds |
+|---|---|
+| `SourceFile` | The model's file name |
+| `SourceGUIDs` | The GUIDs it had there: for a merged element, those of every element merged into it, joined with `; ` |
+| `Zone` | Its zone (`zone-property`, in any set), if that's one of the `zone` lines; otherwise the zone in the model's file name, if there is one. A model of a group of zones, such as `PWA`, gives none of its own |
+| `SiteID` | Its site ID, as merging reads it |
+| `Asset Type` | How the site ID starts, as its level is named, such as `ECL` for `ECL301102` |
+| `Location` | Its location (`location-property`, in any set), such as `06203-L003-SL011` |
+
+A value that's blank, `N/A` or a placeholder is left out, and a merged element has each of its parts' values, joined with `; `. The set goes on after the mapping, so `mapping.csv` doesn't change it. It adds a few percent to the federation file, most where a merged site has hundreds of parts, such as LV's cables, each with its GUID in the list. Ports, annotations and grids don't have one.
+
 Each output is then tidied:
 
 - `cull-set` sets are left out, once merging has used their design tags, along with what only they had.
@@ -88,7 +102,7 @@ Face sets that are the same shape, moved and turned, are written once and placed
 
 A body of several face sets isn't instanced set by set, as Open IFC Viewer won't select an element by clicking it when its body is many mapped items. A whole body that's the same as another, moved and turned, is placed from it instead, as one mapped item, and so is the map of several sets that Revit makes an element's body of.
 
-Where a family doesn't say what a thing is, as with a road's meshes, `hidden-if` and `envelope-if` rules go by a property's value instead: `SET.PROPERTY=VALUE`.
+Where a family doesn't say what a thing is, as with a road's meshes, `hidden-if` and `envelope-if` rules go by a property's value instead: `SET.PROPERTY=VALUE`. A `hidden-small-parts-if` rule picks out assemblies the same way, and puts their parts under a quarter of the assembly's size in the hidden file: a sign face's text, where the exporter left broken pieces of letters over the real ones, while its plate, border, symbols and the real text stay.
 
 Each output is then written compactly, keeping every element and property (`--no-compact` skips this):
 

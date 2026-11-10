@@ -27,6 +27,7 @@ struct MergePlan {
     std::vector<uint32_t> keep;                        // instances of the input that they refer to
     std::vector<MergedAsset> assets;
     std::unordered_map<uint32_t, size_t> merged_into;  // element, and the asset it's now part of
+    uint64_t ports_moved = 0;                          // ports on a merged part, and now on its asset
     uint64_t openings_moved = 0;                       // openings that cut a merged part, and now cut its asset
     uint64_t left_out_other = 0;                       // placed in a way a mapped item can't repeat
     uint64_t left_out_extent = 0;                      // where its shape reaches couldn't be worked out

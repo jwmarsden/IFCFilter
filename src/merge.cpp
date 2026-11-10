@@ -498,6 +498,16 @@ class Planner {
                 if (attributes.size() == 6) {
                     for (const uint32_t element : refs_in(attributes[4])) voids_of_[element].push_back(id);
                 }
+            } else if (type == "IFCRELNESTS" || type == "IFCRELCONNECTSPORTTOELEMENT") {
+                // A port is nested in what it's on, or in IFC2X3 connected to it
+                const auto attributes = attributes_of(spf_.line(id));
+                if (attributes.size() != 6) continue;
+                const bool nests = type == "IFCRELNESTS";
+                const auto host = refs_in(attributes[nests ? 4 : 5]);
+                if (host.size() != 1 || !candidate.count(host[0])) continue;
+                for (const uint32_t port : refs_in(attributes[nests ? 5 : 4])) {
+                    if (spf_.type(port) == "IFCDISTRIBUTIONPORT") ports_of_[host[0]].push_back(port);
+                }
             } else if (type == "IFCRELCONTAINEDINSPATIALSTRUCTURE") {
                 const auto attributes = attributes_of(spf_.line(id));
                 if (attributes.size() != 6) continue;
@@ -813,6 +823,20 @@ class Planner {
             }
         }
 
+        // Its parts' ports are on the asset now, where they were, rather than left on nothing
+        std::vector<uint32_t> ports;
+        for (const Member* member : members) {
+            const auto on = ports_of_.find(member->id);
+            if (on == ports_of_.end()) continue;
+            for (const uint32_t port : on->second) {
+                if (!gone_(port)) ports.push_back(port);
+            }
+        }
+        if (!ports.empty()) {
+            emitter_.emit("IFCRELNESTS('" + derived_guid(asset_key + "@" + stem_ + "/ports") + "'," + owner + ",'NestedPorts',$," + reference(element) + "," + list_of(ports) + ");");
+            plan_.ports_moved += ports.size();
+        }
+
         // The asset keeps what's true of all of it
         std::map<std::string, size_t> counted;
         std::vector<std::pair<std::string_view, uint32_t>> first_seen;
@@ -883,6 +907,7 @@ class Planner {
     std::vector<uint32_t> containments_;      // relationships that hold elements on levels
     std::unordered_set<uint32_t> held_;       // structures they hold elements on
     std::unordered_map<uint32_t, uint32_t> aggregation_of_;  // whole, and the relationship of its parts
+    std::unordered_map<uint32_t, std::vector<uint32_t>> ports_of_;  // element, and the ports on it
     std::unordered_map<uint32_t, std::vector<uint32_t>> voids_of_;  // element, and the relationships of the openings that cut it
     std::unordered_map<uint32_t, PropertySet> property_sets_;
     std::map<uint32_t, std::vector<uint32_t>> contained_;

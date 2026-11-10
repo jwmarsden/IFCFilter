@@ -3,6 +3,7 @@
 #include "breps.h"
 #include "combine.h"
 #include "compact.h"
+#include "extent.h"
 #include "simplify.h"
 #include "ifc_access.h"
 #include "instance.h"
@@ -14,6 +15,7 @@
 #include "spf.h"
 #include "system.h"
 #include "tidy.h"
+#include "trace.h"
 #include "upgrade.h"
 #include "zip.h"
 
@@ -68,6 +70,7 @@ struct Rules {
     std::vector<std::string> envelope;      // opaque, but not really there (clearance envelopes)
     std::vector<std::string> hidden;        // really there, but out of sight (buried piles)
     std::vector<PropertyRule> by_property;  // for models where the family doesn't say what a thing is
+    std::vector<PropertyRule> small_parts;  // assemblies whose small parts are hidden, such as a sign's badly exported text
 
     static bool matches(const std::vector<std::string>& list, const std::string& family) {
         return std::any_of(list.begin(), list.end(), [&](const std::string& s) { return family.find(s) != std::string::npos; });
@@ -89,6 +92,12 @@ struct Rules {
             else if (action == "physical") rules.physical.push_back(family);
             else if (action == "envelope") rules.envelope.push_back(family);
             else if (action == "hidden") rules.hidden.push_back(family);
+            else if (action == "hidden-small-parts-if") {
+                const auto dot = family.find('.');
+                const auto equals = family.find('=');
+                if (dot == std::string::npos || equals == std::string::npos || equals < dot) throw std::runtime_error(path + ": " + action + " needs SET.PROPERTY=VALUE: " + family);
+                rules.small_parts.push_back({family.substr(0, dot), family.substr(dot + 1, equals - dot - 1), trimmed(family.substr(equals + 1)), HIDDEN});
+            }
             else if (action == "hidden-if" || action == "envelope-if") {
                 const auto dot = family.find('.');
                 const auto equals = family.find('=');
@@ -137,6 +146,7 @@ class Model {
     std::vector<bool> is_product, is_type;  // by id
     std::vector<bool> is_root;
     std::unordered_map<uint32_t, std::string> renamed;  // roots whose GUID isn't unique, and what they have instead
+    uint64_t small_parts = 0, small_part_assemblies = 0;  // hidden by hidden-small-parts-if, and the assemblies they're of
 
     // A root's GUID in an output. What's in one output only is the thing itself, and keeps its GUID.
     // What's in several keeps it in the federation file, and elsewhere has one made from it.
@@ -204,7 +214,7 @@ double plan_area(const express::entity& item) {
     return (x1 - x0) * (y1 - y0);
 }
 
-void classify(ifcopenshell::file& file, const Rules& rules, double threshold, uint32_t max_id, Model& model) {
+void classify(ifcopenshell::file& file, const SpfFile& spf, const Rules& rules, double threshold, uint32_t max_id, Model& model) {
     model.is_product.assign(max_id, false);
     model.is_type.assign(max_id, false);
     model.is_root.assign(max_id, false);
@@ -253,6 +263,55 @@ void classify(ifcopenshell::file& file, const Rules& rules, double threshold, ui
                     for (const auto& object : links(relationship, "RelatedObjects")) by_property[object.id()] = rule.output;
                 }
             }
+        }
+    }
+
+    // An assembly a rule picks out keeps its big parts, such as a sign's plate, border and symbols, and its parts
+    // under a quarter of its size, such as the letters of text exported as broken meshes, are hidden
+    if (!rules.small_parts.empty()) {
+        std::unordered_set<uint32_t> picked;
+        for (const auto& i : all_of(file, "IfcRelDefinesByProperties")) {
+            const auto relationship = i.as<express::entity>();
+            const auto set = link(relationship, "RelatingPropertyDefinition");
+            if (!set || !set.declaration().is("IfcPropertySet")) continue;
+            const std::string name = text(set, "Name");
+            for (const PropertyRule& rule : rules.small_parts) {
+                if (rule.set != name) continue;
+                for (const auto& p : links(set, "HasProperties")) {
+                    const auto property = p.as<express::entity>();
+                    if (text(property, "Name") != rule.property || trimmed(nominal_text(property)) != rule.value) continue;
+                    for (const auto& object : links(relationship, "RelatedObjects")) picked.insert(object.id());
+                }
+            }
+        }
+        Extents extents(spf);
+        const auto size_of = [](const Box& box) {
+            double size = 0;
+            for (int axis = 0; axis < 3; ++axis) size = std::max(size, box.high[axis] - box.low[axis]);
+            return size;
+        };
+        for (const auto& i : all_of(file, "IfcRelAggregates")) {
+            const auto relationship = i.as<express::entity>();
+            const auto whole = link(relationship, "RelatingObject");
+            if (!whole || !picked.count(whole.id())) continue;
+            std::vector<std::pair<uint32_t, double>> parts;
+            Box all;
+            for (const auto& p : links(relationship, "RelatedObjects")) {
+                const auto box = extents.product(p.id());
+                if (!box || box->empty()) continue;
+                all.add(*box);
+                parts.emplace_back(p.id(), size_of(*box));
+            }
+            if (all.empty()) continue;
+            const double whole_size = size_of(all);
+            uint64_t hidden = 0;
+            for (const auto& [part, size] : parts) {
+                if (size >= whole_size / 4 || by_property.count(part)) continue;
+                by_property[part] = HIDDEN;
+                ++hidden;
+            }
+            model.small_parts += hidden;
+            if (hidden) ++model.small_part_assemblies;
         }
     }
 
@@ -680,7 +739,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         if (file->schema()->name().rfind("IFC4", 0) != 0) {
             std::cerr << input.string() << ": warning: schema is " << file->schema()->name() << ", and is written out as it is: " << why_not_ifc4 << "\n";
         }
-        classify(*file, rules, options.transparent, max_id, model);
+        classify(*file, spf, rules, options.transparent, max_id, model);
         for (const char* type : {"IfcProject", "IfcSpatialStructureElement"}) {
             for (const auto& i : all_of(*file, type)) always.push_back(i.id());
         }
@@ -705,6 +764,25 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         in_output[FEDERATION][element.id] = spatial || !element.has_body || element.items[FEDERATION] || !placed;
         in_output[HIDDEN][element.id] = spatial || element.items[HIDDEN];
         in_output[ENVELOPES][element.id] = spatial || element.items[ENVELOPES];
+    }
+    // A port has no body of its own: it goes where what it's on goes, and isn't left behind without it. One
+    // that's on nothing, as some exporters leave, is left out.
+    for (const auto& element : model.elements) {
+        if (element.type != "IfcDistributionPort") continue;
+        for (auto& v : in_output) v[element.id] = false;
+    }
+    for (uint32_t id = 0; id < max_id; ++id) {
+        const auto type = spf.type(id);
+        if (type != "IFCRELNESTS" && type != "IFCRELCONNECTSPORTTOELEMENT") continue;
+        const auto attributes = attributes_of(spf.line(id));
+        if (attributes.size() != 6) continue;
+        const bool nests = type == "IFCRELNESTS";
+        const auto host = refs_in(attributes[nests ? 4 : 5]);
+        if (host.size() != 1 || host[0] >= max_id) continue;
+        for (const uint32_t port : refs_in(attributes[nests ? 5 : 4])) {
+            if (port >= max_id || spf.type(port) != "IFCDISTRIBUTIONPORT") continue;
+            for (auto& v : in_output) v[port] = v[host[0]];
+        }
     }
 
     std::vector<uint32_t> relationships, followers, layers;
@@ -825,6 +903,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     std::array<TidyStats, 3> tidied{};
     const Mapping mapping = options.mapping_path.empty() ? Mapping{} : load_mapping(options.mapping_path);
     MappingStats mapped;
+    TraceStats trace_stats;
     for (const Output output : {FEDERATION, HIDDEN, ENVELOPES}) {
         const auto path = output_path(output);
         writers[output]->write(path.string(), layers);
@@ -834,6 +913,27 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         if (options.compact) compacted[output] = compact(path.string(), options.precision_mm);
         if (output == FEDERATION && options.compact && options.simplify_mm > 0) simplified = simplify(path.string(), options.simplify_mm);
         if (output == FEDERATION) mapped = apply_mapping(path.string(), mapping);
+        // After the mapping, so that what it does can't take this away
+        if (output == FEDERATION) {
+            std::vector<Traced> elements;
+            std::map<size_t, Traced> assets;
+            for (const auto& element : model.elements) {
+                if (!in_output[FEDERATION][element.id] || element.feature) continue;
+                if (std::find(always.begin(), always.end(), element.id) != always.end()) continue;
+                if (element.type == "IfcDistributionPort" || element.type == "IfcAnnotation" || element.type == "IfcGrid") continue;
+                const auto asset = merge.merged_into.find(element.id);
+                if (asset != merge.merged_into.end()) {
+                    Traced& traced = assets[asset->second];
+                    traced.guid = merge.assets[asset->second].guid;
+                    traced.sources.push_back(element.id);
+                    continue;
+                }
+                const bool whole = !in_output[HIDDEN][element.id] && !in_output[ENVELOPES][element.id];
+                elements.push_back({model.guid_in_output(element.id, element.guid, FEDERATION, whole), {element.id}});
+            }
+            for (auto& [index, traced] : assets) elements.push_back(std::move(traced));
+            trace_stats = trace(path.string(), spf, input.filename().string(), elements);
+        }
         const auto zipped = fs::path(path.string() + ZIPPED);
         // The federation file stays plain, as that's the format Bentley's list names
         if (!options.zip || output == FEDERATION) {
@@ -897,6 +997,14 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     }
     std::cout << "  " << split_elements << " elements split, " << moved_elements << " moved whole, " << model.conflicts.size()
               << " shared items wanted in two places (left in the federation file), " << unreached << " unused instances kept in the federation file\n";
+    {
+        uint64_t loose = 0;
+        for (const auto& element : model.elements) {
+            if (element.type == "IfcDistributionPort" && !in_output[FEDERATION][element.id] && !in_output[HIDDEN][element.id] && !in_output[ENVELOPES][element.id]) ++loose;
+        }
+        if (loose) std::cout << "  " << loose << " ports on nothing left out\n";
+    }
+    if (model.small_parts) std::cout << "  " << model.small_parts << " small parts of " << model.small_part_assemblies << " assemblies hidden by hidden-small-parts-if\n";
     if (!model.renamed.empty()) std::cout << "  " << model.renamed.size() << " GUIDs changed, as they weren't unique\n";
     if (source != input) {
         std::cout << "  written as IFC4: " << upgrade.lengthened << " instances given the attributes IFC4 added, " << upgrade.ports << " port relationships now nesting, "
@@ -905,7 +1013,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     }
     if (options.merge) {
         std::cout << "  " << merge.merged_into.size() << " elements merged into " << merge.assets.size() << " by site ID or design tag, " << merge.openings_moved
-                  << " openings now cutting the asset, " << merge.left_out_other << " left out as they're placed in a way that can't be repeated, "
+                  << " openings now cutting the asset, " << merge.ports_moved << " ports now on it, " << merge.left_out_other << " left out as they're placed in a way that can't be repeated, "
                   << merge.left_out_extent << " left out as where they reach couldn't be worked out\n";
         if (!merge.assets.empty()) {
             uint64_t left_mapped = 0;
@@ -977,6 +1085,8 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
                   << mapped.retyped << " elements given another class\n";
         for (const std::string& warning : mapped.warnings) std::cout << "  warning: " << warning << "\n";
     }
+    std::cout << "  " << trace_stats.elements << " elements given an " << TRACE_SET << " set of where they came from\n";
+    if (trace_stats.missing) std::cout << "  warning: " << trace_stats.missing << " elements weren't found in the federation file by their GUID, so have no " << TRACE_SET << " set\n";
     uint64_t dropped = 0;
     for (const auto& writer : writers) dropped += writer->dropped();
     if (dropped) std::cout << "  warning: " << dropped << " lines couldn't be written without what they refer to\n";
