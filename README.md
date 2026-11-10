@@ -4,7 +4,8 @@ Prepares an IFC model for federation. It takes one model and splits it into thes
 
 | Output | Holds |
 |---|---|
-| `federate/DISCIPLINE/STEM.federate.ifc` | What should be federated, with tessellation explosions fixed and elements merged by site ID where appropriate |
+| `federate/DISCIPLINE/STEM.federate.ifc` | What should be federated, with tessellation explosions fixed and elements merged by site ID or design tag where appropriate |
+| `parts/DISCIPLINE/STEM.federate.ifc` | With `--combine`, the federation file of a model that's combined with others, instead of in `federate` (see [Combining models](#combining-models)) |
 | `non-federate/STEM.hidden.ifczip` | Geometry filtered out because it isn't visible or important to the federation, such as reinforcement inside a slab |
 | `non-federate/STEM.envelopes.ifczip` | Space-proofing and clash shapes that aren't physical, typically transparent envelopes around things |
 | `manifest/STEM.manifest.csv` | Where each original element went, its new GUID, what was done and why |
@@ -50,7 +51,7 @@ ifcfilter check MODELS_FOLDER --out OUTPUT_FOLDER
 ifcfilter cache MODEL.ifc --out MODEL.ifcc
 ```
 
-`scripts\mirror.ps1` keeps a copy of the output folder up to date elsewhere, such as in a synced folder. It won't run on a folder with a run going on, and `-List` says what would change.
+`scripts\mirror.ps1` keeps a copy of the output folder up to date elsewhere, such as in a synced folder. It won't run on a folder with a run going on, `-List` says what would change, and `-Keep` names files and folders of the copy's own that it leaves alone, such as `-Keep update.md,rules.txt,test`. Navisworks' `.nwc` cache files are never copied.
 
 No GUID is written twice in a run, across all its outputs:
 
@@ -77,7 +78,7 @@ Each output is then tidied:
 - `cull-set` sets are left out, once merging has used their design tags, along with what only they had.
 - What the `duplicate-set` repeats from another set on the same elements, with the same value, is left out of it, and it goes if that's all it had. What only it says stays.
 - Property sets are in alphabetical order, ignoring case: their relationships are written last, numbered in that order, as viewers list sets in the order of those.
-- The header names the output and the time it was written, gives IFCFilter as the preprocessor with the one before it in brackets, and its description notes the source. The originating system and author stay as they were. Owner histories are marked `.MODIFIED.` then, by a IFCFilter application.
+- The header names the output and the time it was written, gives IFCFilter as the preprocessor with the one before it in brackets, and its description notes the source. The originating system and author stay as they were. Owner histories are marked `.MODIFIED.` then, by an IFCFilter application.
 - The project is named after the model, with its `project-long-name` as its long name, the site as `site-name`, and the building after its `building-name`, both in the `project-set`, the values most of the model has. Levels lose their Revit level type.
 - Elements with a site ID, and what they're made of, are named after it and described as their `asset-component`. An `asset-type` that isn't how the site ID starts is corrected to it, with a property of its own, as the old one may be on other sets; a set on elements of different types is left as it is. Anything else is named as its family and type, without the Revit element ID Revit adds to the end, as that's its tag already.
 
@@ -119,7 +120,7 @@ ifcfilter combine FEDERATE_FOLDER --out OUTPUT_FOLDER --register combine.csv
 
 `ifcfilter split --combine combine.csv` does it as part of a run from the models: a model with a name in the register has its federation file written to `parts/DISCIPLINE` instead of `federate`, and after the run each name is written to `federate/DISCIPLINE/NAME.federate.ifc` from its models' files, so what's combined is only federated once. A combined file is written again if it's missing, or older than any of its models' files or than the register. A model taken out of a group goes back to `federate` the next time it's done.
 
-What's combined has one project, named after the file, one set of units and contexts, one site and one building, the first model's, and levels of the same name in any of them are one level, in alphabetical order with `Non-Managed Types` last; a site's level stays under its type's. What the others' site, building and levels placed is placed from what took their place, where it was, as models can have their site in different places, so nothing moves. Everything else is copied as it is, renumbered; GUIDs are already unique across a run, and an application such as Revit is only written once. Models whose length, area or volume units differ aren't combined.
+What's combined has one project, named after the file, one set of units and contexts, one site and one building, the biggest model's, and levels of the same name in any of them are one level, in alphabetical order with `Non-Managed Types` last; a site's level stays under its type's. What the others' site, building and levels placed is placed from what took their place, where it was, as models can have their site in different places, so nothing moves. Everything else is copied as it is, renumbered; GUIDs are already unique across a run, and an application such as Revit is only written once. Models whose length, area or volume units differ aren't combined.
 
 ## Mapping data
 
@@ -151,7 +152,9 @@ Planned:
 3. Compact writing. Done.
 4. Merge by site ID. Done.
 5. Instancing repeated shapes. Done.
-6. Tessellation fixes: merging flat faces, then simplifying within a tolerance.
+6. Tessellation fixes: simplifying within a tolerance. Done; merging flat faces isn't.
+7. Combining models into one federation file each, by a register. Done.
+8. `ifcfilter cache`, the viewing cache. A prototype.
 
 ## Build
 
