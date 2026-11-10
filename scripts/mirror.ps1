@@ -3,11 +3,14 @@
 #
 #   .\scripts\mirror.ps1 -From C:\Apps\IFCFilter -To C:\Users\jwmar\OneDrive\Work\IFCFilter
 #   .\scripts\mirror.ps1 -From C:\Apps\IFCFilter -To C:\Users\jwmar\OneDrive\Work\IFCFilter -List
+#   .\scripts\mirror.ps1 -From C:\Apps\IFCFilter -To C:\Users\jwmar\OneDrive\Work\IFCFilter -Keep update.md,rules.txt,test
 #
-# Run it after a run has been checked. -List says what would change, and changes nothing.
+# Run it after a run has been checked. -List says what would change, and changes nothing. -Keep names files
+# and folders of the copy's own, at its top, that the output doesn't have, so they aren't deleted.
 param(
     [Parameter(Mandatory)][string]$From,
     [Parameter(Mandatory)][string]$To,
+    [string[]]$Keep = @(),
     [switch]$List
 )
 
@@ -25,7 +28,15 @@ if ((Test-Path $To) -and (Get-ChildItem $To -Force | Select-Object -First 1) -an
 }
 
 # Navisworks leaves its cache files beside what it opens. They aren't output, so they don't get copied.
-$options = @('/MIR', '/R:5', '/W:10', '/NP', '/NDL', '/FFT', '/XJ', '/XF', '*.nwc')
+$files = @('*.nwc')
+$folders = @()
+foreach ($name in $Keep) {
+    $kept = Join-Path $To $name
+    if (Test-Path $kept -PathType Container) { $folders += $kept } else { $files += $name }
+}
+# Robocopy neither copies nor deletes what it's told to leave out
+$options = @('/MIR', '/R:5', '/W:10', '/NP', '/NDL', '/FFT', '/XJ', '/XF') + $files
+if ($folders) { $options += @('/XD') + $folders }
 if ($List) { $options += '/L' }
 robocopy $From $To @options
 # Below 8 is robocopy saying that it worked

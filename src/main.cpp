@@ -1,3 +1,4 @@
+#include "combine.h"
 #include "mapping.h"
 #include "report.h"
 #include "split.h"
@@ -12,9 +13,10 @@ namespace {
 int usage(int code) {
     (code ? std::cerr : std::cout)
         << "usage: ifcfilter report MODEL.ifc [--csv FAMILIES.csv] [--suspects ELEMENTS.csv] [--rules rules.txt] [--top N] [--heavy-faces N] [--transparent T]\n"
-        << "       ifcfilter split MODEL.ifc|FOLDER... --out DIR [--rules rules.txt] [--transparent T] [--mapping mapping.csv] [--no-merge] [--merge-gap M] [--no-instance] [--no-compact] [--precision-mm MM] [--no-zip] [--jobs N] [--all]\n"
+        << "       ifcfilter split MODEL.ifc|FOLDER... --out DIR [--rules rules.txt] [--transparent T] [--mapping mapping.csv] [--combine combine.csv] [--no-merge] [--merge-gap M] [--no-instance] [--no-compact] [--precision-mm MM] [--simplify-mm MM] [--no-zip] [--jobs N] [--all]\n"
         << "       ifcfilter check MODEL.ifc|FOLDER... --out DIR\n"
-        << "       ifcfilter inventory MODEL.ifc|FOLDER... --mapping mapping.csv [--jobs N]\n";
+        << "       ifcfilter inventory MODEL.ifc|FOLDER... --mapping mapping.csv [--jobs N]\n"
+        << "       ifcfilter combine FEDERATE.ifc|FOLDER... --out DIR [--register combine.csv] [--name-part N]\n";
     return code;
 }
 
@@ -38,6 +40,7 @@ int main(int argc, char** argv) {
             if (arg == "--out") options.out_dir = value();
             else if (arg == "--rules") options.rules_path = value();
             else if (arg == "--mapping") options.mapping_path = value();
+            else if (arg == "--combine") options.combine_path = value();
             else if (arg == "--transparent") options.transparent = std::stod(value());
             else if (arg == "--jobs") options.jobs = std::stoi(value());
             else if (arg == "--worker-shared") options.worker_shared = value();
@@ -48,6 +51,7 @@ int main(int argc, char** argv) {
             else if (arg == "--no-compact") options.compact = false;
             else if (arg == "--no-zip") options.zip = false;
             else if (arg == "--precision-mm") options.precision_mm = std::stod(value());
+            else if (arg == "--simplify-mm") options.simplify_mm = std::stod(value());
             else if (!arg.empty() && arg[0] == '-') return usage(2);
             else options.inputs.push_back(arg);
         }
@@ -74,6 +78,24 @@ int main(int argc, char** argv) {
         } catch (const std::exception& e) {
             std::cerr << e.what() << "\n";
             return 2;
+        }
+    }
+    if (command == "combine") {
+        ifcfilter::CombineOptions options;
+        for (int i = 2; i < argc; ++i) {
+            const std::string arg = argv[i];
+            if (arg == "--out" && i + 1 < argc) options.out_dir = argv[++i];
+            else if (arg == "--name-part" && i + 1 < argc) options.name_part = std::stoi(argv[++i]);
+            else if (arg == "--register" && i + 1 < argc) options.register_path = argv[++i];
+            else if (!arg.empty() && arg[0] == '-') return usage(2);
+            else options.inputs.push_back(arg);
+        }
+        if (options.inputs.empty() || options.out_dir.empty()) return usage(2);
+        try {
+            return ifcfilter::combine(options);
+        } catch (const std::exception& e) {
+            std::cerr << e.what() << "\n";
+            return 1;
         }
     }
     if (command == "inventory") {

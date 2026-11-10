@@ -455,7 +455,7 @@ MappingStats apply_mapping(const std::string& path, const Mapping& mapping) {
         const SpfFile spf(path);
         const uint32_t max_id = spf.max_id();
         const std::string schema_name = schema_in_header(path);
-        const ifcopenshell::schema_definition* schema = ifcopenshell::schema_by_name(schema_name.rfind("IFC2X3", 0) == 0 ? "IFC2X3" : "IFC4");
+        const ifcopenshell::schema_definition* schema = ifcopenshell::schema_by_name(schema_name.rfind("IFC2X3", 0) == 0 ? "IFC2X3" : schema_name.rfind("IFC4X3", 0) == 0 ? "IFC4X3_ADD2" : "IFC4");
         std::set<std::string> warned;
         const auto warn = [&](const std::string& message) {
             if (warned.insert(message).second) stats.warnings.push_back(message);

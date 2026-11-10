@@ -115,7 +115,7 @@ class Instancer {
   public:
     Instancer(const SpfFile& spf, double tolerance)
         : spf_(spf), tolerance_(tolerance), max_id_(spf.max_id()), emitter_(spf.max_id()), kinds_(max_id_, Kind::Other), excluded_(max_id_, false), top_(max_id_, false),
-          map_stays_(max_id_, false), removed_(max_id_, false), references_(max_id_, 0) {}
+          map_stays_(max_id_, false), removed_(max_id_, false), references_(max_id_, 0), several_(max_id_, false), rep_users_(max_id_, 0) {}
 
     // False if there's nothing to do, and the file should stay as it is
     bool run(const std::string& out_path, InstanceStats& stats) {
@@ -123,8 +123,11 @@ class Instancer {
         stats.sets = sets_.size();
         exclude_what_cannot_be_flattened();
         find_copies(stats);
-        if (copy_of_.empty()) return false;
+        find_body_copies(stats);
+        if (copy_of_.empty() && body_copy_of_.empty() && map_copy_of_.empty()) return false;
         rewrite_representations();
+        rewrite_bodies();
+        rewrite_mapped_copies();
         if (!remove_what_is_left_over()) return false;
         write(out_path);
         return true;
@@ -146,6 +149,8 @@ class Instancer {
                 if (next >= max_id_) return;
                 if (kind != Kind::Layer) ++references_[next];
                 const Kind target = kinds_[next];
+                if (kind == Kind::Representation && target == Kind::Set) ++rep_users_[next];
+                if (kind == Kind::Mapped && target == Kind::Map) map_users_[next].push_back(id);
                 // Anything else that uses a set, such as a boolean or a texture, needs it as it is
                 if (target == Kind::Set && kind != Kind::Representation && kind != Kind::Styled && kind != Kind::ColourMap && kind != Kind::Layer) excluded_[next] = true;
                 if (target == Kind::Representation && kind != Kind::Map && kind != Kind::Layer) top_[next] = true;
@@ -263,12 +268,17 @@ class Instancer {
         std::unordered_set<uint32_t> visited;
         // What an opening cuts stays as it is, as taking a solid from a mesh is fragile
         for (const uint32_t id : sets_openings_touch(spf_)) excluded_[id] = true;
-        // A body of several shapes stays as it is: flattened, it would be one mapped item for each, and Open IFC
-        // Viewer won't select an element whose body is many mapped items by clicking it until it's been opened
-        // from the tree. A body of one shape becomes one mapped item, which it selects straight away.
+        other_excluded_ = excluded_;
+        // A body of several shapes isn't instanced shape by shape: flattened, it would be one mapped item for each,
+        // and Open IFC Viewer won't select an element whose body is many mapped items by clicking it until it's
+        // been opened from the tree. A body of one shape becomes one mapped item, which it selects straight away,
+        // and so does a whole body that's a copy of another (find_body_copies).
         std::unordered_set<uint32_t> several;
         for (uint32_t id = 0; id < max_id_; ++id) {
-            if (kinds_[id] == Kind::Representation && top_[id] && shapes_in(id) > 1) exclude_under(id, several);
+            if (kinds_[id] == Kind::Representation && top_[id] && shapes_in(id) > 1) {
+                several_[id] = true;
+                exclude_under(id, several);
+            }
         }
         for (uint32_t id = 0; id < max_id_; ++id) {
             if (kinds_[id] != Kind::Mapped) continue;
@@ -279,77 +289,216 @@ class Instancer {
         }
     }
 
+    // What a set has to share with another to be a copy of it, apart from where its points are: its type, faces
+    // and look. False if it can't be placed from another.
+    bool set_key(uint32_t id, std::string& key, size_t& bytes) {
+        const auto attributes = attributes_of(spf_.line(id));
+        const auto lists = attributes.empty() ? std::vector<uint32_t>{} : refs_in(attributes[0]);
+        if (lists.size() != 1 || spf_.type(lists[0]) != "IFCCARTESIANPOINTLIST3D") return false;
+        bytes += spf_.line(id).size() + spf_.line(lists[0]).size();
+        key.append(spf_.type(id)).append("(");
+        if (spf_.type(id) == "IFCTRIANGULATEDFACESET") {
+            if (attributes.size() < 4 || attributes[1] != "$") return false;  // its own normals would have to turn too
+            key.append(attributes[2]).append(attributes[3]);
+            if (attributes.size() > 4) key.append(attributes[4]);
+        } else {
+            if (attributes.size() != 4) return false;
+            key.append(attributes[1]).append(attributes[3]);
+            for (const uint32_t face : refs_in(attributes[2])) {
+                const auto line = spf_.line(face);
+                bytes += line.size();
+                key.append(line.substr(line.find('=')));
+            }
+        }
+        const auto look = looks_.find(id);
+        if (look != looks_.end()) {
+            auto sorted = look->second;
+            std::sort(sorted.begin(), sorted.end());
+            for (const std::string& part : sorted) key.append("|").append(part);
+        }
+        key.append(")");
+        return true;
+    }
+
+    std::vector<Vector> points_of(uint32_t set) const {
+        const auto attributes = attributes_of(spf_.line(set));
+        const auto list = attributes_of(spf_.line(refs_in(attributes[0])[0]));
+        return list.empty() ? std::vector<Vector>{} : points_in(list[0]);
+    }
+
+    // Members of a bucket that are the same shape, moved and turned: each one that's a copy, with what it's
+    // placed from and how. points says where a member's points are. Returns how many have copies.
+    template <typename Points>
+    uint64_t match(const std::vector<uint32_t>& members, Points points_of_member, std::unordered_map<uint32_t, std::pair<uint32_t, Rigid>>& copies) {
+        const double limit = tolerance_ * tolerance_;
+        std::vector<Shape> shapes;
+        std::vector<bool> has_copies;
+        for (const uint32_t id : members) {
+            std::vector<Vector> points = points_of_member(id);
+            if (points.empty()) continue;
+            bool placed = false;
+            for (size_t s = 0; s < shapes.size() && !placed; ++s) {
+                const Shape& shape = shapes[s];
+                if (shape.points.size() != points.size()) continue;
+                const auto axes = frame(points, shape.a, shape.b, shape.c);
+                if (!axes) continue;
+                const Rigid move = compose(*axes, shape.to_local);
+                bool same = true;
+                for (size_t i = 0; i < points.size() && same; ++i) {
+                    const Vector off = minus(applied(move, shape.points[i]), points[i]);
+                    same = dot(off, off) <= limit;
+                }
+                if (!same) continue;
+                copies[id] = {shape.set, move};
+                has_copies[s] = true;
+                placed = true;
+            }
+            if (placed) continue;
+            Shape shape;
+            shape.set = id;
+            shape.points = std::move(points);
+            if (!set_up(shape)) continue;
+            shapes.push_back(std::move(shape));
+            has_copies.push_back(false);
+        }
+        return static_cast<uint64_t>(std::count(has_copies.begin(), has_copies.end(), true));
+    }
+
     void find_copies(InstanceStats& stats) {
         std::map<std::string, std::vector<uint32_t>> buckets;
         std::string key;
         for (const uint32_t id : sets_) {
             if (excluded_[id]) continue;
-            const auto attributes = attributes_of(spf_.line(id));
-            const auto lists = attributes.empty() ? std::vector<uint32_t>{} : refs_in(attributes[0]);
-            if (lists.size() != 1 || spf_.type(lists[0]) != "IFCCARTESIANPOINTLIST3D") continue;
-            size_t bytes = spf_.line(id).size() + spf_.line(lists[0]).size();
             key.clear();
-            if (spf_.type(id) == "IFCTRIANGULATEDFACESET") {
-                if (attributes.size() < 4 || attributes[1] != "$") continue;  // its own normals would have to turn too
-                key.append(attributes[2]).append(attributes[3]);
-                if (attributes.size() > 4) key.append(attributes[4]);
-            } else {
-                if (attributes.size() != 4) continue;
-                key.append(attributes[1]).append(attributes[3]);
-                for (const uint32_t face : refs_in(attributes[2])) {
-                    const auto line = spf_.line(face);
-                    bytes += line.size();
-                    key.append(line.substr(line.find('=')));
-                }
-            }
-            if (bytes < MIN_BYTES) continue;
-            const auto look = looks_.find(id);
-            if (look != looks_.end()) {
-                auto sorted = look->second;
-                std::sort(sorted.begin(), sorted.end());
-                for (const std::string& part : sorted) key.append("|").append(part);
-            }
-            buckets[derived_guid(std::string(spf_.type(id)) + key)].push_back(id);
+            size_t bytes = 0;
+            if (!set_key(id, key, bytes) || bytes < MIN_BYTES) continue;
+            buckets[derived_guid(key)].push_back(id);
         }
-
-        const double limit = tolerance_ * tolerance_;
         for (const auto& [bucket, members] : buckets) {
             if (members.size() < 2) continue;
-            std::vector<Shape> shapes;
-            std::vector<bool> has_copies;
-            for (const uint32_t id : members) {
-                const auto attributes = attributes_of(spf_.line(id));
-                const auto list = attributes_of(spf_.line(refs_in(attributes[0])[0]));
-                if (list.empty()) continue;
-                std::vector<Vector> points = points_in(list[0]);
-                bool placed = false;
-                for (size_t s = 0; s < shapes.size() && !placed; ++s) {
-                    const Shape& shape = shapes[s];
-                    if (shape.points.size() != points.size()) continue;
-                    const auto axes = frame(points, shape.a, shape.b, shape.c);
-                    if (!axes) continue;
-                    const Rigid move = compose(*axes, shape.to_local);
-                    bool same = true;
-                    for (size_t i = 0; i < points.size() && same; ++i) {
-                        const Vector off = minus(applied(move, shape.points[i]), points[i]);
-                        same = dot(off, off) <= limit;
-                    }
-                    if (!same) continue;
-                    copy_of_[id] = {shape.set, move};
-                    has_copies[s] = true;
-                    placed = true;
-                }
-                if (placed) continue;
-                Shape shape;
-                shape.set = id;
-                shape.points = std::move(points);
-                if (!set_up(shape)) continue;
-                shapes.push_back(std::move(shape));
-                has_copies.push_back(false);
-            }
-            stats.shapes += static_cast<uint64_t>(std::count(has_copies.begin(), has_copies.end(), true));
+            stats.shapes += match(members, [&](uint32_t id) { return points_of(id); }, copy_of_);
         }
         stats.copies = copy_of_.size();
+    }
+
+    // Bodies of several face sets, such as a post or a cabinet, that are the same as another body, moved and
+    // turned, as a whole. Each becomes one mapped item of a map of the first, which Open IFC Viewer selects by
+    // clicking, where one mapped item for each set it doesn't.
+    void find_body_copies(InstanceStats& stats) {
+        std::map<std::string, std::vector<uint32_t>> buckets;
+        std::string key;
+        for (uint32_t id = 0; id < max_id_; ++id) {
+            if (!several_[id]) continue;
+            const auto items = items_of(id);
+            key.clear();
+            size_t bytes = 0;
+            bool ok = !items.empty();
+            for (const uint32_t item : items) {
+                ok = ok && item < max_id_ && kinds_[item] == Kind::Set && !other_excluded_[item] && rep_users_[item] == 1 && set_key(item, key, bytes);
+                if (!ok) break;
+                key.append("#").append(std::to_string(points_of(item).size()));
+            }
+            if (!ok || bytes < MIN_BYTES) continue;
+            // Their context and identifier too, so a body only stands for another body
+            const auto attributes = attributes_of(spf_.line(id));
+            key.append("@").append(attributes[0]).append(attributes[1]).append(attributes[2]);
+            buckets[derived_guid(key)].push_back(id);
+        }
+        for (const auto& [bucket, members] : buckets) {
+            if (members.size() < 2) continue;
+            const uint64_t shapes = match(
+                members,
+                [&](uint32_t representation) {
+                    std::vector<Vector> all;
+                    for (const uint32_t item : items_of(representation)) {
+                        const auto points = points_of(item);
+                        all.insert(all.end(), points.begin(), points.end());
+                    }
+                    return all;
+                },
+                body_copy_of_);
+            stats.bodies += shapes;
+        }
+        for (const auto& [copy, source] : body_copy_of_) body_sources_.insert(source.first);
+        stats.body_copies = body_copy_of_.size();
+
+        // A map of several sets, as Revit writes an element's body, that's the same as another map: what it places
+        // is placed from that one instead, still as one mapped item
+        buckets.clear();
+        for (uint32_t id = 0; id < max_id_; ++id) {
+            if (kinds_[id] != Kind::Map || map_stays_[id]) continue;
+            const auto users = map_users_.find(id);
+            if (users == map_users_.end() || users->second.empty()) continue;
+            const bool placeable = std::all_of(users->second.begin(), users->second.end(), [&](uint32_t mapped) { return placement_of(mapped) && !styled_mapped_.count(mapped); });
+            const uint32_t representation = representation_of(id);
+            const auto origin = refs_in(attributes_of(spf_.line(id))[0]);
+            if (!placeable || !representation || references_[representation] != 1 || origin.size() != 1 || !axis_placement(spf_, origin[0])) continue;
+            const auto items = items_of(representation);
+            if (items.size() < 2) continue;
+            key.clear();
+            size_t bytes = 0;
+            bool ok = true;
+            for (const uint32_t item : items) {
+                ok = ok && item < max_id_ && kinds_[item] == Kind::Set && !other_excluded_[item] && rep_users_[item] == 1 && set_key(item, key, bytes);
+                if (!ok) break;
+                key.append("#").append(std::to_string(points_of(item).size()));
+            }
+            if (!ok || bytes < MIN_BYTES) continue;
+            const auto attributes = attributes_of(spf_.line(representation));
+            key.append("@map").append(attributes[0]).append(attributes[1]).append(attributes[2]);
+            buckets[derived_guid(key)].push_back(id);
+        }
+        for (const auto& [bucket, members] : buckets) {
+            if (members.size() < 2) continue;
+            stats.bodies += match(
+                members,
+                [&](uint32_t map) {
+                    std::vector<Vector> all;
+                    for (const uint32_t item : items_of(representation_of(map))) {
+                        const auto points = points_of(item);
+                        all.insert(all.end(), points.begin(), points.end());
+                    }
+                    return all;
+                },
+                map_copy_of_);
+        }
+        stats.body_copies += map_copy_of_.size();
+    }
+
+    // What placed a map that's a copy of another places that one, moved as the copy was
+    void rewrite_mapped_copies() {
+        for (const auto& [copy, source] : map_copy_of_) {
+            const auto origin = axis_placement(spf_, refs_in(attributes_of(spf_.line(source.first))[0])[0]);
+            for (const uint32_t mapped : map_users_[copy]) {
+                const auto placed = placement_of(mapped);  // the copy's points to where they go
+                const Rigid target = compose(compose(placed->second, source.second), *origin);
+                rewritten_[mapped] = reference(mapped) + "=IFCMAPPEDITEM(" + reference(source.first) + "," + reference(emitter_.emit_operator(target)) + ");";
+            }
+        }
+    }
+
+    // A map of a whole body, which it and its copies are placed from
+    uint32_t body_map_of(uint32_t representation) {
+        const auto seen = body_maps_.find(representation);
+        if (seen != body_maps_.end()) return seen->second;
+        const auto attributes = attributes_of(spf_.line(representation));
+        const uint32_t held = emitter_.emit("IFCSHAPEREPRESENTATION(" + std::string(attributes[0]) + "," + std::string(attributes[1]) + "," + std::string(attributes[2]) + "," +
+                                            std::string(attributes[3]) + ");");
+        const uint32_t map = emitter_.emit("IFCREPRESENTATIONMAP(" + reference(emitter_.emit_identity()) + "," + reference(held) + ");");
+        body_maps_[representation] = map;
+        return map;
+    }
+
+    void rewrite_bodies() {
+        const auto mapped = [&](uint32_t representation, uint32_t source, const Rigid& place) {
+            const uint32_t target = emitter_.emit_operator(place);
+            const uint32_t item = emitter_.emit("IFCMAPPEDITEM(" + reference(body_map_of(source)) + "," + reference(target) + ");");
+            const auto attributes = attributes_of(spf_.line(representation));
+            rewritten_[representation] =
+                reference(representation) + "=IFCSHAPEREPRESENTATION(" + std::string(attributes[0]) + "," + std::string(attributes[1]) + ",'MappedRepresentation',(" + reference(item) + "));";
+        };
+        for (const uint32_t source : body_sources_) mapped(source, source, Rigid{});
+        for (const auto& [copy, source] : body_copy_of_) mapped(copy, source.first, source.second);
     }
 
     bool changes(uint32_t representation) {
@@ -449,6 +598,12 @@ class Instancer {
             for_each_ref(spf_.line(id), [&](uint32_t next) { release(next, to_remove); });
         }
         for (const auto& [set, copy] : copy_of_) to_remove.push_back(set);
+        for (const auto& [body, copy] : body_copy_of_) {
+            for (const uint32_t item : items_of(body)) to_remove.push_back(item);
+        }
+        for (const auto& [map, copy] : map_copy_of_) {
+            for (const uint32_t item : items_of(representation_of(map))) to_remove.push_back(item);
+        }
         while (!to_remove.empty()) {
             const uint32_t id = to_remove.back();
             to_remove.pop_back();
@@ -502,6 +657,14 @@ class Instancer {
     std::unordered_map<uint32_t, std::string> contents_;
     std::unordered_set<uint32_t> styled_mapped_;
     std::unordered_map<uint32_t, std::pair<uint32_t, Rigid>> copy_of_;  // a set, and what it's placed from, and how
+    std::vector<bool> other_excluded_;  // sets kept as they are for a reason other than being in a body of several shapes
+    std::vector<bool> several_;         // bodies of several shapes
+    std::vector<uint32_t> rep_users_;   // how many representations each set is in
+    std::unordered_map<uint32_t, std::pair<uint32_t, Rigid>> body_copy_of_;  // a body, and the body it's placed from, and how
+    std::unordered_set<uint32_t> body_sources_;
+    std::unordered_map<uint32_t, std::pair<uint32_t, Rigid>> map_copy_of_;  // a map, and the map its contents are a copy of, and how
+    std::unordered_map<uint32_t, std::vector<uint32_t>> map_users_;         // a map, and the mapped items that place it
+    std::unordered_map<uint32_t, uint32_t> body_maps_;
     std::unordered_map<uint32_t, bool> changes_;
     std::unordered_map<uint32_t, uint32_t> item_maps_;
     std::map<uint32_t, std::string> rewritten_;

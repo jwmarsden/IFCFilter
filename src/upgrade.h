@@ -17,6 +17,8 @@ struct Upgrade {
     uint64_t lengthened = 0;           // instances given the attributes IFC4 added
     uint64_t ports = 0;                // port relationships now written as nesting
     uint64_t retyped = 0;              // predefined types IFC4 doesn't have, now user defined
+    uint64_t dropped = 0;              // instances that had attributes IFC4 took away, such as a profile's centre of gravity
+    uint64_t still_missing = 0;        // values IFC4 needs that IFC2X3 needed too, and the input didn't have
 };
 
 // Writes an IFC2X3 model as IFC4, at path. Every instance is checked against the IFC4 schema first: its

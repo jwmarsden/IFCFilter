@@ -1,11 +1,14 @@
 #include "split.h"
 
 #include "breps.h"
+#include "combine.h"
 #include "compact.h"
+#include "simplify.h"
 #include "ifc_access.h"
 #include "instance.h"
 #include "mapping.h"
 #include "merge.h"
+#include "progress.h"
 #include "register.h"
 #include "site.h"
 #include "spf.h"
@@ -577,13 +580,31 @@ SharedGuids guids_in_several(const std::vector<fs::path>& models, unsigned jobs)
     return out;
 }
 
+// A model that's combined with others, by the register, has its federation file here, as a part of what's in
+// federate, not in federate itself, so that it's only federated once
+constexpr const char* PARTS = "parts";
+
+// The register's groups, read once for a process
+const std::map<std::string, std::string>& groups_of(const SplitOptions& options) {
+    static const std::map<std::string, std::string> groups = options.combine_path.empty() ? std::map<std::string, std::string>{} : combine_groups(options.combine_path);
+    return groups;
+}
+
+// Where a model's federation file goes, and where it would go otherwise
+std::pair<fs::path, fs::path> federation_file(const fs::path& model, const SplitOptions& options) {
+    const std::string stem = model.stem().string();
+    const std::string discipline = fs::absolute(model).parent_path().filename().string();
+    const auto federate = fs::path(options.out_dir) / FOLDERS[FEDERATION] / discipline / (stem + SUFFIXES[FEDERATION]);
+    const auto part = fs::path(options.out_dir) / PARTS / discipline / (stem + SUFFIXES[FEDERATION]);
+    return groups_of(options).count(stem) ? std::make_pair(part, federate) : std::make_pair(federate, part);
+}
+
 // Where a model's outputs go
 std::vector<fs::path> outputs_of(const fs::path& model, const SplitOptions& options) {
     const std::string stem = model.stem().string();
-    const std::string discipline = fs::absolute(model).parent_path().filename().string();
     const auto out = fs::path(options.out_dir);
     const std::string zipped = options.zip ? ZIPPED : "";
-    return {out / FOLDERS[FEDERATION] / discipline / (stem + SUFFIXES[FEDERATION]), out / FOLDERS[HIDDEN] / (stem + SUFFIXES[HIDDEN] + zipped),
+    return {federation_file(model, options).first, out / FOLDERS[HIDDEN] / (stem + SUFFIXES[HIDDEN] + zipped),
             out / FOLDERS[ENVELOPES] / (stem + SUFFIXES[ENVELOPES] + zipped), out / "manifest" / (stem + ".manifest.csv")};
 }
 
@@ -594,7 +615,7 @@ std::string build_of(const SplitOptions& options) {
     key.precision(17);
     key << sha256_of_file(program_path()) << '|' << (options.rules_path.empty() ? "" : sha256_of_file(options.rules_path)) << '|'
         << (options.mapping_path.empty() ? "" : sha256_of_file(options.mapping_path)) << '|' << options.transparent << '|' << options.merge << '|' << options.instance << '|'
-        << options.compact << '|' << options.precision_mm << '|' << options.merge_gap_m << '|' << options.zip;
+        << options.compact << '|' << options.precision_mm << '|' << options.merge_gap_m << '|' << options.zip << '|' << options.simplify_mm;
     return sha256_of(key.str());
 }
 
@@ -604,8 +625,8 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     // are hundreds of them
     const std::string discipline = fs::absolute(input).parent_path().filename().string();
     const auto output_path = [&](Output output) {
-        const auto folder = fs::path(options.out_dir) / FOLDERS[output];
-        return (output == FEDERATION && !discipline.empty() ? folder / discipline : folder) / (stem + SUFFIXES[output]);
+        if (output == FEDERATION && !discipline.empty()) return federation_file(input, options).first;
+        return fs::path(options.out_dir) / FOLDERS[output] / (stem + SUFFIXES[output]);
     };
     // Where a run before discipline folders put the federation file
     const auto flat = fs::path(options.out_dir) / FOLDERS[FEDERATION] / (stem + SUFFIXES[FEDERATION]);
@@ -655,7 +676,8 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
             std::cerr << input.string() << ": can't be read as IFC\n";
             return 1;
         }
-        if (file->schema()->name() != "IFC4") {
+        // IFC4 and what came after it go through as they are; only what came before is converted
+        if (file->schema()->name().rfind("IFC4", 0) != 0) {
             std::cerr << input.string() << ": warning: schema is " << file->schema()->name() << ", and is written out as it is: " << why_not_ifc4 << "\n";
         }
         classify(*file, rules, options.transparent, max_id, model);
@@ -798,6 +820,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     std::array<uint64_t, 3> sizes{};
     std::array<BrepStats, 3> converted{};
     std::array<CompactStats, 3> compacted{};
+    SimplifyStats simplified;
     std::array<InstanceStats, 3> instanced{};
     std::array<TidyStats, 3> tidied{};
     const Mapping mapping = options.mapping_path.empty() ? Mapping{} : load_mapping(options.mapping_path);
@@ -809,6 +832,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         if (options.compact) converted[output] = breps_to_face_sets(path.string());
         if (options.instance) instanced[output] = instance(path.string(), options.precision_mm);
         if (options.compact) compacted[output] = compact(path.string(), options.precision_mm);
+        if (output == FEDERATION && options.compact && options.simplify_mm > 0) simplified = simplify(path.string(), options.simplify_mm);
         if (output == FEDERATION) mapped = apply_mapping(path.string(), mapping);
         const auto zipped = fs::path(path.string() + ZIPPED);
         // The federation file stays plain, as that's the format Bentley's list names
@@ -818,6 +842,8 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
                 fs::remove(flat);  // from a run before discipline folders
                 fs::remove(fs::path(flat.string() + ZIPPED));
             }
+            // and from a run when it was or wasn't combined with others, so it's only federated once
+            if (output == FEDERATION) fs::remove(federation_file(input, options).second);
             sizes[output] = fs::file_size(path);
             continue;
         }
@@ -874,7 +900,8 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     if (!model.renamed.empty()) std::cout << "  " << model.renamed.size() << " GUIDs changed, as they weren't unique\n";
     if (source != input) {
         std::cout << "  written as IFC4: " << upgrade.lengthened << " instances given the attributes IFC4 added, " << upgrade.ports << " port relationships now nesting, "
-                  << upgrade.retyped << " predefined types now user defined\n";
+                  << upgrade.retyped << " predefined types now user defined, " << upgrade.dropped << " with attributes IFC4 took away, " << upgrade.still_missing
+                  << " values IFC4 needs left missing, as they were\n";
     }
     if (options.merge) {
         std::cout << "  " << merge.merged_into.size() << " elements merged into " << merge.assets.size() << " by site ID or design tag, " << merge.openings_moved
@@ -899,6 +926,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         }
         if (merge.by_design || merge.tags_not_ids) {
             std::cout << "  " << merge.by_design << " elements with no site ID merged by design tag, " << merge.joined_by_design << " of them joining the one site their tag is on; "
+                      << merge.by_mark << " with a mark, so only going with others of the same mark; "
                       << merge.tags_not_ids << " design tags on most of the model, so not taken as IDs\n";
         }
         if (merge.sites_apart || !merge.apart.empty()) {
@@ -924,7 +952,8 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     if (options.instance) {
         const InstanceStats& federated = instanced[FEDERATION];
         std::cout << "  federate instanced: " << federated.sets << " face sets, " << federated.copies << " now placed from " << federated.shapes << " shapes, "
-                  << mb(federated.bytes_before) << " -> " << mb(federated.bytes_after) << " MB\n";
+                  << federated.body_copies << " bodies of several placed from " << federated.bodies << " bodies, " << mb(federated.bytes_before) << " -> "
+                  << mb(federated.bytes_after) << " MB\n";
         if (!federated.checked) std::cout << "  warning: the model's length unit isn't plain SI, so nothing was instanced\n";
     }
     if (options.compact) {
@@ -935,6 +964,12 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
                   << federated.no_area_removed << " faces with no area removed\n";
         if (federated.no_area_left) std::cout << "  warning: " << federated.no_area_left << " faces with no area kept, as all their set had\n";
         if (!federated.rounded) std::cout << "  warning: the model's length unit isn't plain SI, so coordinates weren't rounded\n";
+    }
+    if (options.compact && options.simplify_mm > 0) {
+        std::cout << "  federate simplified within " << options.simplify_mm << " mm: " << simplified.simplified << " of " << simplified.sets << " triangle sets, "
+                  << simplified.triangles_before << " -> " << simplified.triangles_after << " triangles, " << simplified.left_cut << " left as openings cut them, "
+                  << simplified.left_other << " left for colours, normals or shape, " << mb(simplified.bytes_before) << " -> " << mb(simplified.bytes_after) << " MB\n";
+        if (!simplified.checked) std::cout << "  warning: the model's length unit isn't plain SI, so nothing was simplified\n";
     }
     if (!mapping.empty()) {
         std::cout << "  federate mapped: " << mapped.sets_deleted << " sets deleted, " << mapped.sets_renamed << " renamed, " << mapped.sets_emptied << " left empty so gone; "
@@ -958,7 +993,8 @@ std::string worker_command(const fs::path& model, const SplitOptions& options, c
     command.precision(17);
     command << quote(program_path()) << " split " << quote(model.string()) << " --out " << quote(options.out_dir) << " --worker-shared " << quote(shared.string());
     if (!options.rules_path.empty()) command << " --rules " << quote(options.rules_path);
-    command << " --transparent " << options.transparent << " --precision-mm " << options.precision_mm;
+    command << " --transparent " << options.transparent << " --precision-mm " << options.precision_mm << " --simplify-mm " << options.simplify_mm;
+    if (!options.combine_path.empty()) command << " --combine " << quote(options.combine_path);
     if (!options.mapping_path.empty()) command << " --mapping " << quote(options.mapping_path);
     if (!options.merge) command << " --no-merge";
     command << " --merge-gap " << options.merge_gap_m;
@@ -975,7 +1011,7 @@ std::string worker_command(const fs::path& model, const SplitOptions& options, c
 
 // Each model goes in a process of its own: all they share is the list of GUIDs. They start biggest first,
 // and only when what's running leaves room in memory. One that fails gets another go on its own.
-void run_in_parallel(const std::vector<fs::path>& models, const SplitOptions& options, unsigned jobs, const std::unordered_set<std::string>& shared,
+void run_in_parallel(const std::vector<fs::path>& models, const SplitOptions& options, unsigned jobs, const std::unordered_set<std::string>& shared, Progress& progress,
                      const std::function<void(const fs::path&, const Source&, int)>& finished) {
     const fs::path work = fs::path(options.out_dir) / ".work";
     fs::create_directories(work);
@@ -1023,7 +1059,7 @@ void run_in_parallel(const std::vector<fs::path>& models, const SplitOptions& op
         std::cout << "[" << done << "/" << models.size() << "] " << text.rdbuf();
         std::cout.clear();  // an empty log counts as a failed write
         if (!error.empty()) std::cerr << model.string() << ": " << error << "\n";
-        std::cout << std::flush;
+        std::cout << "  " << progress.finished(model, code, outputs_of(model, options)[0]) << "\n" << std::flush;
         // An exception that left this thread would end the whole run
         try {
             finished(model, source, code);
@@ -1055,6 +1091,7 @@ void run_in_parallel(const std::vector<fs::path>& models, const SplitOptions& op
                 in_use += job->memory;
                 ++running;
             }
+            progress.started(job->model);
             run_one(job->model, false);
             {
                 const std::lock_guard<std::mutex> guard(lock);
@@ -1070,6 +1107,7 @@ void run_in_parallel(const std::vector<fs::path>& models, const SplitOptions& op
 
     for (const fs::path& model : failed) {
         std::cout << "trying " << model.filename().string() << " again, on its own\n" << std::flush;
+        progress.started(model);
         run_one(model, true);
     }
     std::error_code ignored;
@@ -1077,6 +1115,43 @@ void run_in_parallel(const std::vector<fs::path>& models, const SplitOptions& op
 }
 
 }  // namespace
+
+// Writes each group of the register as one federation file, in federate, from its models' files in parts:
+// one that isn't there, or is older than any of them or than the register. Returns false if one couldn't be.
+bool combine_all(const std::vector<fs::path>& models, const SplitOptions& options) {
+    const auto& groups = groups_of(options);
+    if (groups.empty()) return true;
+    std::map<std::string, std::vector<fs::path>> parts;
+    std::map<std::string, std::string> discipline_of;
+    for (const fs::path& model : models) {
+        const auto group = groups.find(model.stem().string());
+        if (group == groups.end()) continue;
+        parts[group->second].push_back(federation_file(model, options).first);
+        discipline_of.emplace(group->second, fs::absolute(model).parent_path().filename().string());
+    }
+    const auto register_time = fs::last_write_time(options.combine_path);
+    bool ok = true;
+    for (const auto& [name, files] : parts) {
+        const auto out = fs::path(options.out_dir) / FOLDERS[FEDERATION] / discipline_of[name] /
+                         (name.size() > 4 && name.substr(name.size() - 4) == ".ifc" ? name : name + SUFFIXES[FEDERATION]);
+        const bool missing = std::any_of(files.begin(), files.end(), [](const fs::path& p) { return !fs::exists(p); });
+        if (missing) {
+            std::cerr << "warning: " << out.filename().string() << " isn't written, as one of its models has no federation file yet\n";
+            ok = false;
+            continue;
+        }
+        bool current = fs::exists(out) && fs::last_write_time(out) > register_time;
+        for (const fs::path& file : files) current = current && fs::last_write_time(out) > fs::last_write_time(file);
+        if (current) continue;
+        std::string summary;
+        if (!combine_files(files, out, summary)) {
+            ok = false;
+            continue;
+        }
+        std::cout << "combined " << out.filename().string() << ": " << summary << "\n" << std::flush;
+    }
+    return ok;
+}
 
 int split(const SplitOptions& options) {
     // One of the processes that run_in_parallel starts
@@ -1141,7 +1216,11 @@ int split(const SplitOptions& options) {
     }
     std::cout << to_do.size() << " of " << models.size() << " models to do; the rest have the same input, build and shared GUIDs as their outputs"
               << (options.all ? "" : " (--all does them all)") << "\n" << std::flush;
-    if (to_do.empty()) return 0;
+    if (to_do.empty()) return combine_all(models, options) ? 0 : 1;
+    // From here, what's printed also goes to the run's log, and progress.html says how it's going
+    Progress progress(options.out_dir, to_do, models.size(), jobs);
+    const Tee tee_out(progress, std::cout), tee_err(progress, std::cerr);
+    std::cout << "progress: " << (fs::path(options.out_dir) / "progress.html").string() << ", log: " << progress.log_path().string() << "\n" << std::flush;
     int result = 0;
     size_t failed = 0;
     std::array<size_t, 3> states{};
@@ -1167,18 +1246,20 @@ int split(const SplitOptions& options) {
         }
     };
     if (jobs > 1) {
-        run_in_parallel(to_do, options, jobs, shared, finished);
+        run_in_parallel(to_do, options, jobs, shared, progress, finished);
     } else {
         for (const fs::path& model : to_do) {
             // One bad model shouldn't lose the rest of a long run
             int code = 1;
             Source source;
+            progress.started(model);
             try {
                 source = read_source(model);
                 code = split_model(model, options, rules, shared);
             } catch (const std::exception& e) {
                 std::cerr << model.string() << ": " << e.what() << "\n";
             }
+            std::cout << "  " << progress.finished(model, code, outputs_of(model, options)[0]) << "\n" << std::flush;
             finished(model, source, code);
         }
     }
@@ -1188,6 +1269,8 @@ int split(const SplitOptions& options) {
     std::cout << "register: " << states[static_cast<size_t>(SourceState::New)] << " new, " << states[static_cast<size_t>(SourceState::Changed)] << " changed, "
               << states[static_cast<size_t>(SourceState::Unchanged)] << " unchanged\n";
     if (failed) std::cerr << failed << " of " << to_do.size() << " models failed\n";
+    if (!combine_all(models, options) && !result) result = 1;
+    progress.done();
     return result;
 }
 

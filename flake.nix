@@ -18,7 +18,7 @@
         nativeBuildInputs = [ pkgs.cmake ];
         buildInputs = [ pkgs.boost ];
         cmakeFlags = [
-          "-DSCHEMA_VERSIONS=2x3;4"
+          "-DSCHEMA_VERSIONS=2x3;4;4x3_add2"
           "-DBUILD_IFCGEOM=OFF"
           "-DBUILD_IFCPYTHON=OFF"
           "-DBUILD_CONVERT=OFF"
@@ -35,13 +35,13 @@
         version = "0.1.0";
         src = ./.;
         nativeBuildInputs = [ pkgs.cmake ];
-        buildInputs = [ ifcparse pkgs.boost pkgs.eigen pkgs.zlib ];
+        buildInputs = [ ifcparse pkgs.boost pkgs.eigen pkgs.zlib pkgs.openmesh ];
       };
     in {
       packages.x86_64-linux = { inherit ifcparse ifcfilter; default = ifcfilter; };
       devShells.x86_64-linux.default = pkgs.mkShell {
         nativeBuildInputs = [ pkgs.cmake pkgs.gdb ];
-        buildInputs = [ ifcparse pkgs.boost pkgs.eigen pkgs.zlib ];
+        buildInputs = [ ifcparse pkgs.boost pkgs.eigen pkgs.zlib pkgs.openmesh ];
       };
     };
 }

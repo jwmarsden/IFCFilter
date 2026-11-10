@@ -85,6 +85,8 @@ class Upgrader {
         const ifcopenshell::entity* entity = nullptr;
         std::string refused;  // why this type can't go across, whatever its values
         int predefined = -1, element_type = -1;  // where these attributes are, if it has them
+        const ifcopenshell::entity* before = nullptr;  // what it was in IFC2X3
+        bool drop_extra = false;  // it had attributes at the end that IFC4 took away, and they can go
     };
 
     void refuse(const std::string& reason, const std::string& example = "") {
@@ -121,8 +123,15 @@ class Upgrader {
                 if (!old_entity) {
                     type.refused = name + " isn't in IFC2X3";
                 } else {
+                    type.before = old_entity;
                     const auto& then = old_entity->all_attributes();
-                    if (then.size() > now.size()) type.refused = name + " has fewer attributes in IFC4";
+                    // A profile's centre of gravity was taken away, as it follows from the rest of it; anything else
+                    // that was taken away can't be left out without losing something
+                    if (then.size() > now.size()) {
+                        type.drop_extra = std::all_of(then.begin() + static_cast<std::ptrdiff_t>(now.size()), then.end(),
+                                                      [](const ifcopenshell::attribute* a) { return a->name().rfind("CentreOfGravity", 0) == 0; });
+                        if (!type.drop_extra) type.refused = name + " has fewer attributes in IFC4";
+                    }
                     for (size_t i = 0; i < then.size() && i < now.size(); ++i) {
                         if (then[i]->name() == now[i]->name()) continue;
                         const auto rename = std::pair<std::string_view, std::string_view>(then[i]->name(), now[i]->name());
@@ -227,6 +236,11 @@ class Upgrader {
             return;
         }
         const auto& now = type.entity->all_attributes();
+        if (values.size() > now.size() && type.drop_extra) {
+            values.resize(now.size());
+            changed = true;
+            ++upgrade.dropped;
+        }
         if (values.size() > now.size()) {
             refuse(name + " has too many attributes");
             return;
@@ -251,12 +265,18 @@ class Upgrader {
         }
 
         const auto& derived = type.entity->derived();
+        // A value IFC4 needs is only allowed to be missing if IFC2X3 needed it too: the input was already without
+        // it, as one of SW's grids has no V axes
+        static const std::vector<const ifcopenshell::attribute*> none;
+        const auto& then = type.before ? type.before->all_attributes() : none;
         for (size_t i = 0; i < values.size(); ++i) {
             const auto& value = values[i];
             const bool is_derived = i < derived.size() && derived[i];
+            const bool missing_before = value == "$" && !now[i]->optional() && i < then.size() && !then[i]->optional();
+            if (missing_before) ++upgrade.still_missing;
             const bool fine = value == "*" ? is_derived
                 : is_derived               ? false
-                : value == "$"             ? now[i]->optional()
+                : value == "$"             ? now[i]->optional() || missing_before
                                            : fits(value, now[i]->type_of_attribute());
             if (!fine) refuse(name + "." + now[i]->name() + " can't hold what's there", value.substr(0, 40));
         }

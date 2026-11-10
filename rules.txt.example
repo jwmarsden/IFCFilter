@@ -24,6 +24,8 @@ envelope-if Corridor_Mesh_ID.Asset_Identifier_Label=Vehicle Envelope
 # asset-component    an asset's parts are described as this
 # design-set         a property set holding the design tag, for elements with no site ID; first preferred
 # design-tag         the design tag property
+# mark-set           a property set holding the mark that tells pieces apart; first preferred
+# mark               the mark property: elements with a design tag but different marks are apart
 # quantity-set       sizes are worked out for a merged asset as a whole in this set, as these three:
 # quantity-length, quantity-width, quantity-height
 # cull-set           left out of every output once merging has used it
@@ -38,6 +40,8 @@ asset-type AssetType
 asset-component AssetComponent
 design-set Quantities
 design-tag DesignTag
+mark-set Identity
+mark Mark
 quantity-set Quantities
 quantity-length Length
 quantity-width Width

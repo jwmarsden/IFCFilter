@@ -40,7 +40,7 @@ std::string quoted(const std::string& text) {
 struct PropertySet {
     std::string_view name;  // with its quotes, as it's written
     std::vector<std::pair<std::string_view, uint32_t>> properties;  // each one's text, and its id
-    std::string site, design;
+    std::string site, design, mark;
 };
 
 struct Member {
@@ -103,8 +103,12 @@ class Planner {
                     asset = {key, "site ID " + key, {}};
                     ++plan_.joined_by_design;
                 } else {
-                    key = "design " + tag;
-                    asset = {tag, "design tag " + tag, {}};
+                    // A tag can name a type of piece, as a deck unit's does: pieces with marks of their own
+                    // are each one thing, so only those with the same mark, or none, go together
+                    const std::string mark = mark_of(id);
+                    key = "design " + tag + (mark.empty() ? "" : "\n" + mark);
+                    asset = {tag, "design tag " + tag + (mark.empty() ? "" : ", mark " + mark), {}};
+                    if (!mark.empty()) ++plan_.by_mark;
                 }
                 by_design = true;
             }
@@ -244,6 +248,17 @@ class Planner {
             plan_.on_levels += elements.size();
         }
 
+        // Every building that holds anything has levels, even with no site in it, so a model whose elements have
+        // no site IDs comes out like the rest, with them on Non-Managed Types, not on Revit's DATUM
+        for (const uint32_t relationship : containments_) {
+            const auto attributes = attributes_of(spf_.line(relationship));
+            const auto structure = attributes.size() == 6 ? refs_in(attributes[5]) : std::vector<uint32_t>{};
+            if (structure.size() != 1) continue;
+            const auto type = spf_.type(structure[0]);
+            if (type != "IFCBUILDINGSTOREY" && type != "IFCBUILDING") continue;
+            const uint32_t building = building_of(structure[0]);
+            if (building) of_building[building];
+        }
         // On a building that's been given levels, what's on its own levels, or on it, and has no site, goes on
         // the level for that. What moved, or went with a merge, just leaves the relationship that held it.
         const auto planned_building = [&](uint32_t structure) -> Levels* {
@@ -517,12 +532,13 @@ class Planner {
             if (line.empty()) continue;
             set.properties.emplace_back(line.substr(line.find('=')), property);
             const Schema& s = schema();
-            if (!s.site_sets.count(name) && !s.design_sets.count(name)) continue;
+            if (!s.site_sets.count(name) && !s.design_sets.count(name) && !s.mark_sets.count(name)) continue;
             const auto parts = attributes_of(line);
             if (parts.size() <= 2) continue;
             const std::string property_name = quoted_in(parts[0]);
             if (s.site_sets.count(name) && property_name == s.site_property) set.site = quoted_in(parts[2]);
             if (s.design_sets.count(name) && property_name == s.design_property) set.design = quoted_in(parts[2]);
+            if (s.mark_sets.count(name) && property_name == s.mark_property) set.mark = quoted_in(parts[2]);
         }
         return set;
     }
@@ -553,6 +569,20 @@ class Planner {
             design = set.design;
         }
         return design;
+    }
+
+    // Blank if it has none, or one that says nothing, such as N/A
+    std::string mark_of(uint32_t element) {
+        std::string mark;
+        const auto sets = sets_of_.find(element);
+        if (sets == sets_of_.end()) return mark;
+        for (const uint32_t id : sets->second) {
+            const PropertySet& set = property_set(id);
+            if (set.mark.empty() || NOT_A_SITE.count(set.mark)) continue;
+            if (quoted_in(set.name) == schema().mark_set_preferred) return set.mark;
+            mark = set.mark;
+        }
+        return mark;
     }
 
     std::vector<uint32_t> bodies_of(std::string_view shape) {

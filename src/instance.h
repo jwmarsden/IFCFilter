@@ -13,6 +13,8 @@ struct InstanceStats {
     uint64_t sets = 0;       // face sets in the file
     uint64_t copies = 0;     // of those, the ones now placed from another
     uint64_t shapes = 0;     // shapes that now have copies
+    uint64_t body_copies = 0;  // bodies of several sets now placed from another body as a whole
+    uint64_t bodies = 0;       // bodies that now have copies
     uint64_t bytes_before = 0, bytes_after = 0;
     bool checked = false;    // false if the length unit isn't plain SI, as there's then no tolerance to go by
 };

@@ -10,6 +10,8 @@ endif()
 
 find_package(Boost CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
+# Decimating meshes (simplify.cpp)
+find_package(OpenMesh CONFIG REQUIRED)
 
 
 # An installed IfcOpenShell if there is one, as the flake provides. Otherwise the submodule, built
@@ -23,7 +25,7 @@ else()
         message(FATAL_ERROR "IfcOpenShell isn't installed or checked out: run git submodule update --init")
     endif()
     message(STATUS "IfcOpenShell: building the submodule")
-    set(SCHEMA_VERSIONS 2x3 4)
+    set(SCHEMA_VERSIONS 2x3 4 4x3_add2)
     foreach(flag BUILD_IFCGEOM BUILD_IFCPYTHON BUILD_CONVERT BUILD_GEOMSERVER BUILD_EXAMPLES WITH_OPENCASCADE WITH_CGAL COLLADA_SUPPORT)
         set(${flag} OFF)
     endforeach()
@@ -31,20 +33,21 @@ else()
     add_library(IfcOpenShell::IfcParse ALIAS IfcParse)
     add_library(IfcOpenShell::parse_schema_ifc2x3 ALIAS parse_schema_ifc2x3)
     add_library(IfcOpenShell::parse_schema_ifc4 ALIAS parse_schema_ifc4)
+    add_library(IfcOpenShell::parse_schema_ifc4x3_add2 ALIAS parse_schema_ifc4x3_add2)
 endif()
 
-add_executable(ifcfilter src/main.cpp src/report.cpp src/split.cpp src/merge.cpp src/bake.cpp src/extent.cpp src/mapping.cpp src/instance.cpp src/rigid.cpp src/register.cpp src/system.cpp src/upgrade.cpp src/spf.cpp src/breps.cpp src/compact.cpp src/tidy.cpp src/zip.cpp)
+add_executable(ifcfilter src/main.cpp src/report.cpp src/split.cpp src/merge.cpp src/progress.cpp src/combine.cpp src/bake.cpp src/extent.cpp src/mapping.cpp src/instance.cpp src/rigid.cpp src/register.cpp src/system.cpp src/upgrade.cpp src/spf.cpp src/breps.cpp src/compact.cpp src/simplify.cpp src/tidy.cpp src/zip.cpp)
 # The schemas are plugins, loaded when a file is opened, so nothing links to them
-add_dependencies(ifcfilter IfcOpenShell::parse_schema_ifc2x3 IfcOpenShell::parse_schema_ifc4)
+add_dependencies(ifcfilter IfcOpenShell::parse_schema_ifc2x3 IfcOpenShell::parse_schema_ifc4 IfcOpenShell::parse_schema_ifc4x3_add2)
 target_compile_definitions(ifcfilter PRIVATE BOOST_OPTIONAL_USE_OLD_DEFINITION_OF_NONE IFCFILTER_VERSION="${PROJECT_VERSION}")
 if(MSVC)
     target_compile_options(ifcfilter PRIVATE /W4 /bigobj /utf-8)
 else()
     target_compile_options(ifcfilter PRIVATE -Wall -Wextra)
 endif()
-target_link_libraries(ifcfilter PRIVATE IfcOpenShell::IfcParse Boost::headers ZLIB::ZLIB)
+target_link_libraries(ifcfilter PRIVATE IfcOpenShell::IfcParse Boost::headers ZLIB::ZLIB OpenMeshCore OpenMeshTools)
 if(WIN32)
-    target_compile_definitions(ifcfilter PRIVATE NOMINMAX)
+    target_compile_definitions(ifcfilter PRIVATE NOMINMAX _USE_MATH_DEFINES)
     # IfcOpenShell only builds as shared libraries, so its DLLs go beside the program. Schema plugins
     # are looked for beside the parser's DLL, and aren't linked, so they have to be named.
     add_custom_command(TARGET ifcfilter POST_BUILD
@@ -52,6 +55,7 @@ if(WIN32)
             $<TARGET_RUNTIME_DLLS:ifcfilter>
             $<TARGET_FILE:IfcOpenShell::parse_schema_ifc2x3>
             $<TARGET_FILE:IfcOpenShell::parse_schema_ifc4>
+            $<TARGET_FILE:IfcOpenShell::parse_schema_ifc4x3_add2>
             $<TARGET_FILE_DIR:ifcfilter>
         COMMAND_EXPAND_LISTS)
 endif()

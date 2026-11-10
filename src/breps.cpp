@@ -44,22 +44,34 @@ class Converter {
   public:
     Converter(const SpfFile& spf, bool tag_list, BrepStats& stats) : spf_(spf), tag_list_(tag_list), stats_(stats), next_id_(spf.max_id()) {}
 
-    // The lines that replace a brep, ending with the face set under its id; empty if it stays as it is.
-    // parts gets the shell and what it's made of.
+    // The lines that replace a brep, or a surface model made of shells of faces, as Civil 3D writes, ending with
+    // the face set under its id; empty if it stays as it is. parts gets the shells and what they're made of.
     std::string convert(uint32_t brep, std::vector<uint32_t>& parts) {
+        const auto type = spf_.type(brep);
         const auto attributes = attributes_of(spf_.line(brep));
         const auto shells = attributes.size() == 1 ? refs_in(attributes[0]) : std::vector<uint32_t>{};
-        if (shells.size() != 1 || spf_.type(shells[0]) != "IFCCLOSEDSHELL") return {};
-        const auto shell = attributes_of(spf_.line(shells[0]));
-        if (shell.size() != 1) return {};
-        parts.push_back(shells[0]);
+        if (shells.empty()) return {};
+        std::vector<uint32_t> faces;
+        for (const uint32_t shell_id : shells) {
+            const auto kind = spf_.type(shell_id);
+            const bool fits = type == "IFCFACETEDBREP" ? kind == "IFCCLOSEDSHELL"
+                              : type == "IFCSHELLBASEDSURFACEMODEL" ? kind == "IFCCLOSEDSHELL" || kind == "IFCOPENSHELL"
+                                                                     : kind == "IFCCLOSEDSHELL" || kind == "IFCOPENSHELL" || kind == "IFCCONNECTEDFACESET";
+            const auto shell = attributes_of(spf_.line(shell_id));
+            if (!fits || shell.size() != 1) return {};
+            parts.push_back(shell_id);
+            for (const uint32_t face : refs_in(shell[0])) faces.push_back(face);
+        }
+        if (type == "IFCFACETEDBREP" && shells.size() != 1) return {};
+        // Only one closed shell is a closed set of faces
+        const bool closed = shells.size() == 1 && spf_.type(shells[0]) == "IFCCLOSEDSHELL";
 
         coordinates_.clear();
         index_of_.clear();
         std::string faces_text;
         std::vector<uint32_t> face_ids;
         uint64_t dropped = 0;
-        for (const uint32_t face : refs_in(shell[0])) {
+        for (const uint32_t face : faces) {
             if (spf_.type(face) != "IFCFACE") return {};
             const auto bounds = attributes_of(spf_.line(face));
             if (bounds.size() != 1) return {};
@@ -68,8 +80,8 @@ class Converter {
             size_t outer_at = 0;
             bool outer_given = false;
             for (const uint32_t bound : refs_in(bounds[0])) {
-                const auto type = spf_.type(bound);
-                if (type != "IFCFACEOUTERBOUND" && type != "IFCFACEBOUND") return {};
+                const auto bound_type = spf_.type(bound);
+                if (bound_type != "IFCFACEOUTERBOUND" && bound_type != "IFCFACEBOUND") return {};
                 const auto bound_attributes = attributes_of(spf_.line(bound));
                 const auto loops = bound_attributes.size() == 2 ? refs_in(bound_attributes[0]) : std::vector<uint32_t>{};
                 if (loops.size() != 1 || spf_.type(loops[0]) != "IFCPOLYLOOP") return {};
@@ -85,7 +97,7 @@ class Converter {
                 }
                 while (indices.size() > 1 && indices.front() == indices.back()) indices.pop_back();
                 if (trimmed(bound_attributes[1]) == ".F.") std::reverse(indices.begin(), indices.end());
-                if (type == "IFCFACEOUTERBOUND" && !outer_given) {
+                if (bound_type == "IFCFACEOUTERBOUND" && !outer_given) {
                     outer_at = loops_of_face.size();
                     outer_given = true;
                 }
@@ -131,7 +143,7 @@ class Converter {
         }
         out += tag_list_ ? "),$);\n" : "));\n";
         out += faces_text;
-        out += "#" + std::to_string(brep) + "=IFCPOLYGONALFACESET(#" + std::to_string(list) + ",.T.,(";
+        out += "#" + std::to_string(brep) + "=IFCPOLYGONALFACESET(#" + std::to_string(list) + (closed ? ",.T.,(" : ",.F.,(");
         for (size_t i = 0; i < face_ids.size(); ++i) {
             if (i) out += ',';
             out += '#';
@@ -193,7 +205,7 @@ BrepStats breps_to_face_sets(const std::string& path) {
         for (uint32_t id = 0; id < max_id; ++id) {
             const auto type = spf.type(id);
             if (type == "IFCFACETEDBREPWITHVOIDS") ++stats.left;
-            if (type != "IFCFACETEDBREP") continue;
+            if (type != "IFCFACETEDBREP" && type != "IFCSHELLBASEDSURFACEMODEL" && type != "IFCFACEBASEDSURFACEMODEL") continue;
             if (cut.count(id)) {
                 ++stats.left;
                 ++stats.left_cut;
@@ -244,7 +256,7 @@ BrepStats breps_to_face_sets(const std::string& path) {
             // A representation of nothing but face sets now is a tessellation
             if (spf.type(id) == "IFCSHAPEREPRESENTATION") {
                 const auto attributes = attributes_of(line);
-                if (attributes.size() == 4 && trimmed(attributes[2]) == "'Brep'") {
+                if (attributes.size() == 4 && (trimmed(attributes[2]) == "'Brep'" || trimmed(attributes[2]) == "'SurfaceModel'")) {
                     const auto items = refs_in(attributes[3]);
                     if (!items.empty() && std::all_of(items.begin(), items.end(), [&](uint32_t item) { return converted.count(item) > 0; })) {
                         text.assign(line.substr(0, line.find('(') + 1));

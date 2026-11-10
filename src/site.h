@@ -22,6 +22,9 @@ struct Schema {
     std::set<std::string> design_sets;  // design-set: the sets that hold the design tag
     std::string design_set_preferred;   // the first design-set, if they differ
     std::string design_property;        // design-tag
+    std::set<std::string> mark_sets;    // mark-set: the sets that hold an element's mark
+    std::string mark_set_preferred;     // the first mark-set, if they differ
+    std::string mark_property;          // mark: says which piece it is, so parts with a design tag but different marks are apart
     std::string quantity_set;           // quantity-set: sizes worked out for an asset as a whole
     std::string length_property, width_property, height_property;  // quantity-length, -width, -height
     std::set<std::string> culled_sets;  // cull-set: used to work out what merges, and not wanted after
@@ -50,6 +53,8 @@ inline bool schema_rule(const std::string& action, const std::string& text) {
     else if (action == "asset-component") s.component_property = text;
     else if (action == "design-set") add(s.design_sets, s.design_set_preferred);
     else if (action == "design-tag") s.design_property = text;
+    else if (action == "mark-set") add(s.mark_sets, s.mark_set_preferred);
+    else if (action == "mark") s.mark_property = text;
     else if (action == "quantity-set") s.quantity_set = text;
     else if (action == "quantity-length") s.length_property = text;
     else if (action == "quantity-width") s.width_property = text;

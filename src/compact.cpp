@@ -144,9 +144,10 @@ bool bridge(std::vector<uint32_t>& ring, std::vector<std::vector<uint32_t>> hole
     for (auto& hole : holes) {
         if (hole.size() < 3 || !in_range(hole, points)) return false;
         double area = 0;
+        const double ox = x(hole[0]), oy = y(hole[0]);  // from its first point, as in triangulate
         for (size_t i = 0; i < hole.size(); ++i) {
             const uint32_t a = hole[i], b = hole[(i + 1) % hole.size()];
-            area += x(a) * y(b) - x(b) * y(a);
+            area += (x(a) - ox) * (y(b) - oy) - (x(b) - ox) * (y(a) - oy);
         }
         if (area > 0) std::reverse(hole.begin(), hole.end());
     }
@@ -221,13 +222,17 @@ bool triangulate(const std::vector<uint32_t>& face, const std::vector<Point>& po
     };
 
     double x0 = x(face[0]), x1 = x0, y0 = y(face[0]), y1 = y0;
+    // From the first point, not the origin: in world coordinates, such as E278706 N6124295, products of whole
+    // coordinates lose more than a small face's area, and the check below then refused faces that were fine
+    const double ox = x(face[0]), oy = y(face[0]);
     double area = 0;
     for (size_t i = 0; i < n; ++i) {
         x0 = std::min(x0, x(face[i]));
         x1 = std::max(x1, x(face[i]));
         y0 = std::min(y0, y(face[i]));
         y1 = std::max(y1, y(face[i]));
-        area += x(face[i]) * y(face[(i + 1) % n]) - x(face[(i + 1) % n]) * y(face[i]);
+        const uint32_t a = face[i], b = face[(i + 1) % n];
+        area += (x(a) - ox) * (y(b) - oy) - (x(b) - ox) * (y(a) - oy);
     }
     area = std::abs(area) / 2;
     const double extent = std::max(x1 - x0, y1 - y0);
