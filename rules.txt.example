@@ -17,6 +17,11 @@ hidden-if Corridor_Mesh_ID.Asset_Identifier_Label=Subbase
 envelope-if Corridor_Mesh_ID.Asset_Identifier_Label=Vehicle Envelope
 # An assembly with this property keeps its big parts; those under a quarter of its size go in the hidden file
 hidden-small-parts-if Corridor Data.IsSignFace=Yes
+# An assembly with this property moves forward by this many millimetres, off its post
+forward-if Corridor Data.IsSignFace=Yes 25
+# A body within this many metres of the world's 0,0 is left out, when nearly all the model is far from it:
+# a dummy an exporter left there, such as an empty surface
+cull-at-origin 10
 
 # Where the models keep their asset data. Anything left out is left alone: without site-set and site-id,
 # nothing merges by site.

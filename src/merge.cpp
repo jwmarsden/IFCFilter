@@ -19,6 +19,7 @@
 
 namespace ifcfilter {
 namespace {
+constexpr double RUN_GAP_M = 0.05;  // parts of a run closer than this touch
 
 // What's between a string's quotes, wherever it is in a value such as IFCTEXT('X')
 std::string quoted_in(std::string_view value) {
@@ -94,7 +95,15 @@ class Planner {
             std::string key = site_of(id);
             Asset asset{key, "site ID " + key, {}};
             bool by_design = false;
-            if (!is_one_site(key)) {
+            bool run = false;
+            if (!is_one_site(key) && !NOT_A_SITE.count(key) && schema().merge_runs.count(asset_type_of(key))) {
+                // A placeholder that stands for a kind of thing, such as a pipe run's: what touches goes together
+                asset = {key, "run of " + key, {}};
+                key = "run " + key;
+                run = true;
+                ++plan_.in_runs;
+            }
+            if (!run && !is_one_site(key)) {
                 const std::string tag = design_of(id);
                 if (tag.empty() || !is_id(tag)) continue;
                 const auto owners = sites_of_tag.find(tag);
@@ -131,8 +140,14 @@ class Planner {
             const auto& members = asset.members;
             if (std::count_if(members.begin(), members.end(), [](const Member& m) { return m.can_merge; }) < 2) continue;
             by_site_ = asset.label.rfind("site ID ", 0) == 0;
+            // A run is what touches, so it's only a hair apart, not a site's few metres
+            const bool run = asset.label.rfind("run of ", 0) == 0;
+            const double site_gap = gap_;
+            if (run && gap_ > 0) gap_ = RUN_GAP_M / unit_;
             const auto groups = groups_of(asset.label, members);
-            if (groups.size() > 1) ++plan_.sites_apart;
+            gap_ = site_gap;
+            if (run) plan_.runs += groups.size();
+            if (groups.size() > 1 && !run) ++plan_.sites_apart;
             for (size_t i = 0; i < groups.size(); ++i) {
                 const std::string note = groups.size() > 1 ? ", group " + std::to_string(i + 1) + " of " + std::to_string(groups.size()) + ", far apart" : "";
                 merge(asset.name, asset.label, i == 0 ? key : key + "/" + std::to_string(i + 1), note, groups[i]);

@@ -4,6 +4,7 @@
 #include "combine.h"
 #include "compact.h"
 #include "extent.h"
+#include "signs.h"
 #include "simplify.h"
 #include "ifc_access.h"
 #include "instance.h"
@@ -70,7 +71,9 @@ struct Rules {
     std::vector<std::string> envelope;      // opaque, but not really there (clearance envelopes)
     std::vector<std::string> hidden;        // really there, but out of sight (buried piles)
     std::vector<PropertyRule> by_property;  // for models where the family doesn't say what a thing is
+    std::vector<ForwardRule> forward;       // assemblies moved forward, such as sign faces off their posts
     std::vector<PropertyRule> small_parts;  // assemblies whose small parts are hidden, such as a sign's badly exported text
+    double cull_at_origin = 0;              // metres: a body this close to the world's 0,0, in a model that's mostly far from it, is left out
 
     static bool matches(const std::vector<std::string>& list, const std::string& family) {
         return std::any_of(list.begin(), list.end(), [&](const std::string& s) { return family.find(s) != std::string::npos; });
@@ -92,6 +95,18 @@ struct Rules {
             else if (action == "physical") rules.physical.push_back(family);
             else if (action == "envelope") rules.envelope.push_back(family);
             else if (action == "hidden") rules.hidden.push_back(family);
+            else if (action == "cull-at-origin") rules.cull_at_origin = std::stod(family);
+            else if (action == "forward-if") {
+                // SET.PROPERTY=VALUE MM, the distance last
+                const auto last = family.rfind(' ');
+                const auto dot = family.find('.');
+                const auto equals = family.find('=');
+                if (dot == std::string::npos || equals == std::string::npos || equals < dot || last == std::string::npos || last < equals) {
+                    throw std::runtime_error(path + ": forward-if needs SET.PROPERTY=VALUE MM: " + family);
+                }
+                rules.forward.push_back({family.substr(0, dot), family.substr(dot + 1, equals - dot - 1), trimmed(family.substr(equals + 1, last - equals - 1)),
+                                         std::stod(family.substr(last + 1))});
+            }
             else if (action == "hidden-small-parts-if") {
                 const auto dot = family.find('.');
                 const auto equals = family.find('=');
@@ -724,6 +739,27 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         }
     }
 
+    // Sign faces and the like moved forward, in a copy that's read from here on
+    Forward forward;
+    struct Moved {
+        fs::path path;
+        ~Moved() {
+            if (path.empty()) return;
+            std::error_code ignored;
+            fs::remove(path, ignored);
+            fs::remove(path.parent_path(), ignored);
+        }
+    } moved;
+    if (!rules.forward.empty()) {
+        const fs::path path = fs::path(options.out_dir) / ".work" / (stem + ".forward.ifc");
+        fs::create_directories(path.parent_path());
+        forward = move_forward(SpfFile(source.string()), rules.forward, path.string());
+        if (forward.faces) {
+            moved.path = path;
+            source = path;
+        }
+    }
+
     const SpfFile spf(source.string());
     const uint32_t max_id = spf.max_id();
     Model model;
@@ -782,6 +818,31 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         for (const uint32_t port : refs_in(attributes[nests ? 5 : 4])) {
             if (port >= max_id || spf.type(port) != "IFCDISTRIBUTIONPORT") continue;
             for (auto& v : in_output) v[port] = v[host[0]];
+        }
+    }
+
+    // A dummy an exporter left at the world's 0,0, such as an empty surface, far from all else: it stretches the
+    // model's box over kilometres. Only when nearly everything else is far away, so a model drawn about 0,0 keeps all.
+    uint64_t at_origin = 0;
+    if (rules.cull_at_origin > 0 && length_unit(spf) > 0) {
+        Extents extents(spf);
+        const double reach = rules.cull_at_origin / length_unit(spf);
+        std::vector<uint32_t> near;
+        uint64_t bodies = 0;
+        for (const auto& element : model.elements) {
+            if (!element.has_body) continue;
+            const auto box = extents.product(element.id);
+            if (!box || box->empty()) continue;
+            ++bodies;
+            bool close = true;
+            for (int a = 0; a < 2; ++a) close = close && std::abs(box->low[a]) < reach && std::abs(box->high[a]) < reach;
+            if (close) near.push_back(element.id);
+        }
+        if (!near.empty() && near.size() * 100 < bodies) {
+            for (const uint32_t id : near) {
+                for (auto& v : in_output) v[id] = false;
+            }
+            at_origin = near.size();
         }
     }
 
@@ -1003,7 +1064,9 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
             if (element.type == "IfcDistributionPort" && !in_output[FEDERATION][element.id] && !in_output[HIDDEN][element.id] && !in_output[ENVELOPES][element.id]) ++loose;
         }
         if (loose) std::cout << "  " << loose << " ports on nothing left out\n";
+        if (at_origin) std::cout << "  " << at_origin << " bodies at the world's 0,0 left out by cull-at-origin\n";
     }
+    if (forward.faces || forward.unsure) std::cout << "  " << forward.faces << " assemblies moved forward by forward-if, " << forward.unsure << " left as which way is forward couldn't be told\n";
     if (model.small_parts) std::cout << "  " << model.small_parts << " small parts of " << model.small_part_assemblies << " assemblies hidden by hidden-small-parts-if\n";
     if (!model.renamed.empty()) std::cout << "  " << model.renamed.size() << " GUIDs changed, as they weren't unique\n";
     if (source != input) {
@@ -1037,6 +1100,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
                       << merge.by_mark << " with a mark, so only going with others of the same mark; "
                       << merge.tags_not_ids << " design tags on most of the model, so not taken as IDs\n";
         }
+        if (merge.in_runs) std::cout << "  " << merge.in_runs << " elements with a merge-runs placeholder site ID, in " << merge.runs << " runs of what touches\n";
         if (merge.sites_apart || !merge.apart.empty()) {
             std::cout << "  " << merge.sites_apart << " sites with parts over " << options.merge_gap_m << " m apart, so not merged as one; " << merge.apart.size()
                       << " elements left as they are, as nothing of their site is near them\n";

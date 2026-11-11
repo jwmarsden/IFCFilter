@@ -28,6 +28,7 @@ struct Schema {
     std::string zone_property;          // zone-property: an element's zone, in any set, for the IFCFilter set
     std::set<std::string> zones;        // zone: one of the zones, as N5T; anything else, such as a group of them, isn't one
     std::string location_property;      // location-property: an element's location, in any set, for the IFCFilter set
+    std::set<std::string> merge_runs;   // merge-runs: asset types whose placeholder site IDs, such as MMP000000, merge where they touch
     std::string quantity_set;           // quantity-set: sizes worked out for an asset as a whole
     std::string length_property, width_property, height_property;  // quantity-length, -width, -height
     std::set<std::string> culled_sets;  // cull-set: used to work out what merges, and not wanted after
@@ -61,6 +62,7 @@ inline bool schema_rule(const std::string& action, const std::string& text) {
     else if (action == "zone-property") s.zone_property = text;
     else if (action == "zone") s.zones.insert(text);
     else if (action == "location-property") s.location_property = text;
+    else if (action == "merge-runs") s.merge_runs.insert(text);
     else if (action == "quantity-set") s.quantity_set = text;
     else if (action == "quantity-length") s.length_property = text;
     else if (action == "quantity-width") s.width_property = text;

@@ -24,6 +24,8 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <memory>
+#include <set>
 #include <optional>
 #include <sstream>
 #include <stdexcept>
@@ -44,10 +46,16 @@ namespace fs = std::filesystem;
 
 constexpr int FORMAT_VERSION = 1;
 constexpr uint32_t NO_MATERIAL = 0xFFFFFFFF;  // a part's: the instance's; an instance's: the default
+constexpr double SNAP_M = 0.0001;             // mesh points are on this grid before meshes are compared
 constexpr double QUANTUM_M = 0.0005;          // positions are 16 bits on the mesh's box, unless that's coarser than this
 constexpr double FEATURE_COSINE = 0.8660254;  // edges where faces meet at more than 30 degrees are drawn
-constexpr size_t TILE_INSTANCES = 2000, TILE_TRIANGLES = 200000;  // a tile is split past either
+constexpr size_t TILE_INSTANCES = 4000, TILE_TRIANGLES = 400000;  // a tile is split past either: big, as the viewer batches a tile
 constexpr int TILE_DEPTH = 12;
+// A tile of what sits behind other things, such as pipes, is also split past this across, so it can be hidden or
+// left out; one of a few instances isn't. Ground, road, tunnel and concrete, which hide rather than get hidden, aren't.
+constexpr double TILE_SPREAD_M = 40;
+constexpr size_t TILE_SPREAD_INSTANCES = 64;
+const char* const OCCLUDERS[] = {"-LA-", "-RW-", "-TU-", "-CV-", "-CC-"};
 constexpr int ZSTD_LEVEL = 12;
 constexpr int MAX_DEPTH = 8;  // of mapped items and booleans
 // Simplified meshes for far away: points snapped together on grids this many metres across, one level each
@@ -327,12 +335,14 @@ struct Mesh {
 void finish(Mesh& mesh, double unit) {
     Box box;
     for (Vector& p : mesh.points) {
-        for (double& c : p) c *= unit;
+        // On a tenth of a millimetre, centre and all, so the same shape exported with float noise, such as
+        // tunnel rings, is one mesh
+        for (double& c : p) c = std::round(c * unit / SNAP_M) * SNAP_M;
         box.add(p);
     }
-    for (int axis = 0; axis < 3; ++axis) mesh.centre[axis] = box.empty() ? 0 : (box.low[axis] + box.high[axis]) / 2;
+    for (int axis = 0; axis < 3; ++axis) mesh.centre[axis] = box.empty() ? 0 : std::round((box.low[axis] + box.high[axis]) / 2 / SNAP_M) * SNAP_M;
     for (Vector& p : mesh.points) {
-        for (int axis = 0; axis < 3; ++axis) p[axis] -= mesh.centre[axis];
+        for (int axis = 0; axis < 3; ++axis) p[axis] = std::round((p[axis] - mesh.centre[axis]) / SNAP_M) * SNAP_M;
         mesh.box.add(p);
     }
     const size_t triangles = mesh.indices.size() / 3;
@@ -541,14 +551,49 @@ struct Kind {
 
 class Builder {
   public:
-    Builder(const std::string& input, Database& db)
-        : input_(input), spf_(input), extents_(spf_), db_(db), strings_(db),
+    Builder(const std::vector<std::string>& inputs, Database& db)
+        : inputs_(inputs), db_(db), strings_(db),
           insert_mesh_(db, "INSERT INTO meshes(id, vertices, triangles, minx, miny, minz, maxx, maxy, maxz, lod, blob) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)"),
           insert_lod_(db, "INSERT INTO mesh_lods(mesh, lod, triangles, blob) VALUES(?, ?, ?, ?)") {}
 
     void run() {
         const auto start = std::chrono::steady_clock::now();
-        schema_name_ = schema_in_header(input_);
+        for (const std::string& input : inputs_) read_model(input);
+        place();
+        build_tiles();
+        write_materials();
+        write_elements();
+        write_tiles();
+        db_.exec(INDEXES);
+        if (!db_.try_exec("CREATE VIRTUAL TABLE strings_fts USING fts5(text, content='strings', content_rowid='id'); "
+                          "INSERT INTO strings_fts(strings_fts) VALUES('rebuild');")) {
+            std::cerr << "warning: this SQLite has no fts5, so the cache has no search index\n";
+        }
+        write_meta();
+        seconds_ = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    }
+
+    // One model into what's shared: its elements, meshes and properties. With more than one, each is under an
+    // element of its own, named after its file, at the top of the tree.
+    void read_model(const std::string& input) {
+        spf_ = std::make_unique<SpfFile>(input);
+        extents_ = std::make_unique<Extents>(*spf_);
+        index_.clear();
+        item_material_.clear();
+        colour_maps_.clear();
+        item_meshes_.clear();
+        swept_.clear();
+        written_psets_.clear();
+        kinds_.clear();
+        skipped_.clear();
+        const size_t first = elements_.size();
+        if (inputs_.size() > 1) {
+            Element model;
+            model.class_name = "Model";
+            model.name = fs::path(input).filename().string();
+            elements_.push_back(std::move(model));
+        }
+        schema_name_ = schema_in_header(input);
         const ifcopenshell::schema_definition* schema = ifcopenshell::schema_by_name(schema_name_.rfind("IFC2X3", 0) == 0 ? "IFC2X3" : "IFC4");
         schema_ = schema;
         product_ = schema->declaration_by_name("IfcProduct")->as_entity();
@@ -559,7 +604,7 @@ class Builder {
             } catch (const std::exception&) {
             }
         }
-        unit_ = length_unit(spf_);
+        unit_ = length_unit(*spf_);
         if (unit_ <= 0) {
             std::cerr << "warning: the model's length unit isn't known; taking it as metres\n";
             unit_ = 1;
@@ -567,21 +612,28 @@ class Builder {
         read_styles();
         read_elements(*schema);
         read_tree();
-        for (Element& element : elements_) shape(element);
-        place();
-        build_tiles();
-        write_materials();
-        write_elements();
-        write_properties();
-        write_tiles();
-        db_.exec(INDEXES);
-        if (!db_.try_exec("CREATE VIRTUAL TABLE strings_fts USING fts5(text, content='strings', content_rowid='id'); "
-                          "INSERT INTO strings_fts(strings_fts) VALUES('rebuild');")) {
-            std::cerr << "warning: this SQLite has no fts5, so the cache has no search index\n";
+        for (size_t e = first; e < elements_.size(); ++e) shape(elements_[e]);
+        // What each is in, by element rather than by the model's ids, as those are only the model's own
+        const int64_t root = inputs_.size() > 1 ? static_cast<int64_t>(first) : -1;
+        int64_t top = 0;
+        for (size_t e = first + (root >= 0 ? 1 : 0); e < elements_.size(); ++e) {
+            Element& element = elements_[e];
+            if (element.has_parent) {
+                element.parent = index_[element.parent];
+            } else if (root >= 0) {
+                element.parent = static_cast<uint32_t>(root);
+                element.has_parent = true;
+                element.sort = top++;
+            }
         }
-        write_meta();
-        seconds_ = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+        write_properties();
+        pset_offset_ += 2 * static_cast<uint64_t>(spf_->max_id()) + 1;
+        source_names_.push_back(fs::path(input).filename().string());
+        source_hashes_.push_back(sha256_of_file(input));
+        schemas_.insert(schema_name_);
     }
+
+    size_t tiles() const { return tile_count_; }
 
     void report(std::ostream& out, uintmax_t bytes) const {
         size_t with_geometry = 0, approximate = 0, instances = 0;
@@ -629,9 +681,9 @@ class Builder {
     }
 
     std::optional<uint32_t> style_material(uint32_t style, int depth) {
-        if (depth > 4 || style >= spf_.max_id()) return std::nullopt;
-        const auto type = spf_.type(style);
-        const auto attributes = attributes_of(spf_.line(style));
+        if (depth > 4 || style >= spf_->max_id()) return std::nullopt;
+        const auto type = spf_->type(style);
+        const auto attributes = attributes_of(spf_->line(style));
         if (type == "IFCPRESENTATIONSTYLEASSIGNMENT" && !attributes.empty()) {
             for (const uint32_t next : refs_in(attributes[0])) {
                 if (const auto found = style_material(next, depth + 1)) return found;
@@ -639,12 +691,12 @@ class Builder {
         } else if (type == "IFCSURFACESTYLE" && attributes.size() == 3) {
             const std::string name = text_of(attributes[0]);
             for (const uint32_t next : refs_in(attributes[2])) {
-                const auto shading = spf_.type(next);
+                const auto shading = spf_->type(next);
                 if (shading != "IFCSURFACESTYLERENDERING" && shading != "IFCSURFACESTYLESHADING") continue;
-                const auto parts = attributes_of(spf_.line(next));
+                const auto parts = attributes_of(spf_->line(next));
                 const auto colour = parts.empty() ? std::vector<uint32_t>{} : refs_in(parts[0]);
                 if (colour.size() != 1) continue;
-                const auto rgb = attributes_of(spf_.line(colour[0]));
+                const auto rgb = attributes_of(spf_->line(colour[0]));
                 if (rgb.size() != 4) continue;
                 const double transparency = parts.size() > 1 ? std::strtod(std::string(parts[1]).c_str(), nullptr) : 0;
                 return material(std::strtod(std::string(rgb[1]).c_str(), nullptr), std::strtod(std::string(rgb[2]).c_str(), nullptr),
@@ -656,10 +708,10 @@ class Builder {
 
     void read_styles() {
         material(0.7, 0.7, 0.7, 1, "Default");
-        for (uint32_t id = 0; id < spf_.max_id(); ++id) {
-            const auto type = spf_.type(id);
+        for (uint32_t id = 0; id < spf_->max_id(); ++id) {
+            const auto type = spf_->type(id);
             if (type == "IFCSTYLEDITEM") {
-                const auto attributes = attributes_of(spf_.line(id));
+                const auto attributes = attributes_of(spf_->line(id));
                 const auto items = attributes.size() == 3 ? refs_in(attributes[0]) : std::vector<uint32_t>{};
                 if (items.size() != 1) continue;
                 for (const uint32_t style : refs_in(attributes[1])) {
@@ -669,12 +721,12 @@ class Builder {
                     }
                 }
             } else if (type == "IFCINDEXEDCOLOURMAP") {
-                const auto attributes = attributes_of(spf_.line(id));
+                const auto attributes = attributes_of(spf_->line(id));
                 if (attributes.size() != 4) continue;
                 const auto target = refs_in(attributes[0]);
                 const auto colours = refs_in(attributes[2]);
                 if (target.size() != 1 || colours.size() != 1) continue;
-                const auto list = attributes_of(spf_.line(colours[0]));
+                const auto list = attributes_of(spf_->line(colours[0]));
                 if (list.empty()) continue;
                 const double opacity = attributes[1] == "$" ? 1 : std::strtod(std::string(attributes[1]).c_str(), nullptr);
                 std::vector<uint32_t> ids;
@@ -708,12 +760,12 @@ class Builder {
     }
 
     void read_elements(const ifcopenshell::schema_definition& schema) {
-        for (uint32_t id = 0; id < spf_.max_id(); ++id) {
-            const auto type = spf_.type(id);
+        for (uint32_t id = 0; id < spf_->max_id(); ++id) {
+            const auto type = spf_->type(id);
             if (type.empty() || type.rfind("IFCREL", 0) == 0) continue;
             const Kind& kind = kind_of(type, schema);
             if (!kind.product || kind.skipped) continue;
-            const auto attributes = attributes_of(spf_.line(id));
+            const auto attributes = attributes_of(spf_->line(id));
             if (attributes.size() < 4) continue;
             Element element;
             element.ifc = id;
@@ -745,10 +797,10 @@ class Builder {
             element->has_parent = true;
             element->sort = children[parent]++;
         };
-        for (uint32_t id = 0; id < spf_.max_id(); ++id) {
-            const auto type = spf_.type(id);
+        for (uint32_t id = 0; id < spf_->max_id(); ++id) {
+            const auto type = spf_->type(id);
             if (type.rfind("IFCREL", 0) != 0) continue;
-            const auto attributes = attributes_of(spf_.line(id));
+            const auto attributes = attributes_of(spf_->line(id));
             if (attributes.size() < 6) continue;
             if (type == "IFCRELAGGREGATES" || type == "IFCRELNESTS") {
                 const auto whole = refs_in(attributes[4]);
@@ -765,7 +817,7 @@ class Builder {
             } else if (type == "IFCRELDEFINESBYTYPE") {
                 const auto type_object = refs_in(attributes[5]);
                 if (type_object.size() != 1) continue;
-                const auto type_attributes = attributes_of(spf_.line(type_object[0]));
+                const auto type_attributes = attributes_of(spf_->line(type_object[0]));
                 const std::string type_name = type_attributes.size() > 2 ? text_of(type_attributes[2]) : std::string();
                 for (const uint32_t object : refs_in(attributes[4])) {
                     if (Element* element = element_at(object)) element->type_name = type_name;
@@ -853,12 +905,12 @@ class Builder {
     std::vector<Vector> points_of(std::string_view coordinates) {
         const auto ids = refs_in(coordinates);
         if (ids.size() != 1) return {};
-        const auto list = attributes_of(spf_.line(ids[0]));
+        const auto list = attributes_of(spf_->line(ids[0]));
         return list.empty() ? std::vector<Vector>{} : point_list(list[0]);
     }
 
     bool triangulated(uint32_t item, Mesh& mesh) {
-        const auto attributes = attributes_of(spf_.line(item));
+        const auto attributes = attributes_of(spf_->line(item));
         if (attributes.size() < 4) return false;
         mesh.points = points_of(attributes[0]);
         const auto pn = attributes.size() > 4 && attributes[4] != "$" ? indices_in(attributes[4]) : std::vector<uint32_t>{};
@@ -882,7 +934,7 @@ class Builder {
     }
 
     bool polygonal(uint32_t item, Mesh& mesh) {
-        const auto attributes = attributes_of(spf_.line(item));
+        const auto attributes = attributes_of(spf_->line(item));
         if (attributes.size() < 3) return false;
         mesh.points = points_of(attributes[0]);
         const auto pn = attributes.size() > 3 && attributes[3] != "$" ? indices_in(attributes[3]) : std::vector<uint32_t>{};
@@ -895,10 +947,10 @@ class Builder {
         const auto colours = colour_maps_.find(item);
         const auto faces = refs_in(attributes[2]);
         for (size_t f = 0; f < faces.size(); ++f) {
-            const auto parts = attributes_of(spf_.line(faces[f]));
+            const auto parts = attributes_of(spf_->line(faces[f]));
             if (parts.empty()) continue;
             std::vector<std::vector<uint32_t>> holes;
-            if (spf_.type(faces[f]) == "IFCINDEXEDPOLYGONALFACEWITHVOIDS" && parts.size() > 1 && parts[1].size() > 2) {
+            if (spf_->type(faces[f]) == "IFCINDEXEDPOLYGONALFACEWITHVOIDS" && parts.size() > 1 && parts[1].size() > 2) {
                 for (const auto loop : attributes_of(trimmed(parts[1]).substr(1, trimmed(parts[1]).size() - 2))) holes.push_back(mapped(indices_in(loop)));
             }
             const uint32_t material = colours != colour_maps_.end() && f < colours->second.size() ? colours->second[f] : NO_MATERIAL;
@@ -909,7 +961,7 @@ class Builder {
 
     // Faceted breps, and surface models made of the same faces
     bool faceted(uint32_t item, std::string_view type, Mesh& mesh) {
-        const auto attributes = attributes_of(spf_.line(item));
+        const auto attributes = attributes_of(spf_->line(item));
         if (attributes.empty()) return false;
         std::vector<uint32_t> shells;
         if (type == "IFCFACETEDBREP" || type == "IFCFACETEDBREPWITHVOIDS") shells = refs_in(attributes[0]).size() == 1 ? refs_in(attributes[0]) : std::vector<uint32_t>{};
@@ -918,17 +970,17 @@ class Builder {
         std::unordered_map<uint32_t, uint32_t> point_index;  // ifc id, and its index from 1
         const auto loop_of = [&](uint32_t bound, bool& reversed) {
             std::vector<uint32_t> loop;
-            const auto parts = attributes_of(spf_.line(bound));
+            const auto parts = attributes_of(spf_->line(bound));
             if (parts.size() != 2) return loop;
             reversed = trimmed(parts[1]) == ".F.";
             const auto polyloop = refs_in(parts[0]);
-            if (polyloop.size() != 1 || spf_.type(polyloop[0]) != "IFCPOLYLOOP") return loop;
-            const auto points = attributes_of(spf_.line(polyloop[0]));
+            if (polyloop.size() != 1 || spf_->type(polyloop[0]) != "IFCPOLYLOOP") return loop;
+            const auto points = attributes_of(spf_->line(polyloop[0]));
             if (points.empty()) return loop;
             for (const uint32_t point : refs_in(points[0])) {
                 auto [at, added] = point_index.try_emplace(point, static_cast<uint32_t>(mesh.points.size() + 1));
                 if (added) {
-                    const auto coordinates = attributes_of(spf_.line(point));
+                    const auto coordinates = attributes_of(spf_->line(point));
                     const auto read = coordinates.empty() ? std::vector<Vector>{} : point_list(coordinates[0]);
                     mesh.points.push_back(read.empty() ? Vector{} : read[0]);
                 }
@@ -938,16 +990,16 @@ class Builder {
             return loop;
         };
         for (const uint32_t shell : shells) {
-            const auto shell_attributes = attributes_of(spf_.line(shell));
+            const auto shell_attributes = attributes_of(spf_->line(shell));
             if (shell_attributes.empty()) continue;
             for (const uint32_t face : refs_in(shell_attributes[0])) {
-                const auto face_attributes = attributes_of(spf_.line(face));
+                const auto face_attributes = attributes_of(spf_->line(face));
                 if (face_attributes.empty()) continue;
                 // The outer bound is the one that says so, or else the first
                 const auto bounds = refs_in(face_attributes[0]);
                 size_t outer_at = 0;
                 for (size_t b = 0; b < bounds.size(); ++b) {
-                    if (spf_.type(bounds[b]) == "IFCFACEOUTERBOUND") {
+                    if (spf_->type(bounds[b]) == "IFCFACEOUTERBOUND") {
                         outer_at = b;
                         break;
                     }
@@ -982,15 +1034,15 @@ class Builder {
     Vector vector_at(std::string_view reference) {
         const auto ids = refs_in(reference);
         if (ids.size() != 1) return {};
-        const auto attributes = attributes_of(spf_.line(ids[0]));
+        const auto attributes = attributes_of(spf_->line(ids[0]));
         return attributes.empty() ? Vector{} : numbers_in(attributes[0]);
     }
 
     // An IfcAxis2Placement2D's move and turn applied to a profile's loops; none leaves them as they are
     void place_2d(std::string_view position, std::vector<std::vector<Vector>>& loops) {
         const auto ids = refs_in(position);
-        if (ids.size() != 1 || spf_.type(ids[0]) != "IFCAXIS2PLACEMENT2D") return;
-        const auto attributes = attributes_of(spf_.line(ids[0]));
+        if (ids.size() != 1 || spf_->type(ids[0]) != "IFCAXIS2PLACEMENT2D") return;
+        const auto attributes = attributes_of(spf_->line(ids[0]));
         if (attributes.empty()) return;
         const Vector origin = vector_at(attributes[0]);
         Vector x{1, 0, 0};
@@ -1049,16 +1101,16 @@ class Builder {
         std::vector<Vector> loop;
         const auto ids = refs_in(reference);
         if (ids.size() != 1) return loop;
-        const auto type = spf_.type(ids[0]);
-        const auto attributes = attributes_of(spf_.line(ids[0]));
+        const auto type = spf_->type(ids[0]);
+        const auto attributes = attributes_of(spf_->line(ids[0]));
         if (type == "IFCPOLYLINE" && !attributes.empty()) {
             for (const uint32_t point : refs_in(attributes[0])) {
-                const auto coordinates = attributes_of(spf_.line(point));
+                const auto coordinates = attributes_of(spf_->line(point));
                 if (!coordinates.empty()) loop.push_back(numbers_in(coordinates[0]));
             }
         } else if (type == "IFCINDEXEDPOLYCURVE" && !attributes.empty()) {
             const auto list = refs_in(attributes[0]);
-            const auto list_attributes = list.size() == 1 ? attributes_of(spf_.line(list[0])) : std::vector<std::string_view>{};
+            const auto list_attributes = list.size() == 1 ? attributes_of(spf_->line(list[0])) : std::vector<std::string_view>{};
             const auto points = list_attributes.empty() ? std::vector<Vector>{} : point_list(list_attributes[0]);
             const auto at = [&](uint32_t i) { return i >= 1 && i <= points.size() ? points[i - 1] : Vector{}; };
             if (attributes.size() < 2 || trimmed(attributes[1]) == "$") {
@@ -1085,8 +1137,8 @@ class Builder {
 
     // A profile as loops in its plane: the outer first, then any holes; empty for a kind not read yet
     std::vector<std::vector<Vector>> profile_loops(uint32_t profile) {
-        const auto type = spf_.type(profile);
-        const auto a = attributes_of(spf_.line(profile));
+        const auto type = spf_->type(profile);
+        const auto a = attributes_of(spf_->line(profile));
         std::vector<std::vector<Vector>> loops;
         if (type == "IFCCIRCLEPROFILEDEF" && a.size() == 4) {
             loops.push_back(ellipse(number_of(a[3]), number_of(a[3])));
@@ -1115,8 +1167,10 @@ class Builder {
     }
 
     // An IfcExtrudedAreaSolid as a mesh in its own position's coordinates, and that position
-    bool extruded(uint32_t item, Mesh& mesh, Rigid& position) {
-        const auto a = attributes_of(spf_.line(item));
+    // stretch is set where the extrusion goes straight along its own z: the mesh is then a metre long, and an
+    // instance stretches it to its depth, so that extrusions of the same profile, such as pipes, share one mesh
+    bool extruded(uint32_t item, Mesh& mesh, Rigid& position, double& stretch) {
+        const auto a = attributes_of(spf_->line(item));
         if (a.size() != 4) return false;
         const auto profile = refs_in(a[0]);
         if (profile.size() != 1) return false;
@@ -1124,14 +1178,17 @@ class Builder {
         if (loops.empty()) return false;
         const auto placement = refs_in(a[1]);
         if (!placement.empty()) {
-            const auto read = axis_placement(spf_, placement[0]);
+            const auto read = axis_placement(*spf_, placement[0]);
             if (!read) return false;
             position = *read;
         }
         const auto direction = normalised(vector_at(a[2]));
         const double depth = number_of(a[3]);
         if (!direction || depth <= 0) return false;
-        const Vector along{(*direction)[0] * depth, (*direction)[1] * depth, (*direction)[2] * depth};
+        const bool straight = std::abs((*direction)[0]) < 1e-9 && std::abs((*direction)[1]) < 1e-9;
+        const double length = straight ? 1 / unit_ : depth;
+        stretch = straight ? depth / length : 1;
+        const Vector along{(*direction)[0] * length, (*direction)[1] * length, (*direction)[2] * length};
 
         // The outer loop anticlockwise and holes clockwise, seen from where the extrusion goes
         const auto area = [](const std::vector<Vector>& loop) {
@@ -1190,6 +1247,7 @@ class Builder {
         int64_t mesh = -1;
         Vector centre{};
         Rigid position;
+        double stretch = 1;  // along its z, from a mesh a metre long
         bool empty = false;  // no length, so nothing to draw
     };
 
@@ -1197,10 +1255,10 @@ class Builder {
         const auto seen = swept_.find(item);
         if (seen != swept_.end()) return seen->second;
         Swept swept;
-        const auto attributes = attributes_of(spf_.line(item));
+        const auto attributes = attributes_of(spf_->line(item));
         swept.empty = attributes.size() == 4 && number_of(attributes[3]) <= 0;
         Mesh mesh;
-        if (!swept.empty && extruded(item, mesh, swept.position) && !mesh.indices.empty()) {
+        if (!swept.empty && extruded(item, mesh, swept.position, swept.stretch) && !mesh.indices.empty()) {
             finish(mesh, unit_);
             swept.centre = mesh.centre;
             const bool approximate = mesh.approximate;
@@ -1211,37 +1269,38 @@ class Builder {
         return swept_.emplace(item, swept).first->second;
     }
 
-    void add_instance(Element& element, uint32_t mesh, const Rigid& placed, const Vector& centre, uint32_t material) {
+    void add_instance(Element& element, uint32_t mesh, const Rigid& placed, const Vector& centre, uint32_t material, double stretch = 1) {
         Instance instance;
         instance.element = index_[element.ifc];
         instance.mesh = mesh;
         instance.material = material;
         for (int axis = 0; axis < 3; ++axis) instance.columns[axis] = placed.axes[axis];
+        for (double& c : instance.columns[2]) c *= stretch;
         Rigid rotation = placed;
         rotation.origin = {0, 0, 0};
-        const Vector turned = applied(rotation, centre);
+        const Vector turned = applied(rotation, {centre[0], centre[1], centre[2] * stretch});
         for (int axis = 0; axis < 3; ++axis) instance.translation[axis] = turned[axis] + placed.origin[axis] * unit_;
         element.instances.push_back(instance);
         if (approximate_meshes_.count(mesh)) element.flags |= APPROXIMATE;
     }
 
     void walk(Element& element, uint32_t item, const Rigid& placed, uint32_t material, int depth) {
-        if (depth > MAX_DEPTH || item >= spf_.max_id()) return;
+        if (depth > MAX_DEPTH || item >= spf_->max_id()) return;
         const auto own = item_material_.find(item);
         if (own != item_material_.end()) material = own->second;
-        const auto type = spf_.type(item);
-        const auto attributes = attributes_of(spf_.line(item));
+        const auto type = spf_->type(item);
+        const auto attributes = attributes_of(spf_->line(item));
         if (type == "IFCMAPPEDITEM" && attributes.size() == 2) {
             const auto map = refs_in(attributes[0]);
             const auto target = refs_in(attributes[1]);
-            const auto parts = map.size() == 1 ? attributes_of(spf_.line(map[0])) : std::vector<std::string_view>{};
+            const auto parts = map.size() == 1 ? attributes_of(spf_->line(map[0])) : std::vector<std::string_view>{};
             const auto origin_ids = parts.size() == 2 ? refs_in(parts[0]) : std::vector<uint32_t>{};
             const auto representation = parts.size() == 2 ? refs_in(parts[1]) : std::vector<uint32_t>{};
-            const auto operation = target.size() == 1 ? operator_of(spf_, target[0]) : std::nullopt;
-            const auto origin = origin_ids.size() == 1 ? axis_placement(spf_, origin_ids[0]) : std::nullopt;
+            const auto operation = target.size() == 1 ? operator_of(*spf_, target[0]) : std::nullopt;
+            const auto origin = origin_ids.size() == 1 ? axis_placement(*spf_, origin_ids[0]) : std::nullopt;
             if (operation && origin && representation.size() == 1) {
                 const Rigid inner = compose(placed, compose(*operation, inverse(*origin)));
-                const auto held = attributes_of(spf_.line(representation[0]));
+                const auto held = attributes_of(spf_->line(representation[0]));
                 if (held.size() == 4) {
                     for (const uint32_t next : refs_in(held[3])) walk(element, next, inner, material, depth + 1);
                 }
@@ -1270,7 +1329,7 @@ class Builder {
                 return;
             }
             if (swept.mesh >= 0) {
-                add_instance(element, static_cast<uint32_t>(swept.mesh), compose(placed, swept.position), swept.centre, material);
+                add_instance(element, static_cast<uint32_t>(swept.mesh), compose(placed, swept.position), swept.centre, material, swept.stretch);
                 return;
             }
         }
@@ -1280,7 +1339,7 @@ class Builder {
     // What isn't a mesh is drawn as its box in the world, for now
     void box(Element& element, uint32_t item, const Rigid& placed, uint32_t material, std::string_view type) {
         Box reach;
-        if (!extents_.item(item, placed, reach) || reach.empty()) {
+        if (!extents_->item(item, placed, reach) || reach.empty()) {
             ++unknown_;
             return;
         }
@@ -1309,17 +1368,17 @@ class Builder {
     }
 
     void shape(Element& element) {
-        const auto attributes = attributes_of(spf_.line(element.ifc));
+        const auto attributes = attributes_of(spf_->line(element.ifc));
         if (attributes.size() < 7 || attributes[6] == "$") return;
-        const auto placed = extents_.placement(attributes[5]);
+        const auto placed = extents_->placement(attributes[5]);
         if (!placed) return;
         const auto definition = refs_in(attributes[6]);
         if (definition.size() != 1) return;
-        const auto shape_attributes = attributes_of(spf_.line(definition[0]));
+        const auto shape_attributes = attributes_of(spf_->line(definition[0]));
         if (shape_attributes.size() != 3) return;
         uint32_t chosen = 0;
         for (const uint32_t representation : refs_in(shape_attributes[2])) {
-            const auto parts = attributes_of(spf_.line(representation));
+            const auto parts = attributes_of(spf_->line(representation));
             if (parts.size() != 4) continue;
             const std::string identifier = text_of(parts[1]);
             if (identifier == "Body") {
@@ -1329,7 +1388,7 @@ class Builder {
             if (identifier == "Facetation" && !chosen) chosen = representation;
         }
         if (!chosen) return;
-        for (const uint32_t item : refs_in(attributes_of(spf_.line(chosen))[3])) walk(element, item, *placed, NO_MATERIAL, 0);
+        for (const uint32_t item : refs_in(attributes_of(spf_->line(chosen))[3])) walk(element, item, *placed, NO_MATERIAL, 0);
     }
 
     // The origin is the middle of everything, to the metre; then boxes and moves are taken from it
@@ -1402,7 +1461,8 @@ class Builder {
         }
         std::array<std::vector<uint32_t>, 8> children;
         std::vector<uint32_t> kept;
-        if ((instances > TILE_INSTANCES || triangles > TILE_TRIANGLES) && level < TILE_DEPTH) {
+        const bool spread = !occluder_ && instances > TILE_SPREAD_INSTANCES && largest_side(tiles_[id].box) > TILE_SPREAD_M;
+        if ((instances > TILE_INSTANCES || triangles > TILE_TRIANGLES || spread) && level < TILE_DEPTH) {
             for (const uint32_t e : members) {
                 const Box& box = elements_[e].box;
                 if (largest_side(box) > half) {
@@ -1434,7 +1494,10 @@ class Builder {
         return id;
     }
 
+
     void build_tiles() {
+        const std::string name = fs::path(inputs_.front()).filename().string();
+        for (const char* code : OCCLUDERS) occluder_ = occluder_ || name.find(code) != std::string::npos;
         std::vector<uint32_t> members;
         for (uint32_t e = 0; e < elements_.size(); ++e) {
             if (!elements_[e].instances.empty() && !elements_[e].box.empty()) members.push_back(e);
@@ -1481,7 +1544,7 @@ class Builder {
             else insert.text(2, element.guid);
             insert.string_id(3, strings_.id(element.class_name)).string_id(4, strings_.id(element.name)).string_id(5, strings_.id(element.description));
             insert.string_id(6, strings_.id(element.object_type)).string_id(7, strings_.id(element.tag));
-            if (element.has_parent) insert.integer(8, index_[element.parent]);
+            if (element.has_parent) insert.integer(8, element.parent);
             else insert.null(8);
             insert.integer(9, element.sort).string_id(10, strings_.id(element.type_name));
             bind_box(insert, 11, element.box);
@@ -1508,13 +1571,13 @@ class Builder {
     // A property or quantity set, written the first time it's used; false if it isn't one
     bool write_pset(uint32_t pset, int kind) {
         if (written_psets_.count(pset)) return true;
-        const auto type = spf_.type(pset);
-        const auto attributes = attributes_of(spf_.line(pset));
+        const auto type = spf_->type(pset);
+        const auto attributes = attributes_of(spf_->line(pset));
         std::vector<std::pair<std::string, Value>> values;
         if (type == "IFCPROPERTYSET" && attributes.size() == 5) {
             for (const uint32_t property : refs_in(attributes[4])) {
-                const auto parts = attributes_of(spf_.line(property));
-                const auto property_type = spf_.type(property);
+                const auto parts = attributes_of(spf_->line(property));
+                const auto property_type = spf_->type(property);
                 if (property_type == "IFCPROPERTYSINGLEVALUE" && parts.size() >= 3) {
                     if (auto value = value_in(parts[2])) values.emplace_back(text_of(parts[0]), std::move(*value));
                 } else if (property_type == "IFCPROPERTYENUMERATEDVALUE" && parts.size() >= 3 && parts[2].size() > 2) {
@@ -1530,8 +1593,8 @@ class Builder {
         } else if (type == "IFCELEMENTQUANTITY" && attributes.size() == 6) {
             kind = 1;
             for (const uint32_t quantity : refs_in(attributes[5])) {
-                const auto parts = attributes_of(spf_.line(quantity));
-                if (parts.size() < 4 || spf_.type(quantity).rfind("IFCQUANTITY", 0) != 0) continue;
+                const auto parts = attributes_of(spf_->line(quantity));
+                if (parts.size() < 4 || spf_->type(quantity).rfind("IFCQUANTITY", 0) != 0) continue;
                 const std::string number(trimmed(parts[3]));
                 char* end = nullptr;
                 Value value;
@@ -1544,15 +1607,15 @@ class Builder {
             return false;
         }
         written_psets_.insert(pset);
-        insert_pset_->integer(1, pset).string_id(2, strings_.id(text_of(attributes[2]))).integer(3, kind).run();
-        for (const auto& [name, value] : values) insert_pset_value_->integer(1, pset).string_id(2, strings_.id(name)).integer(3, value_id(value)).run();
+        insert_pset_->integer(1, static_cast<int64_t>(pset + pset_offset_)).string_id(2, strings_.id(text_of(attributes[2]))).integer(3, kind).run();
+        for (const auto& [name, value] : values) insert_pset_value_->integer(1, static_cast<int64_t>(pset + pset_offset_)).string_id(2, strings_.id(name)).integer(3, value_id(value)).run();
         return true;
     }
 
     std::string material_names(uint32_t id, int depth) {
-        if (depth > 4 || id >= spf_.max_id()) return {};
-        const auto type = spf_.type(id);
-        const auto attributes = attributes_of(spf_.line(id));
+        if (depth > 4 || id >= spf_->max_id()) return {};
+        const auto type = spf_->type(id);
+        const auto attributes = attributes_of(spf_->line(id));
         if (type == "IFCMATERIAL") return attributes.empty() ? std::string() : text_of(attributes[0]);
         std::string out;
         for (const auto attribute : attributes) {
@@ -1575,17 +1638,17 @@ class Builder {
 
         std::unordered_map<uint32_t, std::vector<uint32_t>> type_psets;  // a type object's own sets
         std::vector<std::pair<uint32_t, uint32_t>> typed;                 // element, type object
-        for (uint32_t id = 0; id < spf_.max_id(); ++id) {
-            const auto type = spf_.type(id);
+        for (uint32_t id = 0; id < spf_->max_id(); ++id) {
+            const auto type = spf_->type(id);
             if (type.rfind("IFCREL", 0) != 0) continue;
-            const auto attributes = attributes_of(spf_.line(id));
+            const auto attributes = attributes_of(spf_->line(id));
             if (attributes.size() < 6) continue;
             if (type == "IFCRELDEFINESBYPROPERTIES") {
                 const auto pset = refs_in(attributes[5]);
                 if (pset.size() != 1) continue;
                 for (const uint32_t object : refs_in(attributes[4])) {
                     const auto found = index_.find(object);
-                    if (found != index_.end() && write_pset(pset[0], 0)) link.integer(1, found->second).integer(2, pset[0]).run();
+                    if (found != index_.end() && write_pset(pset[0], 0)) link.integer(1, found->second).integer(2, static_cast<int64_t>(pset[0] + pset_offset_)).run();
                 }
             } else if (type == "IFCRELDEFINESBYTYPE") {
                 const auto type_object = refs_in(attributes[5]);
@@ -1597,7 +1660,7 @@ class Builder {
                 const std::string names = material_names(relating[0], 0);
                 if (names.empty()) continue;
                 // A set of its own, numbered past the model's ids
-                const uint32_t pset = spf_.max_id() + id;
+                const int64_t pset = static_cast<int64_t>(spf_->max_id() + id + pset_offset_);
                 bool written = false;
                 for (const uint32_t object : refs_in(attributes[4])) {
                     const auto found = index_.find(object);
@@ -1616,10 +1679,10 @@ class Builder {
         for (const auto& [object, type_object] : typed) {
             const auto found = index_.find(object);
             if (found == index_.end()) continue;
-            const auto attributes = attributes_of(spf_.line(type_object));
+            const auto attributes = attributes_of(spf_->line(type_object));
             if (attributes.size() < 6 || attributes[5] == "$") continue;
             for (const uint32_t pset : refs_in(attributes[5])) {
-                if (write_pset(pset, 2)) link.integer(1, found->second).integer(2, pset).run();
+                if (write_pset(pset, 2)) link.integer(1, found->second).integer(2, static_cast<int64_t>(pset + pset_offset_)).run();
             }
         }
         insert_pset_ = insert_pset_value_ = insert_value_ = nullptr;
@@ -1699,9 +1762,15 @@ class Builder {
         set("format_version", std::to_string(FORMAT_VERSION));
         set("generator", std::string("IFCFilter ") + IFCFILTER_VERSION);
         set("created", created);
-        set("source_name", fs::path(input_).filename().string());
-        set("source_sha256", sha256_of_file(input_));
-        set("schema", schema_name_);
+        const auto joined = [](const auto& values) {
+            std::string out;
+            for (const auto& v : values) out += (out.empty() ? "" : "; ") + v;
+            return out;
+        };
+        set("source_name", joined(source_names_));
+        set("source_sha256", joined(source_hashes_));
+        set("source_count", std::to_string(source_names_.size()));
+        set("schema", joined(schemas_));
         set("origin", numbers({origin_[0], origin_[1], origin_[2]}));
         if (!model_box_.empty()) {
             set("bbox", numbers({model_box_.low[0], model_box_.low[1], model_box_.low[2], model_box_.high[0], model_box_.high[1], model_box_.high[2]}));
@@ -1713,9 +1782,12 @@ class Builder {
         set("lod_cells", numbers({LOD_CELLS_M[0], LOD_CELLS_M[1], LOD_CELLS_M[2]}));
     }
 
-    const std::string input_;
-    SpfFile spf_;
-    Extents extents_;
+    const std::vector<std::string> inputs_;
+    std::unique_ptr<SpfFile> spf_;     // the model being read
+    std::unique_ptr<Extents> extents_;
+    uint64_t pset_offset_ = 0;         // the sets of the models before are numbered below this
+    std::vector<std::string> source_names_, source_hashes_;
+    std::set<std::string> schemas_;
     Database& db_;
     Strings strings_;
     Statement insert_mesh_, insert_lod_;
@@ -1749,6 +1821,7 @@ class Builder {
     Box model_box_;
     std::vector<Tile> tiles_;
     size_t tile_count_ = 0;
+    bool occluder_ = false;
 
     std::unordered_set<uint32_t> written_psets_;
     std::unordered_map<std::string, int64_t> value_ids_;
@@ -1761,29 +1834,41 @@ class Builder {
 
 }  // namespace
 
-int cache(const std::string& input, const std::string& output) {
+int cache(const std::vector<std::string>& inputs, const std::string& output) {
     try {
         const std::string partial = output + ".partial";
         std::error_code ignored;
         fs::remove(partial, ignored);
         uintmax_t bytes = 0;
+        bool empty = false;
         {
             Database db(partial);
             db.exec("PRAGMA journal_mode = OFF; PRAGMA synchronous = OFF;");
             db.exec(TABLES);
             db.exec("BEGIN");
-            Builder builder(input, db);
+            Builder builder(inputs, db);
             builder.run();
+            if (!builder.tiles()) {
+                db.exec("ROLLBACK");
+                empty = true;
+            } else {
             db.exec("COMMIT");
             db.exec("VACUUM");
             bytes = fs::file_size(partial);
             std::cout << output << "\n";
             builder.report(std::cout, bytes);
+            }
+        }
+        if (empty) {
+            fs::remove(partial);
+            fs::remove(output, ignored);
+            std::cout << output << ": nothing to draw, so no cache\n";
+            return 0;
         }
         replace_file(partial, output);
         return 0;
     } catch (const std::exception& e) {
-        std::cerr << input << ": " << e.what() << "\n";
+        std::cerr << (inputs.empty() ? output : inputs.front()) << ": " << e.what() << "\n";
         return 1;
     }
 }

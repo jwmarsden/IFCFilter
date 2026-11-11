@@ -102,7 +102,7 @@ Face sets that are the same shape, moved and turned, are written once and placed
 
 A body of several face sets isn't instanced set by set, as Open IFC Viewer won't select an element by clicking it when its body is many mapped items. A whole body that's the same as another, moved and turned, is placed from it instead, as one mapped item, and so is the map of several sets that Revit makes an element's body of.
 
-Where a family doesn't say what a thing is, as with a road's meshes, `hidden-if` and `envelope-if` rules go by a property's value instead: `SET.PROPERTY=VALUE`. A `hidden-small-parts-if` rule picks out assemblies the same way, and puts their parts under a quarter of the assembly's size in the hidden file: a sign face's text, where the exporter left broken pieces of letters over the real ones, while its plate, border, symbols and the real text stay.
+Where a family doesn't say what a thing is, as with a road's meshes, `hidden-if` and `envelope-if` rules go by a property's value instead: `SET.PROPERTY=VALUE`. A `hidden-small-parts-if` rule picks out assemblies the same way, and puts their parts under a quarter of the assembly's size in the hidden file: a sign face's text, where the exporter left broken pieces of letters over the real ones, while its plate, border, symbols and the real text stay. A `forward-if SET.PROPERTY=VALUE MM` rule moves such assemblies forward by that many millimetres, off the post a sign face is often modelled flush against, so the two don't flicker in a viewer. Forward is the side of the plate its legend is on, or, where the legend is in the plate's plane, away from what touches it.
 
 Each output is then written compactly, keeping every element and property (`--no-compact` skips this):
 

@@ -51,7 +51,7 @@ else()
     add_library(IfcOpenShell::parse_schema_ifc4x3_add2 ALIAS parse_schema_ifc4x3_add2)
 endif()
 
-add_executable(ifcfilter src/main.cpp src/report.cpp src/split.cpp src/merge.cpp src/progress.cpp src/combine.cpp src/bake.cpp src/extent.cpp src/mapping.cpp src/instance.cpp src/rigid.cpp src/register.cpp src/system.cpp src/upgrade.cpp src/spf.cpp src/breps.cpp src/compact.cpp src/simplify.cpp src/tidy.cpp src/zip.cpp src/cache.cpp src/trace.cpp)
+add_executable(ifcfilter src/main.cpp src/report.cpp src/split.cpp src/merge.cpp src/progress.cpp src/combine.cpp src/bake.cpp src/extent.cpp src/mapping.cpp src/instance.cpp src/rigid.cpp src/register.cpp src/system.cpp src/upgrade.cpp src/spf.cpp src/breps.cpp src/compact.cpp src/simplify.cpp src/tidy.cpp src/zip.cpp src/cache.cpp src/trace.cpp src/signs.cpp)
 # The schemas are plugins, loaded when a file is opened, so nothing links to them
 add_dependencies(ifcfilter IfcOpenShell::parse_schema_ifc2x3 IfcOpenShell::parse_schema_ifc4 IfcOpenShell::parse_schema_ifc4x3_add2)
 target_compile_definitions(ifcfilter PRIVATE BOOST_OPTIONAL_USE_OLD_DEFINITION_OF_NONE IFCFILTER_VERSION="${PROJECT_VERSION}")
