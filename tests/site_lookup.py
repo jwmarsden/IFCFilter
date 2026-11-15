@@ -21,11 +21,16 @@ with tempfile.TemporaryDirectory() as temp:
 #107=IFCPROPERTYSINGLEVALUE('Description',$,IFCLABEL('ORIGINAL DESCRIPTION'),$);
 #108=IFCPROPERTYSET('0Jm4wmcl10lPX6wYa53Xrk',$,'IFCFilter',$,(#106,#107));
 #109=IFCRELDEFINESBYPROPERTIES('0Jm4wmcl10lPX6wYa53Xrl',$,$,$,(#15),#108);
+#111=IFCPROPERTYSINGLEVALUE('DisciplineCode',$,IFCLABEL('BR'),$);
+#112=IFCPROPERTYSET('0Jm4wmcl10lPX6wYa53Xrm',$,'Project',$,(#111));
+#113=IFCRELDEFINESBYPROPERTIES('0Jm4wmcl10lPX6wYa53Xrn',$,$,$,(#15),#112);
+#114=IFCRELAGGREGATES('0Jm4wmcl10lPX6wYa53Xro',$,$,$,#15,(#115));
+#115=IFCWALL('0Jm4wmcl10lPX6wYa53Xrp',$,'Child',$,$,#4,#14,$,$);
 """
     model = root / 'test.ifc'
     model.write_text(text.replace('ENDSEC;\nEND-ISO-10303-21;', extra+'ENDSEC;\nEND-ISO-10303-21;'))
     rules = root / 'rules.txt'
-    rules.write_text('site-set Asset\nsite-id SiteID\ndesign-set Asset\ndesign-tag DesignTag\n')
+    rules.write_text('site-set Asset\nsite-id SiteID\ndesign-set Asset\ndesign-tag DesignTag\nproject-set Project\n')
     lookup = root / 'lookup.csv'
     lookup.write_text('SiteID,DesignTag,Asset Type,Location,Zone,Co,En,SL,EF,Ss,Pr,Identifier,Description\nPU000123,NEW,PUMP,LOC,A,,,,EF_20,,,CORRECTED ID,CORRECTED DESCRIPTION\n')
     schema_book = Workbook()
@@ -34,6 +39,7 @@ with tempfile.TemporaryDirectory() as temp:
         schema_sheet.append(('IFC_Filter', name))
     for name in ('EF_Code', 'EF_Description', 'Co_Code', 'Co_Description', 'En_Code', 'En_Description', 'SL_Code', 'SL_Description'):
         schema_sheet.append(('Classification', name))
+    schema_sheet.append(('Project', 'DisciplineCode'))
     schema = root / 'schema.xlsx'
     schema_book.save(schema)
     reference = root / 'location-referencing.csv'
@@ -50,7 +56,9 @@ with tempfile.TemporaryDirectory() as temp:
           JOIN strings sn ON sn.id=p.name JOIN pset_values pv ON pv.pset=p.id
           JOIN strings pn ON pn.id=pv.name JOIN "values" v ON v.id=pv.value
           LEFT JOIN strings t ON t.id=v.text WHERE e.guid='0Jm4wmcl10lPX6wYa53Xrf' ''').fetchall()
+    resolved = db.execute("SELECT e.guid, f.zone, f.discipline FROM elements e JOIN element_filters f ON f.element=e.id WHERE e.guid IN (?,?)", ('0Jm4wmcl10lPX6wYa53Xrf', '0Jm4wmcl10lPX6wYa53Xrp')).fetchall()
     db.close()
+    assert dict((guid, (zone, discipline)) for guid,zone,discipline in resolved) == {'0Jm4wmcl10lPX6wYa53Xrf': ('A','BR'), '0Jm4wmcl10lPX6wYa53Xrp': ('A','BR')}, resolved
     actual = {(s,n):v for s,n,v in rows}
     for key, value in {('IFC_Filter','SiteID'):'PU000123',('IFC_Filter','Design_ID'):'NEW',('IFC_Filter','Asset_Type'):'PUMP',('IFC_Filter','Location'):'LOC',('IFC_Filter','Location_Description'):'Example location',('IFC_Filter','Identifier'):'CORRECTED ID',('IFC_Filter','Description'):'CORRECTED DESCRIPTION',('Classification','Co_Code'):'Co_20',('Classification','Co_Description'):'Complex',('Classification','En_Code'):'En_20',('Classification','SL_Code'):'SL_20',('Classification','EF_Code'):'EF_20',('Classification','EF_Description'):'Structural elements'}.items():
         assert actual.get(key) == value, (key, actual.get(key))

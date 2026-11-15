@@ -19,7 +19,16 @@ set EXE=%SOURCE%\build\Release\ifcfilter.exe
 set INPUT=C:\Apps\IFC
 set OUT=%~dp0
 if "%OUT:~-1%"=="\" set OUT=%OUT:~0,-1%
-set ALL_DISCIPLINES=AR BR BS CC CO CV DU FD FS GD HV HY LA LE LT LV MP MS PA RR RS RW SD SU SV SW TF TT TU TV TW UC UE UG US UT UW VA WF
+if not exist "%INPUT%\" (
+    echo Input folder is missing: %INPUT%
+    goto :done
+)
+set "ALL_DISCIPLINES="
+for /d %%D in ("%INPUT%\*") do set "ALL_DISCIPLINES=!ALL_DISCIPLINES! %%~nxD"
+if not defined ALL_DISCIPLINES (
+    echo No discipline folders found in %INPUT%.
+    goto :done
+)
 
 set "ARGUMENTS=%*"
 if "%~1"=="" (
@@ -54,7 +63,7 @@ for %%A in (!ARGUMENTS!) do (
     )
 )
 if "%FOLDERS%"=="" (
-    for %%D in (%ALL_DISCIPLINES%) do set FOLDERS=!FOLDERS! "%INPUT%\%%D"
+    for /d %%D in ("%INPUT%\*") do set FOLDERS=!FOLDERS! "%%~fD"
 )
 
 set MAPPING=

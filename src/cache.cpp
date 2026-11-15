@@ -63,8 +63,8 @@ const char* const OCCLUDERS[] = {"-LA-", "-RW-", "-TU-", "-CV-", "-CC-"};
 constexpr int ZSTD_LEVEL = 12;
 constexpr int MAX_DEPTH = 8;  // of mapped items and booleans
 // Simplified meshes for far away: points snapped together on grids this many metres across, one level each
-constexpr std::array<double, 3> LOD_CELLS_M{0.05, 0.25, 1.0};
-constexpr size_t LOD_MIN_TRIANGLES = 48;  // smaller meshes are drawn as they are at any distance
+constexpr std::array<double, 3> LOD_CELLS_M{0.10, 0.50, 2.0};
+constexpr size_t LOD_MIN_TRIANGLES = 24;  // smaller meshes are drawn as they are at any distance
 constexpr double LOD_WORTH = 0.7;         // a level is kept if it has at most this share of the triangles of the one before
 
 enum Flags : uint32_t { HAS_GEOMETRY = 1, HIDDEN = 2, ENVELOPE = 4, MERGED = 8, APPROXIMATE = 16 };
@@ -274,6 +274,7 @@ class Statement {
 const char* const TABLES = R"(
 CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE strings(id INTEGER PRIMARY KEY, text TEXT UNIQUE);
+CREATE TABLE element_filters(element INTEGER PRIMARY KEY, zone TEXT, discipline TEXT);
 CREATE TABLE elements(id INTEGER PRIMARY KEY, guid TEXT, class INTEGER, name INTEGER, description INTEGER, object_type INTEGER,
     tag INTEGER, parent INTEGER, sort INTEGER, type_name INTEGER, minx REAL, miny REAL, minz REAL, maxx REAL, maxy REAL, maxz REAL,
     tile INTEGER, flags INTEGER);
@@ -571,6 +572,7 @@ class Builder {
         write_elements();
         write_tiles();
         db_.exec(INDEXES);
+        write_filters();
         if (!db_.try_exec("CREATE VIRTUAL TABLE strings_fts USING fts5(text, content='strings', content_rowid='id'); "
                           "INSERT INTO strings_fts(strings_fts) VALUES('rebuild');")) {
             std::cerr << "warning: this SQLite has no fts5, so the cache has no search index\n";
@@ -1791,6 +1793,48 @@ class Builder {
             if (element.tile >= 0) insert.integer(17, element.tile);
             else insert.null(17);
             insert.integer(18, element.flags).run();
+        }
+    }
+
+    // Resolve filter values once, with the same precedence and inheritance as the viewer's legacy reader.
+    void write_filters() {
+        const char* query = "SELECT ep.element, lower(replace(replace(trim(n.text), '_', ''), ' ', '')), trim(t.text) FROM pset_values pv JOIN psets p ON p.id = pv.pset JOIN strings s ON s.id = p.name JOIN element_psets ep ON ep.pset = p.id JOIN strings n ON n.id = pv.name JOIN \"values\" v ON v.id = pv.value JOIN strings t ON t.id = v.text WHERE pv.name IN (SELECT id FROM strings WHERE lower(replace(replace(trim(text), '_', ''), ' ', '')) IN ('zone', 'discipline', 'disciplinecode')) AND p.name IN (SELECT id FROM strings WHERE lower(replace(replace(trim(text), '_', ''), ' ', '')) IN ('ifcfilter')) AND trim(t.text) <> '' ORDER BY ep.element, CASE lower(replace(replace(trim(s.text), '_', ''), ' ', '')) WHEN 'ifcfilter' THEN 0 ELSE 1 END, t.text";
+        using Fields = std::pair<std::optional<std::string>, std::optional<std::string>>;
+        std::vector<Fields> own(elements_.size());
+        sqlite3_stmt* raw = nullptr;
+        if (sqlite3_prepare_v2(db_.get(), query, -1, &raw, nullptr) != SQLITE_OK) throw std::runtime_error(sqlite3_errmsg(db_.get()));
+        std::unique_ptr<sqlite3_stmt, decltype(&sqlite3_finalize)> stmt(raw, sqlite3_finalize);
+        int status;
+        while ((status = sqlite3_step(stmt.get())) == SQLITE_ROW) {
+            const auto id = sqlite3_column_int64(stmt.get(), 0);
+            if (id < 0 || static_cast<size_t>(id) >= own.size()) continue;
+            const std::string name(reinterpret_cast<const char*>(sqlite3_column_text(stmt.get(), 1)));
+            const std::string value(reinterpret_cast<const char*>(sqlite3_column_text(stmt.get(), 2)));
+            auto& target = name.size() >= 4 && name.compare(name.size()-4, 4, "zone") == 0 ? own[id].first : own[id].second;
+            if (!target) target = value;
+        }
+        if (status != SQLITE_DONE) throw std::runtime_error(sqlite3_errmsg(db_.get()));
+        std::vector<std::vector<uint32_t>> children(elements_.size());
+        std::vector<uint32_t> roots;
+        for (uint32_t i=0;i<elements_.size();++i) {
+            const auto& element=elements_[i];
+            if (element.has_parent && element.parent < children.size()) children[element.parent].push_back(i);
+            else if (!element.has_parent) roots.push_back(i);
+        }
+        struct Entry {uint32_t id; Fields inherited;};
+        std::vector<Entry> stack;
+        for (const auto id:roots) stack.push_back({id,{}});
+        Statement insert(db_, "INSERT INTO element_filters(element, zone, discipline) VALUES(?, ?, ?)");
+        while (!stack.empty()) {
+            auto current=std::move(stack.back());stack.pop_back();
+            auto fields=own[current.id];
+            if (!fields.first) fields.first=current.inherited.first;
+            if (!fields.second) fields.second=current.inherited.second;
+            insert.integer(1,current.id);
+            if(fields.first) insert.text(2,*fields.first); else insert.null(2);
+            if(fields.second) insert.text(3,*fields.second); else insert.null(3);
+            insert.run();
+            for(const auto child:children[current.id]) stack.push_back({child,fields});
         }
     }
 

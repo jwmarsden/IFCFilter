@@ -3,6 +3,7 @@
 #include "extent.h"
 #include "spf.h"
 #include "system.h"
+#include "../third_party/earcut/earcut.hpp"
 
 #include <algorithm>
 #include <array>
@@ -301,12 +302,51 @@ std::vector<std::array<double, 3>> point_list(std::string_view list) { return po
 
 bool triangulate_polygon(std::vector<uint32_t> ring, const std::vector<std::vector<uint32_t>>& holes, const std::vector<std::array<double, 3>>& points,
                          std::vector<std::array<uint32_t, 3>>& out) {
-    if (!holes.empty() && !bridge(ring, holes, points)) return false;
-    if (ring.size() == 3) {
-        if (!in_range(ring, points)) return false;
-        out.push_back({ring[0], ring[1], ring[2]});
+    if (!in_range(ring, points) || ring.size() < 3) return false;
+    if (!holes.empty()) {
+        for (const auto& hole : holes) if (hole.size() < 3 || !in_range(hole, points)) return false;
+        const Flat flat(ring, points);
+        if (!flat.has_area) return false;
+        using Vertex = std::array<double, 2>;
+        std::vector<std::vector<Vertex>> polygon;
+        std::vector<uint32_t> ids;
+        const auto& origin = points[ring[0] - 1];
+        const auto append = [&](const std::vector<uint32_t>& contour) {
+            polygon.emplace_back();
+            for (auto id : contour) {
+                polygon.back().push_back({points[id-1][flat.u]-origin[flat.u], points[id-1][flat.v]-origin[flat.v]});
+                ids.push_back(id);
+            }
+        };
+        append(ring);
+        for (const auto& hole : holes) append(hole);
+        const auto signed_area = [](const std::vector<Vertex>& contour) {
+            double value=0;
+            for(size_t i=0;i<contour.size();++i) {const auto& a=contour[i];const auto& b=contour[(i+1)%contour.size()];value+=a[0]*b[1]-b[0]*a[1];}
+            return value/2;
+        };
+        const double outer=signed_area(polygon[0]);
+        double expected=std::abs(outer);
+        for(size_t i=1;i<polygon.size();++i) expected-=std::abs(signed_area(polygon[i]));
+        if(expected<=0) return false;
+        const auto indices=mapbox::earcut<uint32_t>(polygon);
+        if(indices.empty() || indices.size()%3) return false;
+        double covered=0;
+        std::vector<std::array<uint32_t,3>> triangles;
+        for(size_t i=0;i<indices.size();i+=3) {
+            if(indices[i]>=ids.size() || indices[i+1]>=ids.size() || indices[i+2]>=ids.size()) return false;
+            auto a=ids[indices[i]],b=ids[indices[i+1]],c=ids[indices[i+2]];
+            const auto& pa=points[a-1];const auto& pb=points[b-1];const auto& pc=points[c-1];
+            const double area=((pb[flat.u]-pa[flat.u])*(pc[flat.v]-pa[flat.v])-(pb[flat.v]-pa[flat.v])*(pc[flat.u]-pa[flat.u]))/2;
+            covered+=std::abs(area);
+            if(area*outer<0) std::swap(b,c);
+            triangles.push_back({a,b,c});
+        }
+        if(std::abs(covered-expected)>std::max(expected*1e-6,1e-12)) return false;
+        out.insert(out.end(),triangles.begin(),triangles.end());
         return true;
     }
+    if (ring.size() == 3) { out.push_back({ring[0], ring[1], ring[2]}); return true; }
     return ring.size() <= MAX_POLYGON && triangulate(ring, points, out);
 }
 

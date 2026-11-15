@@ -116,9 +116,13 @@ Each shape once. Blob layout below.
 | `lod` | always 0: simplified versions are in `mesh_lods` |
 | `blob` | BLOB, zstd |
 
+### element_filters
+
+`element_filters(element INTEGER PRIMARY KEY, zone TEXT, discipline TEXT)` stores the resolved filter values for each element. Values use the IFC_Filter property set before the rules' project set and inherit missing fields from the parent element. Null means no value was found. Readers must fall back to resolving the properties for older caches without this table.
+
 ### mesh_lods
 
-Simplified versions of the meshes with 48 triangles or more, for far away. Each level snaps the full mesh's points to a grid, each cell's points to their average, and drops triangles left with no area or the same as another; meta `lod_cells` gives the grids, in metres, from level 1 (0.05, 0.25 and 1 m). A level is kept only where it has at most 70% of the triangles of the level before; one that isn't kept draws as the level before it. A level with no triangles has no blob: the mesh isn't drawn that far off. The points stay in the mesh's own frame, so the same instances place them.
+Simplified versions of the meshes with 24 triangles or more, for far away. Each level snaps the full mesh's points to a grid, each cell's points to their average, and drops triangles left with no area or the same as another; meta `lod_cells` gives the grids, in metres, from level 1 (0.10, 0.50 and 2 m). A level is kept only where it has at most 70% of the triangles of the level before; one that isn't kept draws as the level before it. A level with no triangles has no blob: the mesh isn't drawn that far off. The points stay in the mesh's own frame, so the same instances place them.
 
 `mesh_lods(mesh INTEGER, lod INTEGER, triangles INTEGER, blob BLOB, PRIMARY KEY(mesh, lod)) WITHOUT ROWID`
 
