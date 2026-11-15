@@ -1,0 +1,13 @@
+build/
+result
+result-*
+out/
+.direnv/
+EXAMPLES.md
+rules.txt
+mapping.csv
+combine.csv
+
+# Project data: site register, lookups and location referencing
+data/*
+!data/uniclass/

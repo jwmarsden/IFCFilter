@@ -1,0 +1,592 @@
+ID,CODE,GROUP_CODE,SUB_GROUP_CODE,SECTION_CODE,OBJECT_CODE,TITLE,ACTIVE
+10,En_20,20,,,,"Administrative, commercial and protective service entities",TRUE
+20,En_20_10,20,10,,,Legislative entities,TRUE
+30,En_20_10_45,20,10,45,,Governmental buildings,TRUE
+40,En_20_15,20,15,,,Administrative office entities,TRUE
+50,En_20_15_10,20,15,10,,Multiple occupation office buildings,TRUE
+60,En_20_15_70,20,15,70,,Single occupation office buildings,TRUE
+70,En_20_20,20,20,,,Secular representative entities,TRUE
+80,En_20_20_10,20,20,10,,Buildings for representatives of nation states abroad,TRUE
+90,En_20_20_40,20,20,40,,Local government buildings,TRUE
+100,En_20_20_50,20,20,50,,National government buildings,TRUE
+110,En_20_20_70,20,20,70,,Regional government buildings,TRUE
+120,En_20_45,20,45,,,"Motor vehicle maintenance, fuelling and charging entities",TRUE
+130,En_20_45_49,20,45,49,,Motor vehicle charging hubs,TRUE
+140,En_20_45_50,20,45,50,,Motor vehicle fuelling stations,TRUE
+150,En_20_45_54,20,45,54,,Motor vehicle servicing and repair facilities,TRUE
+160,En_20_50,20,50,,,Commercial entities,TRUE
+170,En_20_50_05,20,50,05,,Auction buildings,TRUE
+180,En_20_50_22,20,50,22,,Department stores,TRUE
+190,En_20_50_29,20,50,29,,Financial and professional services buildings,TRUE
+200,En_20_50_50,20,50,50,,Markets,TRUE
+210,En_20_50_53,20,50,53,,Mixed use buildings,TRUE
+220,En_20_50_55,20,50,55,,Motor vehicle sales entities,TRUE
+230,En_20_50_80,20,50,80,,Shop units,TRUE
+240,En_20_50_85,20,50,85,,Supermarkets,TRUE
+250,En_20_50_97,20,50,97,,Wholesale buildings,TRUE
+260,En_20_55,20,55,,,Postal communications entities,TRUE
+270,En_20_55_65,20,55,65,,Post office buildings,TRUE
+280,En_20_55_80,20,55,80,,Sorting office buildings,TRUE
+290,En_20_60,20,60,,,Military entities,TRUE
+300,En_20_60_02,20,60,02,,Air force buildings,TRUE
+310,En_20_60_10,20,60,10,,Army buildings,TRUE
+320,En_20_60_56,20,60,56,,Navy buildings,TRUE
+330,En_20_65,20,65,,,Law enforcement operational entities,TRUE
+340,En_20_65_09,20,65,09,,Police buildings,TRUE
+350,En_20_70,20,70,,,Judicial entities,TRUE
+360,En_20_70_40,20,70,40,,Law court buildings,TRUE
+370,En_20_75,20,75,,,Detention entities,TRUE
+380,En_20_75_10,20,75,10,,Detention buildings,TRUE
+390,En_20_80,20,80,,,Weapons training ranges,TRUE
+400,En_20_80_29,20,80,29,,Firing range buildings,TRUE
+410,En_20_80_30,20,80,30,,Exterior firing ranges,TRUE
+420,En_20_85,20,85,,,Security entities,TRUE
+430,En_20_85_15,20,85,15,,Security control buildings,TRUE
+440,En_20_85_30,20,85,30,,Security fences,TRUE
+450,En_20_90,20,90,,,Incident support entities,TRUE
+460,En_20_90_10,20,90,10,,Fire and rescue training buildings,TRUE
+470,En_20_90_15,20,90,15,,Fire station buildings,TRUE
+480,En_25,25,,,,"Cultural, educational, scientific and information entities",TRUE
+490,En_25_05,25,05,,,Commemoration entities,TRUE
+500,En_25_05_35,25,05,35,,Gardens of remembrance,TRUE
+510,En_25_05_50,25,05,50,,Memorials,TRUE
+520,En_25_05_55,25,05,55,,Monuments,TRUE
+530,En_25_10,25,10,,,Educational entities,TRUE
+540,En_25_10_10,25,10,10,,Preschool educational buildings,TRUE
+550,En_25_10_20,25,10,20,,Infant educational buildings,TRUE
+560,En_25_10_30,25,10,30,,Primary educational buildings,TRUE
+570,En_25_10_40,25,10,40,,Secondary educational buildings,TRUE
+580,En_25_10_50,25,10,50,,Pre-tertiary educational buildings,TRUE
+590,En_25_10_60,25,10,60,,Tertiary educational buildings,TRUE
+600,En_25_10_70,25,10,70,,Adult educational buildings,TRUE
+610,En_25_30,25,30,,,Scientific and laboratory entities,TRUE
+620,En_25_30_40,25,30,40,,Laboratory buildings,TRUE
+630,En_25_30_50,25,30,50,,Meteorological stations,TRUE
+640,En_25_30_60,25,30,60,,Observatory buildings,TRUE
+650,En_25_30_66,25,30,66,,Observatory antennas,TRUE
+660,En_25_30_70,25,30,70,,Research buildings,TRUE
+670,En_25_30_77,25,30,77,,Seed banks,TRUE
+680,En_25_30_90,25,30,90,,Triangulation pillars,TRUE
+690,En_25_50,25,50,,,Exhibition entities,TRUE
+700,En_25_50_02,25,50,02,,Art exhibition buildings,TRUE
+710,En_25_50_04,25,50,04,,Art installations,TRUE
+720,En_25_50_15,25,50,15,,Collection exhibition buildings,TRUE
+730,En_25_50_29,25,50,29,,Fauna exhibition buildings,TRUE
+740,En_25_50_30,25,50,30,,Fauna exhibition grounds,TRUE
+750,En_25_50_31,25,50,31,,Flora exhibition buildings,TRUE
+760,En_25_50_32,25,50,32,,Flora exhibition grounds,TRUE
+770,En_25_50_54,25,50,54,,Multipurpose exhibition buildings,TRUE
+780,En_25_70,25,70,,,Information entities,TRUE
+790,En_25_70_02,25,70,02,,Archive buildings,TRUE
+800,En_25_70_11,25,70,11,,Clock towers,TRUE
+810,En_25_70_13,25,70,13,,Conference buildings,TRUE
+820,En_25_70_42,25,70,42,,Information kiosks,TRUE
+830,En_25_70_47,25,70,47,,Library buildings,TRUE
+840,En_25_90,25,90,,,Worship entities,TRUE
+850,En_25_90_30,25,90,30,,Faith worship buildings,TRUE
+860,En_30,30,,,,Industrial entities,TRUE
+870,En_30_10,30,10,,,Mineral extraction entities,TRUE
+880,En_30_10_57,30,10,57,,Offshore oil and gas extraction platforms,TRUE
+890,En_30_10_80,30,10,80,,Spoil heaps,TRUE
+900,En_30_10_85,30,10,85,,Surface mining structures,TRUE
+910,En_30_10_86,30,10,86,,Surface mining cuttings,TRUE
+920,En_30_10_90,30,10,90,,Underground mining structures,TRUE
+930,En_30_20,30,20,,,Nuclear and chemical management entities,TRUE
+940,En_30_20_15,30,20,15,,Radioactivity waste management control buildings,TRUE
+950,En_30_20_30,30,20,30,,High-heat-generating radioactive waste management tunnels,TRUE
+960,En_30_20_35,30,20,35,,High-heat radioactive waste package transfer buildings,TRUE
+970,En_30_20_45,30,20,45,,Low-heat radioactive waste package transfer buildings,TRUE
+980,En_30_20_60,30,20,60,,Low-heat-generating radioactive waste management vault,TRUE
+990,En_30_20_70,30,20,70,,Radioactivity decontamination buildings,TRUE
+1000,En_30_20_75,30,20,75,,Radioactivity effluent management buildings,TRUE
+1010,En_30_30,30,30,,,Mineral processing entities,TRUE
+1020,En_30_30_33,30,30,33,,Gas processing structures,TRUE
+1030,En_30_30_58,30,30,58,,Oil processing structures,TRUE
+1040,En_30_30_59,30,30,59,,Ore processing structures,TRUE
+1050,En_30_40,30,40,,,Animal and plant products processing entities,TRUE
+1060,En_30_40_01,30,40,01,,Animal processing buildings,TRUE
+1070,En_30_40_20,30,40,20,,Crop processing buildings,TRUE
+1080,En_30_40_30,30,40,30,,Fish processing buildings,TRUE
+1090,En_30_40_40,30,40,40,,Horticultural processing buildings,TRUE
+1100,En_30_40_90,30,40,90,,Timber processing buildings,TRUE
+1110,En_30_50,30,50,,,Manufacturing entities,TRUE
+1120,En_30_50_15,30,50,15,,Cranes,TRUE
+1130,En_30_50_50,30,50,50,,Manufacturing buildings,TRUE
+1140,En_30_60,30,60,,,Cleaning and maintenance entities,TRUE
+1150,En_30_60_20,30,60,20,,Decontamination laundry buildings,TRUE
+1160,En_30_60_40,30,60,40,,Laundry buildings,TRUE
+1170,En_30_60_50,30,60,50,,Maintenance buildings,TRUE
+1180,En_30_60_94,30,60,94,,Vehicle-cleaning buildings,TRUE
+1190,En_30_70,30,70,,,Process entities,TRUE
+1200,En_30_70_13,30,70,13,,Chimney stacks,TRUE
+1210,En_30_70_15,30,70,15,,Conveyors,TRUE
+1220,En_30_70_17,30,70,17,,Cooling towers,TRUE
+1230,En_30_70_28,30,70,28,,Equipment gantries,TRUE
+1240,En_30_80,30,80,,,Mechanical power generation,TRUE
+1250,En_30_80_96,30,80,96,,Watermills,TRUE
+1260,En_30_80_97,30,80,97,,Windmills,TRUE
+1270,En_30_85,30,85,,,Marine and water entities,TRUE
+1280,En_30_85_07,30,85,07,,Boathouse buildings,TRUE
+1290,En_30_85_08,30,85,08,,Boatyard buildings,TRUE
+1300,En_30_85_24,30,85,24,,Dry docks,TRUE
+1310,En_30_85_80,30,85,80,,Shipyard buildings,TRUE
+1320,En_30_85_97,30,85,97,,Wet docks,TRUE
+1330,En_30_90,30,90,,,Warehousing and distribution entities,TRUE
+1340,En_30_90_33,30,90,33,,Goods warehousing buildings,TRUE
+1350,En_30_90_35,30,90,35,,Goods distribution buildings,TRUE
+1360,En_32,32,,,,Water and land management entities,TRUE
+1370,En_32_10,32,10,,,Agricultural and horticultural entities,TRUE
+1380,En_32_10_02,32,10,02,,Arable buildings,TRUE
+1390,En_32_10_04,32,10,04,,Arable land,TRUE
+1400,En_32_10_06,32,10,06,,Barns,TRUE
+1410,En_32_10_20,32,10,20,,Coppices,TRUE
+1420,En_32_10_28,32,10,28,,Fishing buildings,TRUE
+1430,En_32_10_29,32,10,29,,Fishing cages,TRUE
+1440,En_32_10_30,32,10,30,,Forestry buildings,TRUE
+1450,En_32_10_31,32,10,31,,Forestry plantations,TRUE
+1460,En_32_10_37,32,10,37,,Hedgerows,TRUE
+1470,En_32_10_39,32,10,39,,Horticultural buildings,TRUE
+1480,En_32_10_40,32,10,40,,Horticultural land,TRUE
+1490,En_32_10_46,32,10,46,,Livestock buildings,TRUE
+1500,En_32_10_47,32,10,47,,Livestock paddocks and fields,TRUE
+1510,En_32_10_93,32,10,93,,Vineyard and winery buildings,TRUE
+1520,En_32_10_94,32,10,94,,Vineyard plantations,TRUE
+1530,En_32_15,32,15,,,Dam entities,TRUE
+1540,En_32_15_19,32,15,19,,Dam cut-off walls,TRUE
+1550,En_32_15_22,32,15,22,,Dam discharge conduits,TRUE
+1560,En_32_15_23,32,15,23,,Dam spillways,TRUE
+1570,En_32_15_26,32,15,26,,Drop inlet works,TRUE
+1580,En_32_15_27,32,15,27,,Emergency spillways,TRUE
+1590,En_32_15_57,32,15,57,,Outlet channels,TRUE
+1600,En_32_15_58,32,15,58,,Outlet works,TRUE
+1610,En_32_15_85,32,15,85,,Spillway gates,TRUE
+1620,En_32_15_88,32,15,88,,Toe drains,TRUE
+1630,En_32_20,32,20,,,Designated land entities,TRUE
+1640,En_32_20_65,32,20,65,,Plots of land,TRUE
+1650,En_32_35,32,35,,,Grounds,TRUE
+1660,En_32_35_05,32,35,05,,Arboretums,TRUE
+1670,En_32_35_15,32,35,15,,Community gardens,TRUE
+1680,En_32_35_33,32,35,33,,Gardens,TRUE
+1690,En_32_35_36,32,35,36,,Hard landscapes,TRUE
+1700,En_32_35_80,32,35,80,,Soft landscapes,TRUE
+1710,En_32_40,32,40,,,Land managed entities,TRUE
+1720,En_32_40_20,32,40,20,,Cuttings,TRUE
+1730,En_32_40_26,32,40,26,,Embankments,TRUE
+1740,En_32_40_30,32,40,30,,False cuttings,TRUE
+1750,En_32_40_37,32,40,37,,High ground,TRUE
+1760,En_32_40_65,32,40,65,,Precipitation compounds,TRUE
+1770,En_32_40_90,32,40,90,,Trenches,TRUE
+1780,En_32_50,32,50,,,Marine and waterside entities,TRUE
+1790,En_32_50_20,32,50,20,,Degaussing and acoustic ranges,TRUE
+1800,En_32_50_22,32,50,22,,Dock buildings,TRUE
+1810,En_32_50_44,32,50,44,,Jetties,TRUE
+1820,En_32_50_46,32,50,46,,Landing stages,TRUE
+1830,En_32_50_58,32,50,58,,Offshore anchorages,TRUE
+1840,En_32_50_63,32,50,63,,Piers,TRUE
+1850,En_32_50_65,32,50,65,,Pontoons,TRUE
+1860,En_32_50_69,32,50,69,,Quays,TRUE
+1870,En_32_50_96,32,50,96,,Waterside platforms,TRUE
+1880,En_32_50_98,32,50,98,,Wharfs,TRUE
+1890,En_32_60,32,60,,,Pollution control entities,TRUE
+1900,En_32_60_40,32,60,40,,Groundwater storage entities,TRUE
+1910,En_32_60_60,32,60,60,,Permeable reactive barriers,TRUE
+1920,En_32_65,32,65,,,Natural entities,TRUE
+1930,En_32_65_06,32,65,06,,Beaches,TRUE
+1940,En_32_65_13,32,65,13,,Cliff faces,TRUE
+1950,En_32_65_14,32,65,14,,Cliff toes,TRUE
+1960,En_32_65_15,32,65,15,,Clifftops,TRUE
+1970,En_32_65_37,32,65,37,,Heathlands,TRUE
+1980,En_32_65_50,32,65,50,,Marshes and wet grasslands,TRUE
+1990,En_32_65_51,32,65,51,,Meadows,TRUE
+2000,En_32_65_53,32,65,53,,Moorlands,TRUE
+2010,En_32_65_55,32,65,55,,Mudflats,TRUE
+2020,En_32_65_59,32,65,59,,Open grasslands,TRUE
+2030,En_32_65_73,32,65,73,,Rocks and screes,TRUE
+2040,En_32_65_75,32,65,75,,Sand dunes,TRUE
+2050,En_32_65_76,32,65,76,,Scrub,TRUE
+2060,En_32_65_80,32,65,80,,Shingle banks,TRUE
+2070,En_32_65_81,32,65,81,,Shores,TRUE
+2080,En_32_65_82,32,65,82,,Species-rich grassland,TRUE
+2090,En_32_65_95,32,65,95,,Washland,TRUE
+2100,En_32_85,32,85,,,Water control and retaining entities,TRUE
+2110,En_32_85_06,32,85,06,,Barrier beaches,TRUE
+2120,En_32_85_10,32,85,10,,Breakwaters,TRUE
+2130,En_32_85_15,32,85,15,,Control gates,TRUE
+2140,En_32_85_23,32,85,23,,Debris screens,TRUE
+2150,En_32_85_24,32,85,24,,Dolphins,TRUE
+2160,En_32_85_25,32,85,25,,Draw-off towers,TRUE
+2170,En_32_85_30,32,85,30,,Flood prevention structures,TRUE
+2180,En_32_85_31,32,85,31,,Flumes,TRUE
+2190,En_32_85_35,32,85,35,,Groynes,TRUE
+2200,En_32_85_45,32,85,45,,Levees,TRUE
+2210,En_32_85_59,32,85,59,,Outfalls,TRUE
+2220,En_32_85_72,32,85,72,,Revetments,TRUE
+2230,En_32_85_75,32,85,75,,Sand traps,TRUE
+2240,En_32_85_77,32,85,77,,Sea dikes,TRUE
+2250,En_32_85_80,32,85,80,,Sluices,TRUE
+2260,En_32_85_82,32,85,82,,Spillways,TRUE
+2270,En_32_85_84,32,85,84,,Stilling basins,TRUE
+2280,En_32_85_96,32,85,96,,Water-retaining walls,TRUE
+2290,En_32_85_97,32,85,97,,Weirs,TRUE
+2300,En_32_85_98,32,85,98,,Wells,TRUE
+2310,En_32_95,32,95,,,Waterways,TRUE
+2320,En_32_95_14,32,95,14,,Channels,TRUE
+2330,En_32_95_16,32,95,16,,Complex culverts,TRUE
+2340,En_32_95_23,32,95,23,,Ditches,TRUE
+2350,En_32_95_30,32,95,30,,"Fish, eel and lamprey passes",TRUE
+2360,En_32_95_59,32,95,59,,Open channels,TRUE
+2370,En_32_95_80,32,95,80,,Simple culverts,TRUE
+2380,En_32_95_85,32,95,85,,Surface water channels,TRUE
+2390,En_32_95_86,32,95,86,,Swales,TRUE
+2400,En_35,35,,,,"Medical, health, welfare and sanitary entities",TRUE
+2410,En_35_10,35,10,,,Medical entities,TRUE
+2420,En_35_10_10,35,10,10,,Medical buildings,TRUE
+2430,En_35_50,35,50,,,Welfare entities,TRUE
+2440,En_35_50_21,35,50,21,,Day welfare buildings,TRUE
+2450,En_35_50_70,35,50,70,,Residential welfare buildings,TRUE
+2460,En_35_50_94,35,50,94,,Visitor welfare buildings,TRUE
+2470,En_35_70,35,70,,,Funerary entities,TRUE
+2480,En_35_70_06,35,70,06,,Body storage buildings,TRUE
+2490,En_35_70_10,35,70,10,,Burial buildings,TRUE
+2500,En_35_70_11,35,70,11,,Burial grounds,TRUE
+2510,En_35_70_30,35,70,30,,Funeral buildings,TRUE
+2520,En_35_70_60,35,70,60,,Medical chimney stacks,TRUE
+2530,En_35_80,35,80,,,Sanitary entities,TRUE
+2540,En_35_80_10,35,80,10,,Bathing buildings,TRUE
+2550,En_35_80_90,35,80,90,,Toilet buildings,TRUE
+2560,En_35_85,35,85,,,Animal entities,TRUE
+2570,En_35_85_02,35,85,02,,Animal cage buildings,TRUE
+2580,En_35_85_03,35,85,03,,Animal pen buildings,TRUE
+2590,En_35_85_84,35,85,84,,Stable buildings,TRUE
+2600,En_35_90,35,90,,,"Animal medical, health, welfare and funerary entities",TRUE
+2610,En_35_90_10,35,90,10,,Animal cemeteries,TRUE
+2620,En_35_90_30,35,90,30,,Animal funerary buildings,TRUE
+2630,En_35_90_50,35,90,50,,Animal medical buildings,TRUE
+2640,En_35_90_80,35,90,80,,Small animal treatment buildings,TRUE
+2650,En_40,40,,,,Recreational entities,TRUE
+2660,En_40_05,40,05,,,Amusement entities,TRUE
+2670,En_40_05_03,40,05,03,,Amusement buildings,TRUE
+2680,En_40_05_13,40,05,13,,Casinos,TRUE
+2690,En_40_05_27,40,05,27,,E-sport buildings,TRUE
+2700,En_40_05_42,40,05,42,,Indoor fairgrounds,TRUE
+2710,En_40_05_60,40,05,60,,Outdoor fairgrounds,TRUE
+2720,En_40_05_68,40,05,68,,Public amenities,TRUE
+2730,En_40_20,40,20,,,Dining entities,TRUE
+2740,En_40_20_23,40,20,23,,Dining buildings,TRUE
+2750,En_40_35,40,35,,,Historic entities,TRUE
+2760,En_40_35_10,40,35,10,,Buildings of historic interest,TRUE
+2770,En_40_35_36,40,35,36,,Historic buildings,TRUE
+2780,En_40_60,40,60,,,Performing arts entities,TRUE
+2790,En_40_60_10,40,60,10,,Multiple performing arts buildings,TRUE
+2800,En_40_60_70,40,60,70,,Single performing arts buildings,TRUE
+2810,En_40_75,40,75,,,Social recreation entities,TRUE
+2820,En_40_75_10,40,75,10,,Multiple social recreation buildings,TRUE
+2830,En_40_75_15,40,75,15,,Club houses,TRUE
+2840,En_40_75_70,40,75,70,,Single social recreation buildings,TRUE
+2850,En_40_75_94,40,75,94,,Visitor centres,TRUE
+2860,En_42,42,,,,Sport and activity entities,TRUE
+2870,En_42_15,42,15,,,"Courts, pitches and field sports entities",TRUE
+2880,En_42_15_04,42,15,04,,Athletics facilities,TRUE
+2890,En_42_15_06,42,15,06,,Ball courts,TRUE
+2900,En_42_15_81,42,15,81,,Sports grounds,TRUE
+2910,En_42_15_82,42,15,82,,Sports pitches,TRUE
+2920,En_42_40,42,40,,,Indoor activity entities,TRUE
+2930,En_42_40_80,42,40,80,,Sports buildings,TRUE
+2940,En_42_55,42,55,,,Outdoor activity entities,TRUE
+2950,En_42_55_01,42,55,01,,Activity grounds,TRUE
+2960,En_42_55_18,42,55,18,,Cricket pavilions,TRUE
+2970,En_42_55_34,42,55,34,,Golf driving ranges,TRUE
+2980,En_42_85,42,85,,,Swimming entities,TRUE
+2990,En_42_85_60,42,85,60,,Outdoor swimming pools,TRUE
+3000,En_42_85_83,42,85,83,,Swimming pool buildings,TRUE
+3010,En_42_90,42,90,,,Water activity entities,TRUE
+3020,En_42_95,42,95,,,Winter sports entities,TRUE
+3030,En_42_95_40,42,95,40,,Ice rink buildings,TRUE
+3040,En_42_95_80,42,95,80,,Ski resort buildings,TRUE
+3050,En_45,45,,,,Residential entities,TRUE
+3060,En_45_10,45,10,,,Residential buildings,TRUE
+3070,En_45_10_03,45,10,03,,Apartments or flats,TRUE
+3080,En_45_10_39,45,10,39,,Houses,TRUE
+3090,En_45_10_47,45,10,47,,Long-term residential buildings,TRUE
+3100,En_45_10_70,45,10,70,,Short-term residential buildings,TRUE
+3110,En_45_10_90,45,10,90,,Temporary residential buildings,TRUE
+3120,En_50,50,,,,Waste disposal entities,TRUE
+3130,En_50_10,50,10,,,Gas waste collection entities,TRUE
+3140,En_50_20,50,20,,,Non-aqueous waste collection entities,TRUE
+3150,En_50_20_10,50,20,10,,Non-aqueous waste collection tanks,TRUE
+3160,En_50_30,50,30,,,Drainage collection entities,TRUE
+3170,En_50_30_25,50,30,25,,Drainage collection pipelines,TRUE
+3180,En_50_35,50,35,,,Wastewater collection entities,TRUE
+3190,En_50_35_93,50,35,93,,Wastewater collection pumping stations,TRUE
+3200,En_50_35_98,50,35,98,,Wastewater collection pipelines,TRUE
+3210,En_50_40,50,40,,,Dry waste collection and distribution,TRUE
+3220,En_50_40_10,50,40,10,,Dry waste collection structures,TRUE
+3230,En_50_40_11,50,40,11,,Dry waste storage structures,TRUE
+3240,En_50_40_12,50,40,12,,Dry waste storage yards,TRUE
+3250,En_50_40_50,50,40,50,,Dry waste distribution structures,TRUE
+3260,En_50_50,50,50,,,"Gas waste storage, treatment and disposal",TRUE
+3270,En_50_60,50,60,,,"Non-aqueous waste storage, treatment and disposal",TRUE
+3280,En_50_70,50,70,,,"Drainage storage, treatment and disposal",TRUE
+3290,En_50_75,50,75,,,"Wastewater storage, treatment and disposal entities",TRUE
+3300,En_50_75_28,50,75,28,,Effluent transfer and disposal pipelines,TRUE
+3310,En_50_75_30,50,75,30,,Effluent transfer and disposal pumping stations,TRUE
+3320,En_50_75_68,50,75,68,,Wastewater treatment pumping stations,TRUE
+3330,En_50_75_80,50,75,80,,Sludge treatment entities,TRUE
+3340,En_50_75_95,50,75,95,,Wastewater treatment entities,TRUE
+3350,En_50_75_96,50,75,96,,Wastewater storage entities,TRUE
+3360,En_50_80,50,80,,,Dry waste treatment and disposal,TRUE
+3370,En_50_80_40,50,80,40,,Dry waste treatment structures,TRUE
+3380,En_50_80_70,50,80,70,,Dry waste disposal structures,TRUE
+3390,En_55,55,,,,Piped supply entities,TRUE
+3400,En_55_05,55,05,,,"Gas extraction, treatment and storage",TRUE
+3410,En_55_05_30,55,05,30,,Gas extraction structures,TRUE
+3420,En_55_05_35,55,05,35,,Gas extraction vessels,TRUE
+3430,En_55_05_38,55,05,38,,Gas extraction pipelines,TRUE
+3440,En_55_05_40,55,05,40,,Gas storage tanks,TRUE
+3450,En_55_05_70,55,05,70,,Gas treatment buildings,TRUE
+3460,En_55_05_75,55,05,75,,Gas treatment plant,TRUE
+3470,En_55_05_78,55,05,78,,Gas treatment pipelines,TRUE
+3480,En_55_10,55,10,,,Liquid fuel extraction and treatment entities,TRUE
+3490,En_55_10_10,55,10,10,,Oil extraction structures,TRUE
+3500,En_55_10_45,55,10,45,,Oil storage tanks,TRUE
+3510,En_55_10_50,55,10,50,,Fuel treatment buildings,TRUE
+3520,En_55_10_55,55,10,55,,Fuel treatment tanks,TRUE
+3530,En_55_10_58,55,10,58,,Fuel treatment pipelines,TRUE
+3540,En_55_15,55,15,,,Water extraction and treatment entities,TRUE
+3550,En_55_15_50,55,15,50,,Raw water treatment entities,TRUE
+3560,En_55_15_72,55,15,72,,Raw water pipelines,TRUE
+3570,En_55_15_75,55,15,75,,Raw water pumping stations,TRUE
+3580,En_55_15_80,55,15,80,,Raw water storage entities,TRUE
+3590,En_55_20,55,20,,,Gas supply entities,TRUE
+3600,En_55_20_50,55,20,50,,Gas distribution structures,TRUE
+3610,En_55_20_60,55,20,60,,Gas distribution pipelines,TRUE
+3620,En_55_30,55,30,,,Fire-extinguishing supply entities,TRUE
+3630,En_55_40,55,40,,,Steam supply entities,TRUE
+3640,En_55_50,55,50,,,Liquid fuel supply entities,TRUE
+3650,En_55_50_20,55,50,20,,Fuel distribution pipelines,TRUE
+3660,En_55_50_45,55,50,45,,Liquid fuel distribution buildings,TRUE
+3670,En_55_60,55,60,,,Process liquid supply entities,TRUE
+3680,En_55_70,55,70,,,Water supply entities,TRUE
+3690,En_55_70_85,55,70,85,,Treated water pipelines,TRUE
+3700,En_55_70_87,55,70,87,,Treated water pumping stations,TRUE
+3710,En_55_70_89,55,70,89,,Treated water storage entities,TRUE
+3720,En_55_90,55,90,,,Piped solids supply entities,TRUE
+3730,En_60,60,,,,"Heating, cooling and refrigeration entities",TRUE
+3740,En_60_30,60,30,,,Rail and paving heating entities,TRUE
+3750,En_60_40,60,40,,,Space heating and cooling entities,TRUE
+3760,En_60_40_10,60,40,10,,District heating buildings,TRUE
+3770,En_60_40_20,60,40,20,,District heating pipelines,TRUE
+3780,En_60_40_50,60,40,50,,District cooling buildings,TRUE
+3790,En_60_40_60,60,40,60,,District cooling pipelines,TRUE
+3800,En_60_60,60,60,,,Refrigeration entities,TRUE
+3810,En_60_80,60,80,,,Drying entities,TRUE
+3820,En_65,65,,,,Ventilation and air conditioning entities,TRUE
+3830,En_65_40,65,40,,,Ventilation entities,TRUE
+3840,En_65_40_80,65,40,80,,Shaft and tunnel ventilation plant building,TRUE
+3850,En_65_80,65,80,,,Air conditioning entities,TRUE
+3860,En_70,70,,,,Electrical power generation and distribution entities,TRUE
+3870,En_70_10,70,10,,,Electrical power generation entities,TRUE
+3880,En_70_10_10,70,10,10,,Electrical power generation buildings,TRUE
+3890,En_70_10_35,70,10,35,,Generator transformer substations,TRUE
+3900,En_70_10_39,70,10,39,,Hydroelectric power generation entities,TRUE
+3910,En_70_10_80,70,10,80,,Solar panel fields,TRUE
+3920,En_70_10_90,70,10,90,,Wind turbines,TRUE
+3930,En_70_20,70,20,,,Electrical power transmission entities,TRUE
+3940,En_70_20_02,70,20,02,,Air-insulated transmission substations,TRUE
+3950,En_70_20_05,70,20,05,,Autotransformer feeder stations,TRUE
+3960,En_70_20_15,70,20,15,,Alternating current (a.c.) to direct current (d.c.) converter stations,TRUE
+3970,En_70_20_22,70,20,22,,Direct current (d.c.) switching stations,TRUE
+3980,En_70_20_24,70,20,24,,Electrical cable sealing end (CSE) compounds,TRUE
+3990,En_70_20_27,70,20,27,,Electricity transmission towers,TRUE
+4000,En_70_20_33,70,20,33,,Gas-insulated transmission substations,TRUE
+4010,En_70_20_35,70,20,35,,High-voltage switchyards,TRUE
+4020,En_70_20_59,70,20,59,,Outside gas-insulated transmission substations,TRUE
+4030,En_70_20_60,70,20,60,,Overhead electricity transmission lines,TRUE
+4040,En_70_20_61,70,20,61,,Overhead electricity transmission line sections,TRUE
+4050,En_70_20_62,70,20,62,,Overhead electricity transmission line spans,TRUE
+4060,En_70_20_80,70,20,80,,Sub-sea electricity transmission lines,TRUE
+4070,En_70_20_88,70,20,88,,Transmission network services buildings,TRUE
+4080,En_70_20_90,70,20,90,,Underground electricity transmission lines,TRUE
+4090,En_70_30,70,30,,,Electrical power distribution entities,TRUE
+4100,En_70_30_26,70,30,26,,Sub-transmission substations,TRUE
+4110,En_70_30_35,70,30,35,,Distribution substations,TRUE
+4120,En_70_30_45,70,30,45,,Low-voltage electricity substations,TRUE
+4130,En_70_30_60,70,30,60,,Overhead power distribution lines,TRUE
+4140,En_70_30_92,70,30,92,,Underground electricity distribution lines,TRUE
+4150,En_75,75,,,,"Communications, security, safety and protection entities",TRUE
+4160,En_75_10,75,10,,,Communication entities,TRUE
+4170,En_75_10_10,75,10,10,,Broadcast communications buildings,TRUE
+4180,En_75_10_16,75,10,16,,Broadcast communications masts and towers,TRUE
+4190,En_75_10_20,75,10,20,,Data centres,TRUE
+4200,En_75_10_50,75,10,50,,Mobile telecommunications masts and towers,TRUE
+4210,En_75_10_90,75,10,90,,Telecommunications buildings,TRUE
+4220,En_75_10_97,75,10,97,,Wireless communications masts and towers,TRUE
+4230,En_75_30,75,30,,,Signalling entities,TRUE
+4240,En_75_30_10,75,30,10,,Peer-to-peer communications buildings,TRUE
+4250,En_75_30_18,75,30,18,,Peer-to-peer communications networks,TRUE
+4260,En_75_30_78,75,30,78,,Signalling control centres,TRUE
+4270,En_75_40,75,40,,,Security systems entities,TRUE
+4280,En_75_50,75,50,,,Safety and protection entities,TRUE
+4290,En_75_60,75,60,,,Environmental safety entities,TRUE
+4300,En_75_70,75,70,,,Control and management entities,TRUE
+4310,En_75_70_60,75,70,60,,Operational control centres,TRUE
+4320,En_75_80,75,80,,,Protection entities,TRUE
+4330,En_80,80,,,,Transport entities,TRUE
+4340,En_80_05,80,05,,,Aerospace entities,TRUE
+4350,En_80_05_01,80,05,01,,Air traffic control towers,TRUE
+4360,En_80_05_02,80,05,02,,Aircraft hangars,TRUE
+4370,En_80_05_60,80,05,60,,Passenger terminal buildings,TRUE
+4380,En_80_05_70,80,05,70,,Runways,TRUE
+4390,En_80_05_90,80,05,90,,Taxiways,TRUE
+4400,En_80_20,80,20,,,Cable transport entities,TRUE
+4410,En_80_20_11,80,20,11,,Cable car entities,TRUE
+4420,En_80_20_12,80,20,12,,Cable car stations,TRUE
+4430,En_80_20_86,80,20,86,,Suspended cableways,TRUE
+4440,En_80_35,80,35,,,Road entities,TRUE
+4450,En_80_35_01,80,35,01,,Access roads,TRUE
+4460,En_80_35_05,80,35,05,,Bus lanes,TRUE
+4470,En_80_35_07,80,35,07,,Bus maintenance depots,TRUE
+4480,En_80_35_09,80,35,09,,Bus and coach stations,TRUE
+4490,En_80_35_34,80,35,34,,Guided bus lanes,TRUE
+4500,En_80_35_35,80,35,35,,Highway maintenance depots,TRUE
+4510,En_80_35_38,80,35,38,,Highway service stations,TRUE
+4520,En_80_35_56,80,35,56,,Motorways,TRUE
+4530,En_80_35_67,80,35,67,,Private roads,TRUE
+4540,En_80_35_74,80,35,74,,Roads,TRUE
+4550,En_80_35_77,80,35,77,,Service area buildings,TRUE
+4560,En_80_35_88,80,35,88,,Tollgates,TRUE
+4570,En_80_35_89,80,35,89,,Tracks,TRUE
+4580,En_80_35_90,80,35,90,,Truck maintenance depots,TRUE
+4590,En_80_40,80,40,,,Pathways,TRUE
+4600,En_80_40_02,80,40,02,,Active travel networks,TRUE
+4610,En_80_40_08,80,40,08,,Bridleways,TRUE
+4620,En_80_40_10,80,40,10,,Byways,TRUE
+4630,En_80_40_20,80,40,20,,Cycle pathways,TRUE
+4640,En_80_40_30,80,40,30,,Footpaths,TRUE
+4650,En_80_40_37,80,40,37,,Hiking paths,TRUE
+4660,En_80_40_66,80,40,66,,Promenades,TRUE
+4670,En_80_40_70,80,40,70,,Rambler ways,TRUE
+4680,En_80_40_90,80,40,90,,Trails,TRUE
+4690,En_80_45,80,45,,,Vehicle storage entities,TRUE
+4700,En_80_45_08,80,45,08,,Bus parks,TRUE
+4710,En_80_45_11,80,45,11,,Car garaging entities,TRUE
+4720,En_80_45_17,80,45,17,,Coach parks,TRUE
+4730,En_80_45_19,80,45,19,,Cycle hubs,TRUE
+4740,En_80_45_20,80,45,20,,Cycle shelters,TRUE
+4750,En_80_45_55,80,45,55,,Multistorey vehicle parks,TRUE
+4760,En_80_45_85,80,45,85,,Surface vehicle parks,TRUE
+4770,En_80_45_89,80,45,89,,Truck parks,TRUE
+4780,En_80_45_92,80,45,92,,Underground vehicle parks,TRUE
+4790,En_80_50,80,50,,,Railway entities,TRUE
+4800,En_80_50_53,80,50,53,,Monorail entities,TRUE
+4810,En_80_50_58,80,50,58,,Platforms,TRUE
+4820,En_80_50_60,80,50,60,,Rack rail maintenance buildings,TRUE
+4830,En_80_50_62,80,50,62,,Rack railways track entities,TRUE
+4840,En_80_50_64,80,50,64,,Rail distribution depots,TRUE
+4850,En_80_50_68,80,50,68,,Rail marshalling entities,TRUE
+4860,En_80_50_71,80,50,71,,Railway corridors,TRUE
+4870,En_80_50_74,80,50,74,,Railway stations,TRUE
+4880,En_80_50_78,80,50,78,,Rolling stock depots,TRUE
+4890,En_80_50_83,80,50,83,,Station buildings,TRUE
+4900,En_80_50_85,80,50,85,,Test track entities,TRUE
+4910,En_80_50_86,80,50,86,,Track maintenance depots,TRUE
+4920,En_80_50_87,80,50,87,,Trackside circuit breaker equipment buildings,TRUE
+4930,En_80_50_88,80,50,88,,Train maintenance depots,TRUE
+4940,En_80_50_90,80,50,90,,Tramways,TRUE
+4950,En_80_50_94,80,50,94,,Underground railway stations,TRUE
+4960,En_80_50_95,80,50,95,,Wagon decontamination buildings,TRUE
+4970,En_80_50_97,80,50,97,,Wagon maintenance buildings,TRUE
+4980,En_80_70,80,70,,,Marine and waterways transport entities,TRUE
+4990,En_80_70_06,80,70,06,,Barge loading terminals,TRUE
+5000,En_80_70_11,80,70,11,,Canal channels,TRUE
+5010,En_80_70_15,80,70,15,,Canal locks,TRUE
+5020,En_80_70_46,80,70,46,,Lake passenger terminals,TRUE
+5030,En_80_70_50,80,70,50,,Marinas,TRUE
+5040,En_80_70_52,80,70,52,,Marine and waterways passenger terminals,TRUE
+5050,En_80_70_71,80,70,71,,River passenger terminals,TRUE
+5060,En_80_90,80,90,,,Transport hub entities,TRUE
+5070,En_80_90_30,80,90,30,,Freight depots,TRUE
+5080,En_80_90_66,80,90,66,,Rail freight entities,TRUE
+5090,En_80_90_73,80,90,73,,Road freight depots,TRUE
+5100,En_80_90_90,80,90,90,,Transport interchanges,TRUE
+5110,En_80_94,80,94,,,Bridges,TRUE
+5120,En_80_94_05,80,94,05,,Arch bridges,TRUE
+5130,En_80_94_08,80,94,08,,Beam bridges,TRUE
+5140,En_80_94_11,80,94,11,,Cable-stayed bridges,TRUE
+5150,En_80_94_13,80,94,13,,Cantilever bridges,TRUE
+5160,En_80_94_30,80,94,30,,Fixed bridges,TRUE
+5170,En_80_94_50,80,94,50,,Moveable bridges,TRUE
+5180,En_80_94_85,80,94,85,,Suspension bridges,TRUE
+5190,En_80_94_90,80,94,90,,Transporter bridges,TRUE
+5200,En_80_94_92,80,94,92,,Truss bridges,TRUE
+5210,En_80_96,80,96,,,Tunnels and shafts,TRUE
+5220,En_80_96_17,80,96,17,,Cross-passage tunnels,TRUE
+5230,En_80_96_20,80,96,20,,Drift tunnels,TRUE
+5240,En_80_96_46,80,96,46,,Lined drift tunnels,TRUE
+5250,En_80_96_49,80,96,49,,Lined tunnels,TRUE
+5260,En_80_96_58,80,96,58,,Operational caverns,TRUE
+5270,En_80_96_70,80,96,70,,Running tunnels,TRUE
+5280,En_80_96_80,80,96,80,,Shafts,TRUE
+5290,En_80_96_89,80,96,89,,Tunnel approach ramps,TRUE
+5300,En_80_96_90,80,96,90,,Tunnels,TRUE
+5310,En_80_96_91,80,96,91,,Tunnel portals,TRUE
+5320,En_80_96_92,80,96,92,,Underpasses,TRUE
+5330,En_82,82,,,,Vehicle entities,TRUE
+5340,En_82_10,82,10,,,Bus and coach entities,TRUE
+5350,En_82_10_27,82,10,27,,Electric bus entities,TRUE
+5360,En_82_10_39,82,10,39,,Hybrid bus entities,TRUE
+5370,En_82_10_42,82,10,42,,Internal combustion bus entities,TRUE
+5380,En_82_15,82,15,,,Car and van entities,TRUE
+5390,En_82_15_27,82,15,27,,Electric vehicle entities,TRUE
+5400,En_82_15_39,82,15,39,,Hybrid vehicle entities,TRUE
+5410,En_82_15_42,82,15,42,,Internal combustion vehicle entities,TRUE
+5420,En_82_48,82,48,,,Locomotive entities,TRUE
+5430,En_82_48_07,82,48,07,,Battery-electric locomotive entities,TRUE
+5440,En_82_48_15,82,48,15,,Conductor rail electric locomotive entities,TRUE
+5450,En_82_48_23,82,48,23,,Diesel locomotive entities,TRUE
+5460,En_82_48_59,82,48,59,,Overhead line electric locomotive entities,TRUE
+5470,En_82_48_84,82,48,84,,Steam locomotive entities,TRUE
+5480,En_82_55,82,55,,,Multiple-unit (MU) train entities,TRUE
+5490,En_82_55_23,82,55,23,,Diesel multiple-unit (DMU) train entities,TRUE
+5500,En_82_55_27,82,55,27,,Electric multiple-unit (EMU) train entities,TRUE
+5510,En_82_70,82,70,,,Railway vehicle entities,TRUE
+5520,En_82_70_30,82,70,30,,Flat wagons,TRUE
+5530,En_82_70_38,82,70,38,,Hopper wagons,TRUE
+5540,En_82_70_53,82,70,53,,Motor bogies,TRUE
+5550,En_82_70_70,82,70,70,,Railway wagons,TRUE
+5560,En_82_70_73,82,70,73,,Road-rail vehicles,TRUE
+5570,En_82_70_77,82,70,77,,Shunting vehicles,TRUE
+5580,En_82_70_79,82,70,79,,Sleeper wagons,TRUE
+5590,En_82_70_83,82,70,83,,Spoil wagons,TRUE
+5600,En_82_70_89,82,70,89,,Trailer bogies,TRUE
+5610,En_82_70_93,82,70,93,,Ultrasonic testing trolleys,TRUE
+5620,En_90,90,,,,"Circulation, storage and general entities",TRUE
+5630,En_90_10,90,10,,,Circulation entities,TRUE
+5640,En_90_10_02,90,10,02,,Access stairways and walkways,TRUE
+5650,En_90_10_42,90,10,42,,Inspection galleries,TRUE
+5660,En_90_10_62,90,10,62,,Pedestrianized areas,TRUE
+5670,En_90_10_77,90,10,77,,External service areas,TRUE
+5680,En_90_30,90,30,,,Construction entities,TRUE
+5690,En_90_30_10,90,30,10,,Building envelope,TRUE
+5700,En_90_30_15,90,30,15,,Construction sites,TRUE
+5710,En_90_30_95,90,30,95,,Work areas,TRUE
+5720,En_90_50,90,50,,,Storage entities,TRUE
+5730,En_90_50_02,90,50,02,,Agricultural storage buildings,TRUE
+5740,En_90_50_03,90,50,03,,Agricultural storage silos,TRUE
+5750,En_90_50_28,90,50,28,,Explosives stores,TRUE
+5760,En_90_50_50,90,50,50,,Manufacturing tanks and silos,TRUE
+5770,En_90_50_53,90,50,53,,Mineral storage silos,TRUE
+5780,En_90_50_55,90,50,55,,Motor vehicle storage entities,TRUE
+5790,En_90_50_68,90,50,68,,Refrigerated container storage entities,TRUE
+5800,En_90_50_75,90,50,75,,Salt storage barns,TRUE
+5810,En_90_50_80,90,50,80,,Storage buildings,TRUE
+5820,En_90_90,90,90,,,Plant and control entities,TRUE
+5830,En_90_90_09,90,90,09,,Buried services routes,TRUE
+5840,En_90_90_11,90,90,11,,Cable routes,TRUE
+5850,En_90_90_27,90,90,27,,Environment monitoring buildings,TRUE
+5860,En_90_90_33,90,90,33,,Gauge houses,TRUE
+5870,En_90_90_35,90,90,35,,Gauging station buildings,TRUE
+5880,En_90_90_50,90,90,50,,Mechanical services buildings,TRUE
+5890,En_90_90_64,90,90,64,,Plant and equipment buildings,TRUE
+5900,En_90_90_68,90,90,68,,Pump houses,TRUE
+5910,En_90_90_80,90,90,80,,Services routes,TRUE

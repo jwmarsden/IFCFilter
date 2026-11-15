@@ -1,0 +1,7 @@
+[submodule "third_party/IfcOpenShell"]
+	path = third_party/IfcOpenShell
+	url = https://github.com/IfcOpenShell/IfcOpenShell
+	shallow = true
+[submodule "third_party/OCCT"]
+	path = third_party/OCCT
+	url = https://github.com/Open-Cascade-SAS/OCCT.git

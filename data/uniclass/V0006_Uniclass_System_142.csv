@@ -1,0 +1,2718 @@
+ID,CODE,GROUP_CODE,SUB_GROUP_CODE,SECTION_CODE,OBJECT_CODE,TITLE,ACTIVE
+10,Ss_15,15,,,,"Earthworks, remediation and temporary systems",TRUE
+20,Ss_15_10,15,10,,,Groundworks and earthworks systems,TRUE
+30,Ss_15_10_16,15,10,16,,Contaminant containment systems,TRUE
+40,Ss_15_10_16_75,15,10,16,75,Subsurface asbestos encapsulation cell systems,TRUE
+50,Ss_15_10_30,15,10,30,,"Excavating, filling and erosion control systems",TRUE
+60,Ss_15_10_30_05,15,10,30,05,Backfill systems,TRUE
+70,Ss_15_10_30_25,15,10,30,25,Earthworks excavating systems,TRUE
+80,Ss_15_10_30_27,15,10,30,27,Earthworks filling systems,TRUE
+90,Ss_15_10_30_29,15,10,30,29,Earthworks filling systems around trees,TRUE
+100,Ss_15_10_30_31,15,10,30,31,Earthworks filling systems behind retaining walls,TRUE
+110,Ss_15_10_30_33,15,10,30,33,Erosion control systems,TRUE
+120,Ss_15_10_30_65,15,10,30,65,Puddled clay lining systems,TRUE
+130,Ss_15_10_30_90,15,10,30,90,Topsoil filling systems,TRUE
+140,Ss_15_10_33,15,10,33,,Ground gas disposal systems,TRUE
+150,Ss_15_10_33_34,15,10,33,34,Ground gas collection and venting systems,TRUE
+160,Ss_15_10_35,15,10,35,,Ground remediation systems,TRUE
+170,Ss_15_10_35_07,15,10,35,07,Bioremediation systems,TRUE
+180,Ss_15_10_35_12,15,10,35,12,Chemical stabilization systems,TRUE
+190,Ss_15_10_35_23,15,10,35,23,Deep dry soil mixing systems,TRUE
+200,Ss_15_10_35_25,15,10,35,25,Dynamic deep compaction systems,TRUE
+210,Ss_15_10_35_92,15,10,35,92,Vibro-compaction systems,TRUE
+220,Ss_15_10_35_94,15,10,35,94,Vibro-stone column systems,TRUE
+230,Ss_15_10_35_97,15,10,35,97,Wet soil mixing systems,TRUE
+240,Ss_15_10_45,15,10,45,,Landfill systems,TRUE
+250,Ss_15_10_76,15,10,76,,Site waste disposal systems,TRUE
+260,Ss_15_10_76_21,15,10,76,21,Dewatering systems,TRUE
+270,Ss_15_10_78,15,10,78,,Slurry wall systems,TRUE
+280,Ss_15_10_80,15,10,80,,Stabilization systems,TRUE
+290,Ss_15_10_80_15,15,10,80,15,Concrete column stabilization systems,TRUE
+300,Ss_15_10_80_70,15,10,80,70,Rock bolting and dowelling systems,TRUE
+310,Ss_15_10_80_75,15,10,80,75,Rock fissure grouting systems,TRUE
+320,Ss_15_10_80_80,15,10,80,80,Soil nailing systems,TRUE
+330,Ss_15_10_80_85,15,10,80,85,Subterranean void filling systems,TRUE
+340,Ss_15_30,15,30,,,"Remediation, repair and renovation systems",TRUE
+350,Ss_15_30_10,15,30,10,,Building services remediation systems,TRUE
+360,Ss_15_30_12,15,30,12,,Ceramics repair and renovation systems,TRUE
+370,Ss_15_30_15,15,30,15,,Concrete and masonry cleaning systems,TRUE
+380,Ss_15_30_15_15,15,30,15,15,Concrete cleaning systems,TRUE
+390,Ss_15_30_15_50,15,30,15,50,Masonry cleaning systems,TRUE
+400,Ss_15_30_15_65,15,30,15,65,Preliminary concrete cleaning systems,TRUE
+410,Ss_15_30_15_66,15,30,15,66,Preliminary masonry cleaning systems,TRUE
+420,Ss_15_30_17,15,30,17,,Concrete repair and renovation systems,TRUE
+430,Ss_15_30_17_10,15,30,17,10,Bonded plate repair systems,TRUE
+440,Ss_15_30_17_12,15,30,17,12,Concrete crack repair or filling systems,TRUE
+450,Ss_15_30_17_14,15,30,17,14,Concrete mortar or overlay systems,TRUE
+460,Ss_15_30_17_16,15,30,17,16,Concrete protective coating systems,TRUE
+470,Ss_15_30_17_18,15,30,17,18,Concrete repair systems,TRUE
+480,Ss_15_30_17_85,15,30,17,85,Sprayed concrete repair systems,TRUE
+490,Ss_15_30_32,15,30,32,,Fungus and beetle eradication systems,TRUE
+500,Ss_15_30_32_05,15,30,32,05,Beetle eradication systems,TRUE
+510,Ss_15_30_32_15,15,30,32,15,Combined fungus and beetle treatment systems,TRUE
+520,Ss_15_30_32_35,15,30,32,35,Hot air infestation treatment systems,TRUE
+530,Ss_15_30_32_50,15,30,32,50,Masonry fungus treatment systems,TRUE
+540,Ss_15_30_32_85,15,30,32,85,Termite treatment systems,TRUE
+550,Ss_15_30_32_90,15,30,32,90,Timber fungus treatment systems,TRUE
+560,Ss_15_30_33,15,30,33,,Glass repair and renovation systems,TRUE
+570,Ss_15_30_50,15,30,50,,Masonry repair and renovation systems,TRUE
+580,Ss_15_30_50_50,15,30,50,50,Masonry repair systems,TRUE
+590,Ss_15_30_50_53,15,30,50,53,Mortar joint repair systems,TRUE
+600,Ss_15_30_50_55,15,30,50,55,Mortar repointing systems,TRUE
+610,Ss_15_30_52,15,30,52,,Metal repair and renovation systems,TRUE
+620,Ss_15_30_52_03,15,30,52,03,Aluminium repair systems,TRUE
+630,Ss_15_30_52_15,15,30,52,15,Copper repair systems,TRUE
+640,Ss_15_30_52_42,15,30,52,42,Iron repair systems,TRUE
+650,Ss_15_30_52_46,15,30,52,46,Lead repair systems,TRUE
+660,Ss_15_30_52_84,15,30,52,84,Steel repair systems,TRUE
+670,Ss_15_30_65,15,30,65,,Pipeline renovation systems,TRUE
+680,Ss_15_30_65_15,15,30,65,15,Close-fit plastics pipe lining systems,TRUE
+690,Ss_15_30_65_17,15,30,65,17,Continuous plastics pipe lining systems,TRUE
+700,Ss_15_30_65_20,15,30,65,20,Cured in place lining systems,TRUE
+710,Ss_15_30_65_65,15,30,65,65,Preformed lining systems,TRUE
+720,Ss_15_30_65_72,15,30,65,72,Rigidly anchored plastics inner layer (RAPL) lining systems,TRUE
+730,Ss_15_30_65_80,15,30,65,80,Spray lining systems,TRUE
+740,Ss_15_30_65_81,15,30,65,81,Spirally wound plastics pipe lining systems,TRUE
+750,Ss_15_30_90,15,30,90,,Timber repair and renovation systems,TRUE
+760,Ss_15_30_90_84,15,30,90,84,Timber joint strengthening systems,TRUE
+770,Ss_15_30_90_86,15,30,90,86,Timber section repair systems,TRUE
+780,Ss_15_30_90_90,15,30,90,90,Timber section strengthening systems,TRUE
+790,Ss_15_95,15,95,,,Temporary works systems,TRUE
+800,Ss_15_95_15,15,95,15,,Temporary preparatory works systems,TRUE
+810,Ss_15_95_15_10,15,95,15,10,Borehole systems,TRUE
+820,Ss_15_95_17,15,95,17,,Temporary protection systems,TRUE
+830,Ss_15_95_17_90,15,95,17,90,Temporary backfill systems,TRUE
+840,Ss_15_95_20,15,95,20,,Temporary whole entity structural works systems,TRUE
+850,Ss_15_95_20_30,15,95,20,30,Flying shores systems,TRUE
+860,Ss_15_95_20_32,15,95,20,32,Framed retention structure systems,TRUE
+870,Ss_15_95_20_70,15,95,20,70,Raking shores systems,TRUE
+880,Ss_15_95_20_72,15,95,20,72,Retention structure systems,TRUE
+890,Ss_15_95_20_75,15,95,20,75,Scaffold retention structure systems,TRUE
+900,Ss_15_95_20_87,15,95,20,87,Thrust pit systems,TRUE
+910,Ss_15_95_25,15,95,25,,Temporary wall and barrier systems,TRUE
+920,Ss_15_95_25_30,15,95,25,30,Temporary flood barrier systems,TRUE
+930,Ss_15_95_25_60,15,95,25,60,Temporary pedestrian barrier systems,TRUE
+940,Ss_15_95_25_70,15,95,25,70,Temporary rail barrier systems,TRUE
+950,Ss_15_95_25_75,15,95,25,75,Temporary road barrier systems,TRUE
+960,Ss_15_95_25_85,15,95,25,85,Temporary traffic barrier systems,TRUE
+970,Ss_15_95_25_90,15,95,25,90,Temporary water barrier systems,TRUE
+980,Ss_15_95_30,15,95,30,,"Temporary roof, floor and paving systems",TRUE
+990,Ss_15_95_32,15,95,32,,Temporary water and land management systems,TRUE
+1000,Ss_15_95_32_85,15,95,32,85,Sedimentation ponds,TRUE
+1010,Ss_15_95_35,15,95,35,,Temporary stair and ramp systems,TRUE
+1020,Ss_15_95_37,15,95,37,,"Temporary tunnel, shaft, vessel and tower systems",TRUE
+1030,Ss_15_95_40,15,95,40,,"Temporary signage and fittings, furnishings and equipment (FF&E) systems",TRUE
+1040,Ss_15_95_45,15,95,45,,Temporary flora and fauna systems,TRUE
+1050,Ss_15_95_45_42,15,95,45,42,Intercropping systems,TRUE
+1060,Ss_15_95_45_85,15,95,45,85,Spoil heap temporary crop systems,TRUE
+1070,Ss_15_95_45_90,15,95,45,90,Topsoil heap temporary crop systems,TRUE
+1080,Ss_15_95_50,15,95,50,,Temporary disposal systems,TRUE
+1090,Ss_15_95_55,15,95,55,,Temporary piped supply systems,TRUE
+1100,Ss_15_95_55_90,15,95,55,90,Tunnelling compressed air systems,TRUE
+1110,Ss_15_95_60,15,95,60,,"Temporary heating, cooling and refrigeration systems",TRUE
+1120,Ss_15_95_65,15,95,65,,Temporary ventilation and air conditioning systems,TRUE
+1130,Ss_15_95_70,15,95,70,,Temporary electrical systems,TRUE
+1140,Ss_15_95_75,15,95,75,,"Temporary communications, security, safety, control and protection systems",TRUE
+1150,Ss_15_95_75_88,15,95,75,88,Temporary fire detection and alarm systems,TRUE
+1160,Ss_15_95_75_89,15,95,75,89,Temporary security systems,TRUE
+1170,Ss_15_95_80,15,95,80,,Temporary transport systems,TRUE
+1180,Ss_15_95_80_02,15,95,80,02,Temporary access road systems,TRUE
+1190,Ss_15_95_80_72,15,95,80,72,Temporary roadwork systems,TRUE
+1200,Ss_15_95_85,15,95,85,,Temporary process engineering systems,TRUE
+1210,Ss_15_95_90,15,95,90,,Temporary soft facility management services,TRUE
+1220,Ss_20,20,,,,Structural systems,TRUE
+1230,Ss_20_05,20,05,,,Substructure systems,TRUE
+1240,Ss_20_05_15,20,05,15,,Concrete foundation systems,TRUE
+1250,Ss_20_05_15_65,20,05,15,65,Precast concrete pad and strip foundation systems,TRUE
+1260,Ss_20_05_15_70,20,05,15,70,Reinforced concrete pad and strip foundation systems,TRUE
+1270,Ss_20_05_15_71,20,05,15,71,Reinforced concrete pilecap and ground beam foundation systems,TRUE
+1280,Ss_20_05_15_72,20,05,15,72,Reinforced concrete raft foundation systems,TRUE
+1290,Ss_20_05_15_80,20,05,15,80,Steel ground beam foundation systems,TRUE
+1300,Ss_20_05_15_90,20,05,15,90,Unreinforced concrete foundation systems for cast-in products,TRUE
+1310,Ss_20_05_15_91,20,05,15,91,Unreinforced concrete pad and strip foundation systems,TRUE
+1320,Ss_20_05_15_92,20,05,15,92,Unreinforced concrete trench fill foundation systems,TRUE
+1330,Ss_20_05_50,20,05,50,,Minor concrete substructure systems,TRUE
+1340,Ss_20_05_50_15,20,05,50,15,Concrete haunching systems,TRUE
+1350,Ss_20_05_50_65,20,05,50,65,Precast concrete foundation and plinth systems,TRUE
+1360,Ss_20_05_50_70,20,05,50,70,Reinforced concrete foundation and plinth systems,TRUE
+1370,Ss_20_05_50_92,20,05,50,92,Unreinforced concrete foundation for cast-in products systems,TRUE
+1380,Ss_20_05_50_93,20,05,50,93,Unreinforced concrete foundation and plinth systems,TRUE
+1390,Ss_20_05_65,20,05,65,,Piling systems,TRUE
+1400,Ss_20_05_65_24,20,05,65,24,Driven precast or prestressed concrete piling systems,TRUE
+1410,Ss_20_05_65_40,20,05,65,40,In situ concrete augered piling systems,TRUE
+1420,Ss_20_05_65_41,20,05,65,41,In situ concrete bored piling systems,TRUE
+1430,Ss_20_05_65_42,20,05,65,42,In situ concrete cased displacement piling systems,TRUE
+1440,Ss_20_05_65_43,20,05,65,43,In situ concrete displacement piling systems,TRUE
+1450,Ss_20_05_65_44,20,05,65,44,Concrete micro-piling systems,TRUE
+1460,Ss_20_05_65_64,20,05,65,64,Plunge column piling systems,TRUE
+1470,Ss_20_05_65_76,20,05,65,76,Screw piling systems,TRUE
+1480,Ss_20_05_65_84,20,05,65,84,Steel bearing piling systems,TRUE
+1490,Ss_20_05_65_89,20,05,65,89,Timber piling systems,TRUE
+1500,Ss_20_05_80,20,05,80,,Structural grouting systems,TRUE
+1510,Ss_20_05_80_12,20,05,80,12,Cementitious grout systems,TRUE
+1520,Ss_20_05_80_40,20,05,80,40,Interstitial grouting systems,TRUE
+1530,Ss_20_05_80_57,20,05,80,57,Non-cementitious grout systems,TRUE
+1540,Ss_20_05_80_71,20,05,80,71,Retaining wall cementitious grout systems,TRUE
+1550,Ss_20_05_80_73,20,05,80,73,Retaining wall self-hardening slurry systems,TRUE
+1560,Ss_20_05_80_80,20,05,80,80,Soil nailing cementitious grout systems,TRUE
+1570,Ss_20_05_90,20,05,90,,Underpinning systems,TRUE
+1580,Ss_20_05_90_10,20,05,90,10,Beam and pier underpinning systems,TRUE
+1590,Ss_20_05_90_35,20,05,90,35,Grouted underpinning systems,TRUE
+1600,Ss_20_05_90_45,20,05,90,45,Jacked pile underpinning systems,TRUE
+1610,Ss_20_05_90_46,20,05,90,46,Jet grouted underpinning systems,TRUE
+1620,Ss_20_05_90_50,20,05,90,50,Mass concrete underpinning systems,TRUE
+1630,Ss_20_05_90_60,20,05,90,60,Pile and cantilever support underpinning systems,TRUE
+1640,Ss_20_05_90_61,20,05,90,61,Pile and needle underpinning systems,TRUE
+1650,Ss_20_05_90_70,20,05,90,70,Raking pile underpinning systems,TRUE
+1660,Ss_20_10,20,10,,,Structural frame systems,TRUE
+1670,Ss_20_10_30,20,10,30,,Complete bridge structure systems,TRUE
+1680,Ss_20_10_30_30,20,10,30,30,Footbridge systems,TRUE
+1690,Ss_20_10_30_65,20,10,30,65,Pipe bridge systems,TRUE
+1700,Ss_20_10_30_84,20,10,30,84,Steel arch bridge systems,TRUE
+1710,Ss_20_10_60,20,10,60,,Prefabricated framed and panelled structures,TRUE
+1720,Ss_20_10_60_33,20,10,60,33,Geodesic dome systems,TRUE
+1730,Ss_20_10_60_34,20,10,60,34,Glazed enclosure systems,TRUE
+1740,Ss_20_10_60_50,20,10,60,50,Modular pod systems,TRUE
+1750,Ss_20_10_60_60,20,10,60,60,Panelled and framed modular systems,TRUE
+1760,Ss_20_10_60_65,20,10,60,65,Prefabricated plantroom systems,TRUE
+1770,Ss_20_10_60_84,20,10,60,84,Structural insulated panel systems,TRUE
+1780,Ss_20_10_60_95,20,10,60,95,Volumetric modular systems,TRUE
+1790,Ss_20_10_65,20,10,65,,Prefabricated room systems,TRUE
+1800,Ss_20_10_65_12,20,10,65,12,Prefabricated catering room systems,TRUE
+1810,Ss_20_10_65_15,20,10,65,15,Composite pods,TRUE
+1820,Ss_20_10_65_17,20,10,65,17,Concrete pods,TRUE
+1830,Ss_20_10_65_38,20,10,65,38,Prefabricated hospital care room systems,TRUE
+1840,Ss_20_10_65_52,20,10,65,52,Prefabricated meeting room systems,TRUE
+1850,Ss_20_10_65_58,20,10,65,58,Prefabricated office room systems,TRUE
+1860,Ss_20_10_65_65,20,10,65,65,Polypropylene pods,TRUE
+1870,Ss_20_10_65_96,20,10,65,96,Prefabricated welfare room systems,TRUE
+1880,Ss_20_10_70,20,10,70,,Shelter systems,TRUE
+1890,Ss_20_10_70_03,20,10,70,03,Animal shelter systems,TRUE
+1900,Ss_20_10_70_62,20,10,70,62,People shelter systems,TRUE
+1910,Ss_20_10_70_64,20,10,70,64,Plant shelter systems,TRUE
+1920,Ss_20_10_70_84,20,10,70,84,Storage shelter systems,TRUE
+1930,Ss_20_10_75,20,10,75,,Structural framing systems,TRUE
+1940,Ss_20_10_75_35,20,10,75,35,Heavy steel framing systems,TRUE
+1950,Ss_20_10_75_45,20,10,75,45,Light steel framing systems,TRUE
+1960,Ss_20_10_75_65,20,10,75,65,Precast reinforced concrete framing systems,TRUE
+1970,Ss_20_10_75_70,20,10,75,70,Reinforced concrete framing systems,TRUE
+1980,Ss_20_10_75_85,20,10,75,85,Timber framing systems,TRUE
+1990,Ss_20_20,20,20,,,Structural beams,TRUE
+2000,Ss_20_20_75,20,20,75,,Structural beam systems,TRUE
+2010,Ss_20_20_75_35,20,20,75,35,Heavy steel beam systems,TRUE
+2020,Ss_20_20_75_45,20,20,75,45,Light steel beam systems,TRUE
+2030,Ss_20_20_75_65,20,20,75,65,Precast reinforced concrete beam systems,TRUE
+2040,Ss_20_20_75_67,20,20,75,67,Prestressed concrete beam systems,TRUE
+2050,Ss_20_20_75_70,20,20,75,70,Reinforced concrete beam systems,TRUE
+2060,Ss_20_20_75_85,20,20,75,85,Timber beam systems,TRUE
+2070,Ss_20_30,20,30,,,Structural columns,TRUE
+2080,Ss_20_30_75,20,30,75,,Structural column systems,TRUE
+2090,Ss_20_30_75_35,20,30,75,35,Heavy steel column systems,TRUE
+2100,Ss_20_30_75_45,20,30,75,45,Light steel column systems,TRUE
+2110,Ss_20_30_75_50,20,30,75,50,Masonry column systems,TRUE
+2120,Ss_20_30_75_65,20,30,75,65,Precast reinforced concrete column systems,TRUE
+2130,Ss_20_30_75_70,20,30,75,70,Reinforced concrete column systems,TRUE
+2140,Ss_20_30_75_85,20,30,75,85,Timber column systems,TRUE
+2150,Ss_20_40,20,40,,,Structural sheet and cable systems,TRUE
+2160,Ss_20_40_10,20,40,10,,Building cable systems,TRUE
+2170,Ss_20_50,20,50,,,Bridge structure systems,TRUE
+2180,Ss_20_50_10,20,50,10,,Abutment systems,TRUE
+2190,Ss_20_50_10_10,20,50,10,10,Bank seat abutments,TRUE
+2200,Ss_20_50_10_30,20,50,10,30,Embedded retaining wall bridge abutments,TRUE
+2210,Ss_20_50_10_40,20,50,10,40,Integral abutments,TRUE
+2220,Ss_20_50_10_50,20,50,10,50,Masonry bridge abutments,TRUE
+2230,Ss_20_50_10_70,20,50,10,70,Reinforced concrete bridge abutments,TRUE
+2240,Ss_20_50_10_80,20,50,10,80,Sheet piled bridge abutments,TRUE
+2250,Ss_20_50_10_85,20,50,10,85,Spill-through abutments,TRUE
+2260,Ss_20_50_10_90,20,50,10,90,Tied embedded retaining wall bridge abutments,TRUE
+2270,Ss_20_50_10_95,20,50,10,95,Wing wall systems,TRUE
+2280,Ss_20_50_15,20,50,15,,Bridge bearing systems,TRUE
+2290,Ss_20_50_15_20,20,50,15,20,Curved bearing systems,TRUE
+2300,Ss_20_50_15_23,20,50,15,23,Disk bearing systems,TRUE
+2310,Ss_20_50_15_27,20,50,15,27,Elastomeric bearing systems,TRUE
+2320,Ss_20_50_15_65,20,50,15,65,Pot bearing systems,TRUE
+2330,Ss_20_50_15_72,20,50,15,72,Rocker and pin bearing systems,TRUE
+2340,Ss_20_50_15_74,20,50,15,74,Roller bearing systems,TRUE
+2350,Ss_20_50_15_78,20,50,15,78,Sliding bearing systems,TRUE
+2360,Ss_20_50_15_80,20,50,15,80,Spherical bearing systems,TRUE
+2370,Ss_20_50_20,20,50,20,,Bridge pier and pylon systems,TRUE
+2380,Ss_20_50_20_50,20,50,20,50,Masonry bridge pier systems,TRUE
+2390,Ss_20_50_20_70,20,50,20,70,Reinforced concrete bridge pier systems,TRUE
+2400,Ss_20_50_20_72,20,50,20,72,Reinforced concrete bridge pylon systems,TRUE
+2410,Ss_20_50_20_74,20,50,20,74,Reinforced concrete bridge tower systems,TRUE
+2420,Ss_20_50_20_85,20,50,20,85,Steel bridge pier systems,TRUE
+2430,Ss_20_50_20_87,20,50,20,87,Steel bridge pylon systems,TRUE
+2440,Ss_20_50_20_89,20,50,20,89,Steel bridge tower systems,TRUE
+2450,Ss_20_50_20_90,20,50,20,90,Timber bridge pier systems,TRUE
+2460,Ss_20_50_25,20,50,25,,Bridge deck systems,TRUE
+2470,Ss_20_50_25_08,20,50,25,08,Box girder bridge deck systems,TRUE
+2480,Ss_20_50_25_12,20,50,25,12,Composite steel and concrete bridge deck systems,TRUE
+2490,Ss_20_50_25_15,20,50,25,15,Concrete half through deck systems,TRUE
+2500,Ss_20_50_25_16,20,50,25,16,Concrete slab deck systems,TRUE
+2510,Ss_20_50_25_30,20,50,25,30,Filler beam deck systems,TRUE
+2520,Ss_20_50_25_31,20,50,25,31,Flat and stepped deck systems,TRUE
+2530,Ss_20_50_25_53,20,50,25,53,Modular precast concrete deck systems,TRUE
+2540,Ss_20_50_25_59,20,50,25,59,Orthotropic deck systems,TRUE
+2550,Ss_20_50_25_63,20,50,25,63,Post-tensioned concrete beam deck systems,TRUE
+2560,Ss_20_50_25_65,20,50,25,65,Pre-tensioned concrete beam deck systems,TRUE
+2570,Ss_20_50_25_70,20,50,25,70,Reinforced concrete arch bridge systems,TRUE
+2580,Ss_20_50_25_80,20,50,25,80,Solid steel slab systems,TRUE
+2590,Ss_20_50_30,20,50,30,,Abutment and pier component systems,TRUE
+2600,Ss_20_50_30_11,20,50,30,11,Capping beam systems,TRUE
+2610,Ss_20_50_30_37,20,50,30,37,Bridge headwall systems,TRUE
+2620,Ss_20_50_30_80,20,50,30,80,Spandrel arch wall systems,TRUE
+2630,Ss_20_50_35,20,50,35,,Bridge cable systems,TRUE
+2640,Ss_20_50_35_11,20,50,35,11,Cable-stayed bridge cable systems,TRUE
+2650,Ss_20_50_35_85,20,50,35,85,Suspension bridge cable systems,TRUE
+2660,Ss_20_50_40,20,50,40,,Bridge expansion and movement joint systems,TRUE
+2670,Ss_20_50_40_04,20,50,40,04,Asphaltic plug joint systems,TRUE
+2680,Ss_20_50_40_09,20,50,40,09,Buried expansion joint systems,TRUE
+2690,Ss_20_50_40_56,20,50,40,56,Nosing expansion joint systems with poured sealants,TRUE
+2700,Ss_20_50_40_57,20,50,40,57,Nosing expansion joint systems with preformed compression seals,TRUE
+2710,Ss_20_50_90,20,50,90,,Bridge deck waterproofing systems,TRUE
+2720,Ss_20_50_90_08,20,50,90,08,Bridge deck sheet waterproofing systems,TRUE
+2730,Ss_20_50_90_10,20,50,90,10,Bridge deck sprayed liquid waterproofing systems,TRUE
+2740,Ss_20_60,20,60,,,Retaining wall systems,TRUE
+2750,Ss_20_60_30,20,60,30,,Embedded retaining wall systems,TRUE
+2760,Ss_20_60_30_03,20,60,30,03,Anchored steel sheet pile retaining wall systems,TRUE
+2770,Ss_20_60_30_08,20,60,30,08,Bored king post retaining wall systems,TRUE
+2780,Ss_20_60_30_13,20,60,30,13,Combi retaining wall systems,TRUE
+2790,Ss_20_60_30_15,20,60,30,15,Contiguous pile retaining wall systems,TRUE
+2800,Ss_20_60_30_24,20,60,30,24,Driven king post retaining wall systems,TRUE
+2810,Ss_20_60_30_70,20,60,30,70,Reinforced concrete diaphragm retaining wall systems,TRUE
+2820,Ss_20_60_30_80,20,60,30,80,Secant pile retaining wall systems,TRUE
+2830,Ss_20_60_30_83,20,60,30,83,Slurry diaphragm retaining wall systems,TRUE
+2840,Ss_20_60_30_85,20,60,30,85,Steel sheet pile retaining wall systems,TRUE
+2850,Ss_20_60_30_92,20,60,30,92,Unreinforced concrete diaphragm retaining wall systems,TRUE
+2860,Ss_20_60_35,20,60,35,,Gravity retaining wall systems,TRUE
+2870,Ss_20_60_35_06,20,60,35,06,Bagwork retaining wall systems,TRUE
+2880,Ss_20_60_35_10,20,60,35,10,Caged fill retaining wall systems,TRUE
+2890,Ss_20_60_35_13,20,60,35,13,Concrete bagwork retaining wall systems,TRUE
+2900,Ss_20_60_35_15,20,60,35,15,Crib retaining wall systems,TRUE
+2910,Ss_20_60_35_25,20,60,35,25,Drystack masonry unit retaining wall systems,TRUE
+2920,Ss_20_60_35_50,20,60,35,50,Masonry retaining wall systems,TRUE
+2930,Ss_20_60_35_53,20,60,35,53,Mesh formwork and geogrid retaining wall systems,TRUE
+2940,Ss_20_60_35_66,20,60,35,66,Precast concrete stem wall retaining wall systems,TRUE
+2950,Ss_20_60_35_70,20,60,35,70,Reinforced concrete retaining wall systems,TRUE
+2960,Ss_20_60_35_72,20,60,35,72,Reinforced earth retaining wall systems,TRUE
+2970,Ss_20_60_35_90,20,60,35,90,Timber retaining wall systems,TRUE
+2980,Ss_20_60_35_91,20,60,35,91,Tyre bale retaining wall systems,TRUE
+2990,Ss_20_60_40,20,60,40,,Headwall systems,TRUE
+3000,Ss_20_60_40_20,20,60,40,20,Culvert headwall systems,TRUE
+3010,Ss_20_60_40_40,20,60,40,40,Inlet headwall systems,TRUE
+3020,Ss_20_60_40_60,20,60,40,60,Outfall headwall systems,TRUE
+3030,Ss_20_70,20,70,,,Structural protection systems,TRUE
+3040,Ss_20_70_10,20,70,10,,Cathodic protection systems,TRUE
+3050,Ss_20_70_10_02,20,70,10,02,Adhesive-backed zinc sheet anode systems,TRUE
+3060,Ss_20_70_10_09,20,70,10,09,Buried galvanic anode systems,TRUE
+3070,Ss_20_70_10_10,20,70,10,10,Buried impressed current anode systems,TRUE
+3080,Ss_20_70_10_27,20,70,10,27,Embedded impressed current anode systems,TRUE
+3090,Ss_20_70_10_28,20,70,10,28,Embedded zinc anode systems,TRUE
+3100,Ss_20_70_10_41,20,70,10,41,Immersed galvanic anode systems,TRUE
+3110,Ss_20_70_10_42,20,70,10,42,Immersed impressed current anode systems,TRUE
+3120,Ss_20_70_10_72,20,70,10,72,Recess-mounted impressed current anode systems,TRUE
+3130,Ss_20_70_10_85,20,70,10,85,Surface-mounted impressed current anode systems,TRUE
+3140,Ss_20_70_10_99,20,70,10,99,Zinc mesh in overlay systems,TRUE
+3150,Ss_20_70_15,20,70,15,,Concrete protection systems,TRUE
+3160,Ss_20_70_65,20,70,65,,Protective painting systems,TRUE
+3170,Ss_20_70_80,20,70,80,,Steel encasement systems,TRUE
+3180,Ss_20_80,20,80,,,Structure accessory systems,TRUE
+3190,Ss_20_80_12,20,80,12,,Bearing systems,TRUE
+3200,Ss_20_80_12_28,20,80,12,28,Expansion bearings systems,TRUE
+3210,Ss_20_80_12_30,20,80,12,30,Fixed bearings systems,TRUE
+3220,Ss_20_80_60,20,80,60,,Permanent formwork systems,TRUE
+3230,Ss_25,25,,,,Wall and barrier systems,TRUE
+3240,Ss_25_10,25,10,,,Framed wall systems,TRUE
+3250,Ss_25_10_20,25,10,20,,Curtain walling systems,TRUE
+3260,Ss_25_10_20_85,25,10,20,85,Stick curtain walling systems,TRUE
+3270,Ss_25_10_20_90,25,10,20,90,Unitized curtain walling systems,TRUE
+3280,Ss_25_10_30,25,10,30,,Framed partition systems,TRUE
+3290,Ss_25_10_30_35,25,10,30,35,Gypsum board partition systems,TRUE
+3300,Ss_25_10_30_70,25,10,30,70,Rigid sheet partition systems,TRUE
+3310,Ss_25_10_32,25,10,32,,Framed wall structure systems,TRUE
+3320,Ss_25_10_32_03,25,10,32,03,Aluminium wall framing systems,TRUE
+3330,Ss_25_10_32_35,25,10,32,35,Heavy steel wall framing systems,TRUE
+3340,Ss_25_10_32_45,25,10,32,45,Light steel wall framing systems,TRUE
+3350,Ss_25_10_32_58,25,10,32,58,Plastics wall framing systems,TRUE
+3360,Ss_25_10_32_62,25,10,32,62,Post-tensioned concrete wall systems,TRUE
+3370,Ss_25_10_32_65,25,10,32,65,Precast concrete wall systems,TRUE
+3380,Ss_25_10_32_70,25,10,32,70,Reinforced concrete wall structure systems,TRUE
+3390,Ss_25_10_32_90,25,10,32,90,Timber wall framing systems,TRUE
+3400,Ss_25_10_35,25,10,35,,Framed glazed wall systems,TRUE
+3410,Ss_25_10_35_35,25,10,35,35,Glazed screen systems,TRUE
+3420,Ss_25_10_35_95,25,10,35,95,Vertical patent glazing systems,TRUE
+3430,Ss_25_10_35_97,25,10,35,97,Window wall glazed screen systems,TRUE
+3440,Ss_25_10_60,25,10,60,,Air-pressurized panel wall structure systems,TRUE
+3450,Ss_25_10_60_28,25,10,60,28,Ethylene tetrafluoroethylene (ETFE) wall systems,TRUE
+3460,Ss_25_11,25,11,,,Monolithic wall structure systems,TRUE
+3470,Ss_25_11_13,25,11,13,,Cob wall systems,TRUE
+3480,Ss_25_11_15,25,11,15,,Concrete form masonry unit wall systems,TRUE
+3490,Ss_25_11_16,25,11,16,,Concrete wall systems,TRUE
+3500,Ss_25_11_16_80,25,11,16,80,Sprayed concrete wall structure systems,TRUE
+3510,Ss_25_11_70,25,11,70,,Rammed earth wall systems,TRUE
+3520,Ss_25_11_70_55,25,11,70,55,Non-stabilized rammed earth wall systems,TRUE
+3530,Ss_25_11_70_83,25,11,70,83,Stabilized rammed earth plinth systems,TRUE
+3540,Ss_25_11_70_85,25,11,70,85,Stabilized rammed earth wall systems,TRUE
+3550,Ss_25_11_90,25,11,90,,Timber wall systems,TRUE
+3560,Ss_25_11_90_15,25,11,90,15,Cross-laminated timber wall systems,TRUE
+3570,Ss_25_11_90_96,25,11,90,96,Wood log wall systems,TRUE
+3580,Ss_25_12,25,12,,,Panel wall structure systems,TRUE
+3590,Ss_25_12_10,25,12,10,,Brick panel wall systems,TRUE
+3600,Ss_25_12_10_14,25,12,10,14,Clay brick panel wall systems,TRUE
+3610,Ss_25_12_10_16,25,12,10,16,Concrete brick panel wall systems,TRUE
+3620,Ss_25_12_15,25,12,15,,Concrete panel wall systems,TRUE
+3630,Ss_25_12_15_05,25,12,15,05,Autoclaved aerated concrete (AAC) panel wall systems,TRUE
+3640,Ss_25_12_15_15,25,12,15,15,Composite concrete panel wall systems,TRUE
+3650,Ss_25_12_60,25,12,60,,Panel enclosure systems,TRUE
+3660,Ss_25_12_60_30,25,12,60,30,Fully-framed panel cubicle systems,TRUE
+3670,Ss_25_12_60_60,25,12,60,60,Panel cubicle systems,TRUE
+3680,Ss_25_12_60_65,25,12,60,65,Privacy screen systems,TRUE
+3690,Ss_25_12_65,25,12,65,,Partitioning systems,TRUE
+3700,Ss_25_12_65_50,25,12,65,50,Media wall systems,TRUE
+3710,Ss_25_12_65_55,25,12,65,55,Mesh panel partition systems,TRUE
+3720,Ss_25_12_65_60,25,12,65,60,Plasterboard laminated partition systems,TRUE
+3730,Ss_25_12_65_65,25,12,65,65,Panel partition systems,TRUE
+3740,Ss_25_12_65_70,25,12,65,70,Relocatable partition and ceiling systems,TRUE
+3750,Ss_25_12_65_75,25,12,65,75,Relocatable partition systems,TRUE
+3760,Ss_25_12_65_85,25,12,65,85,Storage wall systems,TRUE
+3770,Ss_25_12_70,25,12,70,,Retractable partition systems,TRUE
+3780,Ss_25_12_70_30,25,12,70,30,Fabric dividing partition systems,TRUE
+3790,Ss_25_12_70_80,25,12,70,80,Sliding stacking panel partition systems,TRUE
+3800,Ss_25_12_80,25,12,80,,Structural glass wall systems,TRUE
+3810,Ss_25_12_80_65,25,12,80,65,Point-fixed structural glass wall systems,TRUE
+3820,Ss_25_12_80_83,25,12,80,83,Stacked structural glass wall systems,TRUE
+3830,Ss_25_12_80_85,25,12,80,85,Suspended structural glass wall systems,TRUE
+3840,Ss_25_12_85,25,12,85,,Structural steel panel wall systems,TRUE
+3850,Ss_25_12_85_60,25,12,85,60,Prefabricated metal wall systems,TRUE
+3860,Ss_25_12_85_63,25,12,85,63,Profile metal sheet wall systems,TRUE
+3870,Ss_25_13,25,13,,,Unit wall structure systems,TRUE
+3880,Ss_25_13_05,25,13,05,,Adobe block wall systems,TRUE
+3890,Ss_25_13_24,25,13,24,,Dry stone wall systems,TRUE
+3900,Ss_25_13_33,25,13,33,,Glass wall systems,TRUE
+3910,Ss_25_13_33_33,25,13,33,33,Glass block wall systems,TRUE
+3920,Ss_25_13_33_64,25,13,33,64,Prefabricated glass block wall systems,TRUE
+3930,Ss_25_13_35,25,13,35,,Gypsum block wall systems,TRUE
+3940,Ss_25_13_45,25,13,45,,Lead brick wall systems,TRUE
+3950,Ss_25_13_50,25,13,50,,Masonry wall systems,TRUE
+3960,Ss_25_13_50_49,25,13,50,49,Masonry exposed feature systems,TRUE
+3970,Ss_25_13_50_51,25,13,50,51,Masonry wall leaf systems,TRUE
+3980,Ss_25_13_50_54,25,13,50,54,Masonry free-standing wall leaf systems,TRUE
+3990,Ss_25_13_50_56,25,13,50,56,Masonry internal partition systems,TRUE
+4000,Ss_25_13_70,25,13,70,,Reinforced masonry wall systems,TRUE
+4010,Ss_25_13_70_71,25,13,70,71,Reinforced masonry wall leaf systems,TRUE
+4020,Ss_25_13_70_74,25,13,70,74,Reinforced masonry free-standing wall leaf systems,TRUE
+4030,Ss_25_13_70_76,25,13,70,76,Reinforced masonry internal partition systems,TRUE
+4040,Ss_25_13_85,25,13,85,,Straw bale wall systems,TRUE
+4050,Ss_25_13_85_30,25,13,85,30,Framed straw bale wall systems,TRUE
+4060,Ss_25_13_85_95,25,13,85,95,Unframed straw bale wall systems,TRUE
+4070,Ss_25_14,25,14,,,Fence systems,TRUE
+4080,Ss_25_14_08,25,14,08,,"Board, palisade and continuous infill fencing systems",TRUE
+4090,Ss_25_14_08_08,25,14,08,08,Board or palisade fencing systems,TRUE
+4100,Ss_25_14_08_14,25,14,08,14,Cleft chestnut pale fencing systems,TRUE
+4110,Ss_25_14_08_52,25,14,08,52,Metal vertical pale fencing systems,TRUE
+4120,Ss_25_14_08_64,25,14,08,64,Precast concrete palisade fencing systems,TRUE
+4130,Ss_25_14_08_85,25,14,08,85,Steel palisade panel fencing systems,TRUE
+4140,Ss_25_14_08_95,25,14,08,95,Wood close-boarded fencing systems,TRUE
+4150,Ss_25_14_08_96,25,14,08,96,Wood palisade fencing systems,TRUE
+4160,Ss_25_14_30,25,14,30,,Framed fence systems,TRUE
+4170,Ss_25_14_30_56,25,14,30,56,Natural stone fencing systems,TRUE
+4180,Ss_25_14_52,25,14,52,,Mesh fencing systems,TRUE
+4190,Ss_25_14_52_12,25,14,52,12,Chain link fencing systems,TRUE
+4200,Ss_25_14_52_15,25,14,52,15,Continuous mesh fencing systems,TRUE
+4210,Ss_25_14_52_34,25,14,52,34,General pattern wire mesh fencing systems,TRUE
+4220,Ss_25_14_52_80,25,14,52,80,Spring steel and high-tensile wire mesh fencing systems,TRUE
+4230,Ss_25_14_55,25,14,55,,Monolithic fence systems,TRUE
+4240,Ss_25_14_61,25,14,61,,Panel fencing systems,TRUE
+4250,Ss_25_14_61_51,25,14,61,51,Metal mesh panel fencing systems,TRUE
+4260,Ss_25_14_61_56,25,14,61,56,Natural hurdle fencing systems,TRUE
+4270,Ss_25_14_61_62,25,14,61,62,Post and panel fencing systems,TRUE
+4280,Ss_25_14_61_65,25,14,61,65,Precast concrete post and panel fencing systems,TRUE
+4290,Ss_25_14_61_67,25,14,61,67,Prefabricated wood or plastics panel fencing systems,TRUE
+4300,Ss_25_14_61_84,25,14,61,84,Steel hurdle fencing systems,TRUE
+4310,Ss_25_14_61_86,25,14,61,86,Steel vertical bar fencing systems,TRUE
+4320,Ss_25_14_61_98,25,14,61,98,Wrought iron panel fencing systems,TRUE
+4330,Ss_25_14_63,25,14,63,,Rail fencing systems,TRUE
+4340,Ss_25_14_63_11,25,14,63,11,Carbon steel continuous bar fencing systems,TRUE
+4350,Ss_25_14_63_51,25,14,63,51,Metal post and rail fencing systems,TRUE
+4360,Ss_25_14_63_63,25,14,63,63,Post and rail fencing systems,TRUE
+4370,Ss_25_14_63_66,25,14,63,66,Precast concrete post and rail fencing systems,TRUE
+4380,Ss_25_14_63_97,25,14,63,97,Wood post and rail fencing systems,TRUE
+4390,Ss_25_14_67,25,14,67,,Post and wire fencing systems,TRUE
+4400,Ss_25_14_67_24,25,14,67,24,Dropper pattern strained wire fencing systems,TRUE
+4410,Ss_25_14_67_27,25,14,67,27,Electric fencing systems,TRUE
+4420,Ss_25_14_67_28,25,14,67,28,Electric security fencing systems,TRUE
+4430,Ss_25_14_67_33,25,14,67,33,General pattern strained wire fencing systems,TRUE
+4440,Ss_25_14_67_70,25,14,67,70,Rope or chain fencing systems,TRUE
+4450,Ss_25_14_67_97,25,14,67,97,Wire fencing systems,TRUE
+4460,Ss_25_15,25,15,,,Fixed pedestrian barrier systems,TRUE
+4470,Ss_25_15_60,25,15,60,,Pedestrian safety barrier and guarding systems,TRUE
+4480,Ss_25_15_60_14,25,15,60,14,Composite barrier systems,TRUE
+4490,Ss_25_15_60_15,25,15,60,15,Composite pedestrian parapet systems,TRUE
+4500,Ss_25_15_60_16,25,15,60,16,Composite post and panel barrier systems,TRUE
+4510,Ss_25_15_60_17,25,15,60,17,Composite post and rail barrier systems,TRUE
+4520,Ss_25_15_60_18,25,15,60,18,Concrete post and rail barrier systems,TRUE
+4530,Ss_25_15_60_37,25,15,60,37,Hoop barrier systems,TRUE
+4540,Ss_25_15_60_52,25,15,60,52,Metal modular barrier systems,TRUE
+4550,Ss_25_15_60_53,25,15,60,53,Metal pedestrian parapet systems,TRUE
+4560,Ss_25_15_60_54,25,15,60,54,Metal post and mesh panel barrier systems,TRUE
+4570,Ss_25_15_60_55,25,15,60,55,Metal post and panel barrier systems,TRUE
+4580,Ss_25_15_60_56,25,15,60,56,Metal post and rail barrier systems,TRUE
+4590,Ss_25_15_60_57,25,15,60,57,Metal vertical bar pedestrian guard rail systems,TRUE
+4600,Ss_25_15_60_60,25,15,60,60,Pedestrian parapet systems,TRUE
+4610,Ss_25_15_60_65,25,15,60,65,Post and panel barrier systems,TRUE
+4620,Ss_25_15_60_66,25,15,60,66,Post and rail barrier systems,TRUE
+4630,Ss_25_15_60_67,25,15,60,67,Post and rope barrier systems,TRUE
+4640,Ss_25_15_60_68,25,15,60,68,Post and wire barrier systems,TRUE
+4650,Ss_25_15_60_96,25,15,60,96,Wood post and panel barrier systems,TRUE
+4660,Ss_25_15_60_97,25,15,60,97,Wood post and rail barrier systems,TRUE
+4670,Ss_25_15_85,25,15,85,,Sports barrier systems,TRUE
+4680,Ss_25_15_85_55,25,15,85,55,Multi-use games fencing systems,TRUE
+4690,Ss_25_16,25,16,,,Fixed traffic and protective barrier systems,TRUE
+4700,Ss_25_16_04,25,16,04,,Artificial reef systems,TRUE
+4710,Ss_25_16_05,25,16,05,,Avalanche and snow barrier systems,TRUE
+4720,Ss_25_16_08,25,16,08,,Blast barrier systems,TRUE
+4730,Ss_25_16_08_44,25,16,08,44,Jet blast deflection systems,TRUE
+4740,Ss_25_16_21,25,16,21,,Debris flow barrier systems,TRUE
+4750,Ss_25_16_46,25,16,46,,Landslide barrier systems,TRUE
+4760,Ss_25_16_50,25,16,50,,"Coastal, river and waterways protection systems",TRUE
+4770,Ss_25_16_50_72,25,16,50,72,Rock armour systems,TRUE
+4780,Ss_25_16_50_77,25,16,50,77,Scouring protection systems,TRUE
+4790,Ss_25_16_50_80,25,16,50,80,Sea wall systems,TRUE
+4800,Ss_25_16_50_82,25,16,50,82,Splash deck systems,TRUE
+4810,Ss_25_16_50_84,25,16,50,84,Splash wall systems,TRUE
+4820,Ss_25_16_73,25,16,73,,Road and rail barrier systems,TRUE
+4830,Ss_25_16_73_03,25,16,73,03,Acoustic barrier systems,TRUE
+4840,Ss_25_16_73_05,25,16,73,05,Anti-throw barrier systems,TRUE
+4850,Ss_25_16_73_26,25,16,73,26,Environment protection screen systems,TRUE
+4860,Ss_25_16_73_79,25,16,73,79,Sight barrier systems,TRUE
+4870,Ss_25_16_73_80,25,16,73,80,Socket for temporary barrier systems,TRUE
+4880,Ss_25_16_76,25,16,76,,Rockfall barrier systems,TRUE
+4890,Ss_25_16_94,25,16,94,,Vehicle restraint systems,TRUE
+4900,Ss_25_16_94_10,25,16,94,10,Bollard systems,TRUE
+4910,Ss_25_16_94_14,25,16,94,14,Combined metal and concrete vehicle safety parapet systems,TRUE
+4920,Ss_25_16_94_16,25,16,94,16,Concrete safety barrier (CSB) systems,TRUE
+4930,Ss_25_16_94_44,25,16,94,44,Low-speed precast concrete safety parapet (PCONC) systems,TRUE
+4940,Ss_25_16_94_46,25,16,94,46,Low-speed masonry safety parapet (PMAS) systems,TRUE
+4950,Ss_25_16_94_48,25,16,94,48,Low-speed metal vehicle safety parapet systems,TRUE
+4960,Ss_25_16_94_50,25,16,94,50,Metal vehicle safety fence systems,TRUE
+4970,Ss_25_16_94_65,25,16,94,65,Protective rail systems,TRUE
+4980,Ss_25_16_94_95,25,16,94,95,Vehicle safety control systems,TRUE
+4990,Ss_25_16_94_96,25,16,94,96,Vehicle security barrier systems,TRUE
+5000,Ss_25_16_94_97,25,16,94,97,Wire rope safety fence (WRSF) systems,TRUE
+5010,Ss_25_17,25,17,,,Dam and levee structure systems,TRUE
+5020,Ss_25_17_05,25,17,05,,Arch dam systems,TRUE
+5030,Ss_25_17_10,25,17,10,,Buttress dam systems,TRUE
+5040,Ss_25_17_25,25,17,25,,Embankment dam and levee systems,TRUE
+5050,Ss_25_17_25_30,25,17,25,30,Flow control embankments,TRUE
+5060,Ss_25_17_35,25,17,35,,Gravity dam systems,TRUE
+5070,Ss_25_17_35_60,25,17,35,60,Orifice check dam systems,TRUE
+5080,Ss_25_20,25,20,,,Wall cladding systems,TRUE
+5090,Ss_25_20_08,25,20,08,,Board cladding systems,TRUE
+5100,Ss_25_20_08_95,25,20,08,95,Weatherboarding systems,TRUE
+5110,Ss_25_20_12,25,20,12,,Cladding support systems,TRUE
+5120,Ss_25_20_12_02,25,20,12,02,Aluminium cladding support systems,TRUE
+5130,Ss_25_20_12_80,25,20,12,80,Stainless steel cladding support systems,TRUE
+5140,Ss_25_20_14,25,20,14,,Composite panel cladding systems,TRUE
+5150,Ss_25_20_14_10,25,20,14,10,Built-up metal insulating sandwich panel cladding systems,TRUE
+5160,Ss_25_20_14_52,25,20,14,52,Metal composite panel cladding systems,TRUE
+5170,Ss_25_20_14_54,25,20,14,54,Metal insulating sandwich panel cladding systems,TRUE
+5180,Ss_25_20_14_55,25,20,14,55,Metal semi-composite panel cladding systems,TRUE
+5190,Ss_25_20_15,25,20,15,,Concrete cladding systems,TRUE
+5200,Ss_25_20_15_16,25,20,15,16,Concrete panel cladding systems,TRUE
+5210,Ss_25_20_33,25,20,33,,Glass fibre-reinforced concrete (GRC) cladding systems,TRUE
+5220,Ss_25_20_33_35,25,20,33,35,Glass fibre-reinforced concrete (GRC) wall cladding systems,TRUE
+5230,Ss_25_20_34,25,20,34,,Glass fibre-reinforced gypsum (GRG) cladding systems,TRUE
+5240,Ss_25_20_34_35,25,20,34,35,Glass fibre-reinforced gypsum (GRG) wall cladding systems,TRUE
+5250,Ss_25_20_35,25,20,35,,Glass fibre-reinforced plastics (GRP) cladding systems,TRUE
+5260,Ss_25_20_35_35,25,20,35,35,Glass fibre-reinforced plastics (GRP) wall cladding systems,TRUE
+5270,Ss_25_20_50,25,20,50,,Metal sheet fully supported wall-covering systems,TRUE
+5280,Ss_25_20_50_05,25,20,50,05,Aluminium sheet fully supported wall-covering systems,TRUE
+5290,Ss_25_20_50_11,25,20,50,11,Carbon steel sheet fully supported wall-covering systems,TRUE
+5300,Ss_25_20_50_15,25,20,50,15,Copper sheet fully supported wall-covering systems,TRUE
+5310,Ss_25_20_50_45,25,20,50,45,Lead sheet fully supported wall-covering systems,TRUE
+5320,Ss_25_20_50_50,25,20,50,50,Lead-wrapped panel cladding systems,TRUE
+5330,Ss_25_20_50_85,25,20,50,85,Stainless steel sheet fully supported wall-covering systems,TRUE
+5340,Ss_25_20_50_95,25,20,50,95,Zinc sheet fully supported wall-covering systems,TRUE
+5350,Ss_25_20_60,25,20,60,,Panel and sheet cladding systems,TRUE
+5360,Ss_25_20_68,25,20,68,,Profiled sheet self-supporting cladding systems,TRUE
+5370,Ss_25_20_68_30,25,20,68,30,Fibre cement profiled sheet self-supporting cladding systems,TRUE
+5380,Ss_25_20_68_50,25,20,68,50,Metal profiled sheet self-supporting cladding systems,TRUE
+5390,Ss_25_20_68_65,25,20,68,65,Plastics profiled sheet self-supporting cladding systems,TRUE
+5400,Ss_25_20_70,25,20,70,,Rainscreen cladding systems,TRUE
+5410,Ss_25_20_70_25,25,20,70,25,Drained and back-ventilated rainscreen cladding systems,TRUE
+5420,Ss_25_20_70_65,25,20,70,65,Pressure equalized rainscreen cladding systems,TRUE
+5430,Ss_25_20_72,25,20,72,,Sheet cladding systems,TRUE
+5440,Ss_25_20_72_72,25,20,72,72,Rigid sheet cladding systems,TRUE
+5450,Ss_25_20_85,25,20,85,,Stone cladding systems,TRUE
+5460,Ss_25_20_85_50,25,20,85,50,Manufactured stone cladding systems,TRUE
+5470,Ss_25_20_85_55,25,20,85,55,Natural stone slab cladding systems,TRUE
+5480,Ss_25_20_90,25,20,90,,Unit cladding systems,TRUE
+5490,Ss_25_20_90_08,25,20,90,08,Brick slip cladding systems,TRUE
+5500,Ss_25_20_90_13,25,20,90,13,Clay plain tile cladding systems,TRUE
+5510,Ss_25_20_90_15,25,20,90,15,Concrete plain tile cladding systems,TRUE
+5520,Ss_25_20_90_30,25,20,90,30,Fibre cement slate cladding systems,TRUE
+5530,Ss_25_20_90_50,25,20,90,50,Metal tile cladding systems,TRUE
+5540,Ss_25_20_90_55,25,20,90,55,Natural slate cladding systems,TRUE
+5550,Ss_25_20_90_65,25,20,90,65,Precast concrete panel cladding systems,TRUE
+5560,Ss_25_20_90_95,25,20,90,95,Wood shingle or shake cladding systems,TRUE
+5570,Ss_25_25,25,25,,,Wall lining systems,TRUE
+5580,Ss_25_25_05,25,25,05,,Acoustic panel systems,TRUE
+5590,Ss_25_25_45,25,25,45,,Lining and casing systems,TRUE
+5600,Ss_25_25_45_25,25,25,45,25,Duct and wall panel lining systems,TRUE
+5610,Ss_25_25_45_33,25,25,45,33,Gypsum board casing systems,TRUE
+5620,Ss_25_25_45_35,25,25,45,35,Gypsum board wall lining systems,TRUE
+5630,Ss_25_25_45_47,25,25,45,47,Linear wall lining systems,TRUE
+5640,Ss_25_25_45_50,25,25,45,50,Metal framed wall lining systems,TRUE
+5650,Ss_25_25_45_68,25,25,45,68,Rigid sheet casing systems,TRUE
+5660,Ss_25_25_45_70,25,25,45,70,Rigid sheet wall lining systems,TRUE
+5670,Ss_25_25_45_88,25,25,45,88,Timber board casing systems,TRUE
+5680,Ss_25_25_45_90,25,25,45,90,Timber board wall lining systems,TRUE
+5690,Ss_25_25_70,25,25,70,,Radiation shielding lining systems,TRUE
+5700,Ss_25_25_70_08,25,25,70,08,Brick and block radiation shielding lining systems,TRUE
+5710,Ss_25_25_70_70,25,25,70,70,Radio frequency (RF) shielding systems,TRUE
+5720,Ss_25_25_70_78,25,25,70,78,Sheeted radiation shielding lining systems,TRUE
+5730,Ss_25_25_70_96,25,25,70,96,Wet-applied radiation shielding lining systems,TRUE
+5740,Ss_25_25_75,25,25,75,,Rigid sheet fine lining and panelling systems,TRUE
+5750,Ss_25_25_75_05,25,25,75,05,Acoustic panel lining systems,TRUE
+5760,Ss_25_25_75_63,25,25,75,63,Plastics panel lining systems,TRUE
+5770,Ss_25_25_75_65,25,25,75,65,Plastics veneered panel lining systems,TRUE
+5780,Ss_25_25_75_85,25,25,75,85,Specialist faced panel lining systems,TRUE
+5790,Ss_25_25_75_94,25,25,75,94,Wood panel lining systems,TRUE
+5800,Ss_25_25_75_95,25,25,75,95,Wood veneered panel lining systems,TRUE
+5810,Ss_25_25_85,25,25,85,,Stone lining systems,TRUE
+5820,Ss_25_25_85_50,25,25,85,50,Manufactured stone lining systems,TRUE
+5830,Ss_25_25_85_55,25,25,85,55,Natural stone lining systems,TRUE
+5840,Ss_25_25_95,25,25,95,,Wall sheathing systems,TRUE
+5850,Ss_25_25_95_28,25,25,95,28,External wall sheathing systems,TRUE
+5860,Ss_25_30,25,30,,,Door and window systems,TRUE
+5870,Ss_25_30_15,25,30,15,,Concrete wall glazing systems,TRUE
+5880,Ss_25_30_15_66,25,30,15,66,Precast concrete security window systems,TRUE
+5890,Ss_25_30_20,25,30,20,,"Door, shutter and hatch systems",TRUE
+5900,Ss_25_30_20_16,25,30,20,16,Collapsible gate and grille doorset systems,TRUE
+5910,Ss_25_30_20_22,25,30,20,22,Door assembly systems,TRUE
+5920,Ss_25_30_20_25,25,30,20,25,Doorset systems,TRUE
+5930,Ss_25_30_20_30,25,30,20,30,Frame and door leaf systems,TRUE
+5940,Ss_25_30_20_32,25,30,20,32,Frameless glass door systems,TRUE
+5950,Ss_25_30_20_35,25,30,20,35,Hatch systems,TRUE
+5960,Ss_25_30_20_37,25,30,20,37,High-security doorset systems,TRUE
+5970,Ss_25_30_20_38,25,30,20,38,High-speed doorset systems,TRUE
+5980,Ss_25_30_20_39,25,30,20,39,Hinged doorset systems,TRUE
+5990,Ss_25_30_20_40,25,30,20,40,Industrial doorset systems,TRUE
+6000,Ss_25_30_20_45,25,30,20,45,Loading bay doorset systems,TRUE
+6010,Ss_25_30_20_46,25,30,20,46,Louvre doorset systems,TRUE
+6020,Ss_25_30_20_62,25,30,20,62,Pivot doorset systems,TRUE
+6030,Ss_25_30_20_65,25,30,20,65,Platform door systems,TRUE
+6040,Ss_25_30_20_70,25,30,20,70,Revolving doorset systems,TRUE
+6050,Ss_25_30_20_73,25,30,20,73,Roller grille doorset systems,TRUE
+6060,Ss_25_30_20_74,25,30,20,74,Roller shutter doorset systems,TRUE
+6070,Ss_25_30_20_76,25,30,20,76,Sectional overhead doorset systems,TRUE
+6080,Ss_25_30_20_77,25,30,20,77,Sliding doorset systems,TRUE
+6090,Ss_25_30_20_78,25,30,20,78,Sliding folding doorset systems,TRUE
+6100,Ss_25_30_20_84,25,30,20,84,Strip curtain doorset systems,TRUE
+6110,Ss_25_30_20_93,25,30,20,93,Up-and-over doorset systems,TRUE
+6120,Ss_25_30_29,25,30,29,,Fire and smoke curtain systems,TRUE
+6130,Ss_25_30_29_30,25,30,29,30,Fire curtain systems,TRUE
+6140,Ss_25_30_29_80,25,30,29,80,Smoke curtain systems,TRUE
+6150,Ss_25_30_95,25,30,95,,Window and window walling systems,TRUE
+6160,Ss_25_30_95_11,25,30,95,11,Casement window systems,TRUE
+6170,Ss_25_30_95_75,25,30,95,75,Sash window systems,TRUE
+6180,Ss_25_30_95_95,25,30,95,95,Window systems,TRUE
+6190,Ss_25_30_95_96,25,30,95,96,Window walling systems,TRUE
+6200,Ss_25_32,25,32,,,Gate and access control systems,TRUE
+6210,Ss_25_32_35,25,32,35,,Gate systems,TRUE
+6220,Ss_25_32_35_05,25,32,35,05,Animal gate systems,TRUE
+6230,Ss_25_32_35_15,25,32,35,15,Chicane systems,TRUE
+6240,Ss_25_32_35_30,25,32,35,30,Folding gate systems,TRUE
+6250,Ss_25_32_35_37,25,32,35,37,Hinged gate systems,TRUE
+6260,Ss_25_32_35_41,25,32,35,41,In-line inhibitor systems,TRUE
+6270,Ss_25_32_35_45,25,32,35,45,Kissing gate systems,TRUE
+6280,Ss_25_32_35_80,25,32,35,80,Sliding gate systems,TRUE
+6290,Ss_25_32_35_85,25,32,35,85,Stile systems,TRUE
+6300,Ss_25_32_35_90,25,32,35,90,Turnstile systems,TRUE
+6310,Ss_25_32_60,25,32,60,,Access control gate systems,TRUE
+6320,Ss_25_32_60_15,25,32,60,15,Controlled pedestrian access systems,TRUE
+6330,Ss_25_32_60_26,25,32,60,26,e-passport gate systems,TRUE
+6340,Ss_25_32_60_60,25,32,60,60,Passport gate systems,TRUE
+6350,Ss_25_32_70,25,32,70,,Railway platform barrier systems,TRUE
+6360,Ss_25_32_70_64,25,32,70,64,Platform end barrier gate systems,TRUE
+6370,Ss_25_36,25,36,,,Operable barrier systems,TRUE
+6380,Ss_25_36_24,25,36,24,,Dry dock automated gate systems,TRUE
+6390,Ss_25_36_30,25,36,30,,Flood and storm surge barrier systems,TRUE
+6400,Ss_25_36_30_30,25,36,30,30,Flood gate systems,TRUE
+6410,Ss_25_36_50,25,36,50,,Marina and sea gate automated systems,TRUE
+6420,Ss_25_36_58,25,36,58,,Operable rail barrier systems,TRUE
+6430,Ss_25_36_62,25,36,62,,Operable water barrier systems,TRUE
+6440,Ss_25_36_62_47,25,36,62,47,Lock gate systems,TRUE
+6450,Ss_25_36_62_65,25,36,62,65,Prop arm systems,TRUE
+6460,Ss_25_36_62_96,25,36,62,96,Water control gate systems,TRUE
+6470,Ss_25_36_64,25,36,64,,Operable bridge barrier systems,TRUE
+6480,Ss_25_36_66,25,36,66,,Operable tunnel barrier systems,TRUE
+6490,Ss_25_36_70,25,36,70,,Railway crossing systems,TRUE
+6500,Ss_25_36_95,25,36,95,,Vehicle access point control systems,TRUE
+6510,Ss_25_36_95_05,25,36,95,05,Automated heavy-duty gate systems,TRUE
+6520,Ss_25_36_95_35,25,36,95,35,Heavy-duty sliding beam barrier systems,TRUE
+6530,Ss_25_36_95_36,25,36,95,36,Height restrictor systems,TRUE
+6540,Ss_25_36_95_38,25,36,95,38,Horizontal swing gate systems,TRUE
+6550,Ss_25_36_95_40,25,36,95,40,Hydraulic ramp systems,TRUE
+6560,Ss_25_36_95_50,25,36,95,50,Movable bollard and car park post systems,TRUE
+6570,Ss_25_36_95_70,25,36,95,70,Rising arm barrier systems,TRUE
+6580,Ss_25_36_95_72,25,36,95,72,Rising bollard systems,TRUE
+6590,Ss_25_36_95_85,25,36,95,85,Static bollard systems,TRUE
+6600,Ss_25_36_95_94,25,36,95,94,Vehicle flow plate systems,TRUE
+6610,Ss_25_36_95_96,25,36,95,96,Vehicle stop systems,TRUE
+6620,Ss_25_38,25,38,,,Wall and barrier opening hardware systems,TRUE
+6630,Ss_25_38_10,25,38,10,,Barrier and gate control systems,TRUE
+6640,Ss_25_38_10_33,25,38,10,33,Gate hardware systems,TRUE
+6650,Ss_25_38_10_95,25,38,10,95,Water control gate displacer systems,TRUE
+6660,Ss_25_38_20,25,38,20,,Door and window hardware systems,TRUE
+6670,Ss_25_38_20_20,25,38,20,20,Door hardware systems,TRUE
+6680,Ss_25_38_20_30,25,38,20,30,Garage door hardware systems,TRUE
+6690,Ss_25_38_20_35,25,38,20,35,Hatch hardware systems,TRUE
+6700,Ss_25_38_20_70,25,38,20,70,Relocatable partition hardware systems,TRUE
+6710,Ss_25_38_20_80,25,38,20,80,Shutter hardware systems,TRUE
+6720,Ss_25_38_20_95,25,38,20,95,Window hardware systems,TRUE
+6730,Ss_25_45,25,45,,,Wall covering and finish systems,TRUE
+6740,Ss_25_45_02,25,45,02,,Acoustic covering systems,TRUE
+6750,Ss_25_45_12,25,45,12,,Cavity wall insulation systems,TRUE
+6760,Ss_25_45_12_40,25,45,12,40,Injected and blown cavity wall insulation systems,TRUE
+6770,Ss_25_45_25,25,45,25,,Drapery systems,TRUE
+6780,Ss_25_45_70,25,45,70,,Render and roughcast coating systems,TRUE
+6790,Ss_25_45_70_55,25,45,70,55,Multicoat render systems,TRUE
+6800,Ss_25_45_70_60,25,45,70,60,One-coat render systems,TRUE
+6810,Ss_25_45_70_65,25,45,70,65,Parge coat systems,TRUE
+6820,Ss_25_45_70_90,25,45,70,90,Tiling and mosaic render substrate systems,TRUE
+6830,Ss_25_45_72,25,45,72,,Wall insulation systems,TRUE
+6840,Ss_25_45_72_02,25,45,72,02,Adhesive-fixed external wall insulation systems,TRUE
+6850,Ss_25_45_72_28,25,45,72,28,External wall insulation systems,TRUE
+6860,Ss_25_45_72_42,25,45,72,42,Insulated plinth systems,TRUE
+6870,Ss_25_45_72_44,25,45,72,44,Internal wall insulation systems,TRUE
+6880,Ss_25_45_72_70,25,45,72,70,Rail-fixed external wall insulation systems,TRUE
+6890,Ss_25_45_74,25,45,74,,Rolled paper and fabric covering systems,TRUE
+6900,Ss_25_45_74_70,25,45,74,70,Rolled covering systems,TRUE
+6910,Ss_25_45_85,25,45,85,,Sprayed coating systems,TRUE
+6920,Ss_25_45_85_82,25,45,85,82,Sprayed external monolithic coating systems,TRUE
+6930,Ss_25_45_85_85,25,45,85,85,Sprayed internal monolithic coating systems,TRUE
+6940,Ss_25_45_86,25,45,86,,Suspended render systems,TRUE
+6950,Ss_25_45_88,25,45,88,,Tiling systems,TRUE
+6960,Ss_25_45_88_25,25,45,88,25,External wall tiling systems,TRUE
+6970,Ss_25_45_88_40,25,45,88,40,Internal wall tiling systems,TRUE
+6980,Ss_25_45_88_90,25,45,88,90,Tiling and mosaic mortar substrate systems,TRUE
+6990,Ss_25_45_90,25,45,90,,Unit facing systems,TRUE
+7000,Ss_25_45_92,25,45,92,,Terrazzo wall tiling and screed systems,TRUE
+7010,Ss_25_45_92_88,25,45,92,88,Terrazzo wall tiling systems,TRUE
+7020,Ss_25_50,25,50,,,Wall-mounted canopy and screen systems,TRUE
+7030,Ss_25_50_45,25,50,45,,Louvre and screening systems,TRUE
+7040,Ss_25_50_45_22,25,50,45,22,Decorative screen systems,TRUE
+7050,Ss_25_50_45_35,25,50,45,35,Grille systems,TRUE
+7060,Ss_25_50_45_45,25,50,45,45,Louvre screen systems,TRUE
+7070,Ss_25_50_45_60,25,50,45,60,Panellized louvre screen systems,TRUE
+7080,Ss_25_50_45_80,25,50,45,80,Shutter systems,TRUE
+7090,Ss_25_50_75,25,50,75,,Shading systems,TRUE
+7100,Ss_25_50_75_05,25,50,75,05,Awning systems,TRUE
+7110,Ss_25_50_75_10,25,50,75,10,Canopy systems,TRUE
+7120,Ss_25_50_75_30,25,50,75,30,Facade-aligned brise soleil systems,TRUE
+7130,Ss_25_50_75_65,25,50,75,65,Projecting brise soleil systems,TRUE
+7140,Ss_25_60,25,60,,,Wall and barrier accessory systems,TRUE
+7150,Ss_25_60_05,25,60,05,,Balustrade and handrail systems,TRUE
+7160,Ss_25_60_05_05,25,60,05,05,Balustrade and guarding systems,TRUE
+7170,Ss_25_60_05_35,25,60,05,35,Handrail systems,TRUE
+7180,Ss_25_60_10,25,60,10,,Cavity wall tie renewal and insertion systems,TRUE
+7190,Ss_25_60_30,25,60,30,,Fire-stopping systems,TRUE
+7200,Ss_25_60_30_40,25,60,30,40,Individual services penetrations fire-stopping systems,TRUE
+7210,Ss_25_60_30_45,25,60,30,45,Linear gap fire-stopping systems,TRUE
+7220,Ss_25_60_30_48,25,60,30,48,Loose fire-stopping systems,TRUE
+7230,Ss_25_60_30_55,25,60,30,55,Multiple services penetrations fire-stopping systems,TRUE
+7240,Ss_25_60_30_62,25,60,30,62,Pipe collar fire-stopping systems,TRUE
+7250,Ss_25_60_35,25,60,35,,Glazing systems,TRUE
+7260,Ss_25_60_35_06,25,60,35,06,Bead-fixed insulating glazing systems,TRUE
+7270,Ss_25_60_35_08,25,60,35,08,Bead-fixed single glazing systems,TRUE
+7280,Ss_25_60_35_30,25,60,35,30,Fire-resistant glazing systems,TRUE
+7290,Ss_25_60_35_33,25,60,35,33,Glazing film systems,TRUE
+7300,Ss_25_60_35_35,25,60,35,35,Groove-fixed single glazing systems,TRUE
+7310,Ss_25_60_35_40,25,60,35,40,"Internal use bead and tape, groove or channel glazing systems",TRUE
+7320,Ss_25_60_35_50,25,60,35,50,Mirror glazing systems,TRUE
+7330,Ss_25_60_35_65,25,60,35,65,Putty-fronted single glazing systems,TRUE
+7340,Ss_25_60_35_75,25,60,35,75,Single-sided gasket glazing systems,TRUE
+7350,Ss_25_60_35_85,25,60,35,85,Structural zipper gasket glazing systems,TRUE
+7360,Ss_25_60_35_95,25,60,35,95,U-profiled glazing systems,TRUE
+7370,Ss_30,30,,,,"Roof, floor and paving systems",TRUE
+7380,Ss_30_10,30,10,,,Roof structure systems,TRUE
+7390,Ss_30_10_30,30,10,30,,Framed roof structure systems,TRUE
+7400,Ss_30_10_30_03,30,10,30,03,Aluminium roof framing systems,TRUE
+7410,Ss_30_10_30_20,30,10,30,20,Glazed unit roof framing systems,TRUE
+7420,Ss_30_10_30_25,30,10,30,25,Heavy steel roof framing systems,TRUE
+7430,Ss_30_10_30_30,30,10,30,30,Heavy steel roof space frame systems,TRUE
+7440,Ss_30_10_30_35,30,10,30,35,Heavy steel roof space truss systems,TRUE
+7450,Ss_30_10_30_45,30,10,30,45,Light steel roof framing systems,TRUE
+7460,Ss_30_10_30_58,30,10,30,58,Plastics roof framing systems,TRUE
+7470,Ss_30_10_30_60,30,10,30,60,Precast concrete roof structure systems,TRUE
+7480,Ss_30_10_30_70,30,10,30,70,Reinforced concrete roof framing systems,TRUE
+7490,Ss_30_10_30_85,30,10,30,85,Timber roof framing systems,TRUE
+7500,Ss_30_10_50,30,10,50,,Monolithic roof structure systems,TRUE
+7510,Ss_30_10_50_70,30,10,50,70,Sprayed concrete roof systems,TRUE
+7520,Ss_30_10_60,30,10,60,,Air-pressurized panel roof structure systems,TRUE
+7530,Ss_30_10_60_28,30,10,60,28,Ethylene tetrafluoroethylene (ETFE) roof systems,TRUE
+7540,Ss_30_10_90,30,10,90,,Unit roof structure systems,TRUE
+7550,Ss_30_10_90_50,30,10,90,50,Masonry roof systems,TRUE
+7560,Ss_30_12,30,12,,,Floor and deck structure systems,TRUE
+7570,Ss_30_12_05,30,12,05,,Beam and block floor systems,TRUE
+7580,Ss_30_12_15,30,12,15,,Concrete plank floor systems,TRUE
+7590,Ss_30_12_20,30,12,20,,Deck systems,TRUE
+7600,Ss_30_12_32,30,12,32,,Framed decking systems,TRUE
+7610,Ss_30_12_33,30,12,33,,Framed floor systems,TRUE
+7620,Ss_30_12_33_50,30,12,33,50,Light steel framed floor systems,TRUE
+7630,Ss_30_12_33_90,30,12,33,90,Timber-framed floor systems,TRUE
+7640,Ss_30_12_35,30,12,35,,Glass unit masonry floor systems,TRUE
+7650,Ss_30_12_45,30,12,45,,Lift-up concrete plank floor systems,TRUE
+7660,Ss_30_12_50,30,12,50,,Masonry (flat arch) floor systems,TRUE
+7670,Ss_30_12_60,30,12,60,,Pier and jetty structure systems,TRUE
+7680,Ss_30_12_64,30,12,64,,Platform systems,TRUE
+7690,Ss_30_12_64_17,30,12,64,17,Crosswall platform systems,TRUE
+7700,Ss_30_12_64_30,30,12,64,30,Front wall platform systems,TRUE
+7710,Ss_30_12_64_53,30,12,64,53,Modular platform systems,TRUE
+7720,Ss_30_12_64_65,30,12,64,65,Plant enclosure and platform systems,TRUE
+7730,Ss_30_12_85,30,12,85,,Structural deck systems,TRUE
+7740,Ss_30_12_85_15,30,12,85,15,Composite concrete deck systems,TRUE
+7750,Ss_30_12_85_16,30,12,85,16,Composite steel and concrete deck systems,TRUE
+7760,Ss_30_12_85_17,30,12,85,17,Concrete beam and block deck systems,TRUE
+7770,Ss_30_12_85_18,30,12,85,18,Concrete deck systems,TRUE
+7780,Ss_30_12_85_30,30,12,85,30,Glazed unit deck systems,TRUE
+7790,Ss_30_12_85_40,30,12,85,40,Heavy steel deck systems,TRUE
+7800,Ss_30_12_85_50,30,12,85,50,Light steel deck systems,TRUE
+7810,Ss_30_12_85_65,30,12,85,65,Post-tensioned concrete deck systems,TRUE
+7820,Ss_30_12_85_70,30,12,85,70,Reinforced concrete deck systems,TRUE
+7830,Ss_30_12_85_90,30,12,85,90,Timber deck systems,TRUE
+7840,Ss_30_14,30,14,,,Paving systems,TRUE
+7850,Ss_30_14_02,30,14,02,,Acrylic and resin bound aggregate paving systems,TRUE
+7860,Ss_30_14_02_30,30,14,02,30,Fibre-reinforced resin-bound aggregate overlay systems,TRUE
+7870,Ss_30_14_02_41,30,14,02,41,Impact absorbing synthetic play and sport paving systems,TRUE
+7880,Ss_30_14_02_42,30,14,02,42,Impervious acrylic coated sports paving systems,TRUE
+7890,Ss_30_14_02_70,30,14,02,70,Resin-bonded aggregate paving systems,TRUE
+7900,Ss_30_14_02_71,30,14,02,71,Resin-bound aggregate light-duty paving systems,TRUE
+7910,Ss_30_14_02_72,30,14,02,72,Resin-bound aggregate heavy-duty paving systems,TRUE
+7920,Ss_30_14_02_73,30,14,02,73,Resin-bound aggregate overlay systems,TRUE
+7930,Ss_30_14_02_74,30,14,02,74,Resin-bound stone aggregate sports paving systems,TRUE
+7940,Ss_30_14_02_85,30,14,02,85,Synthetic play surfacing systems,TRUE
+7950,Ss_30_14_05,30,14,05,,Asphalt road and paving systems,TRUE
+7960,Ss_30_14_05_05,30,14,05,05,Asphalt concrete light-duty paving systems,TRUE
+7970,Ss_30_14_05_06,30,14,05,06,Asphalt concrete paving systems,TRUE
+7980,Ss_30_14_05_07,30,14,05,07,Asphalt concrete runway paving systems,TRUE
+7990,Ss_30_14_05_08,30,14,05,08,Asphalt concrete surface overlay systems,TRUE
+8000,Ss_30_14_05_35,30,14,05,35,Hot rolled asphalt paving systems,TRUE
+8010,Ss_30_14_05_36,30,14,05,36,Hot rolled asphalt runway paving systems,TRUE
+8020,Ss_30_14_05_40,30,14,05,40,Hot rolled asphalt sports paving systems,TRUE
+8030,Ss_30_14_05_50,30,14,05,50,Mastic asphalt pedestrian paving systems,TRUE
+8040,Ss_30_14_05_65,30,14,05,65,Porous asphalt concrete paving systems,TRUE
+8050,Ss_30_14_05_70,30,14,05,70,Porous asphalt concrete sports paving systems,TRUE
+8060,Ss_30_14_05_73,30,14,05,73,Porous asphalt surfacing systems,TRUE
+8070,Ss_30_14_05_75,30,14,05,75,Stone mastic asphalt paving systems,TRUE
+8080,Ss_30_14_05_80,30,14,05,80,Slurry surfacing overlay systems,TRUE
+8090,Ss_30_14_05_85,30,14,05,85,Surface dressing overlay systems,TRUE
+8100,Ss_30_14_15,30,14,15,,Concrete road and paving systems,TRUE
+8110,Ss_30_14_15_14,30,14,15,14,Concrete grass-filled paving systems,TRUE
+8120,Ss_30_14_15_16,30,14,15,16,Concrete paving systems,TRUE
+8130,Ss_30_14_15_17,30,14,15,17,Concrete porous paving systems,TRUE
+8140,Ss_30_14_15_18,30,14,15,18,Concrete runway paving systems,TRUE
+8150,Ss_30_14_50,30,14,50,,Mat and sheet paving systems,TRUE
+8160,Ss_30_14_50_25,30,14,50,25,Dry ski slope synthetic matting systems,TRUE
+8170,Ss_30_14_50_65,30,14,50,65,Polymeric sports paving systems,TRUE
+8180,Ss_30_14_50_80,30,14,50,80,Synthetic grass surfacing systems,TRUE
+8190,Ss_30_14_65,30,14,65,,Paving structure systems,TRUE
+8200,Ss_30_14_65_06,30,14,65,06,Base layer systems,TRUE
+8210,Ss_30_14_65_08,30,14,65,08,Binder course systems,TRUE
+8220,Ss_30_14_65_25,30,14,65,25,Drainage layer systems,TRUE
+8230,Ss_30_14_65_40,30,14,65,40,Improvement layer systems,TRUE
+8240,Ss_30_14_65_41,30,14,65,41,Intermediate layer systems,TRUE
+8250,Ss_30_14_65_82,30,14,65,82,Sub-base layer systems,TRUE
+8260,Ss_30_14_65_83,30,14,65,83,Subgrade layer systems,TRUE
+8270,Ss_30_14_65_85,30,14,65,85,Surface layer systems,TRUE
+8280,Ss_30_14_80,30,14,80,,Unbound aggregate paving systems,TRUE
+8290,Ss_30_14_80_30,30,14,80,30,Fast dry clay sports paving systems,TRUE
+8300,Ss_30_14_80_37,30,14,80,37,Hoggin paving systems,TRUE
+8310,Ss_30_14_80_40,30,14,80,40,Hard binding gravel paving systems,TRUE
+8320,Ss_30_14_80_45,30,14,80,45,Loose laid aggregate paving systems,TRUE
+8330,Ss_30_14_80_47,30,14,80,47,Loose aggregate overlay systems,TRUE
+8340,Ss_30_14_80_48,30,14,80,48,Loose gravel paving systems,TRUE
+8350,Ss_30_14_80_75,30,14,80,75,Sand play surfacing systems,TRUE
+8360,Ss_30_14_80_90,30,14,80,90,Unbound aggregate cycle paving systems,TRUE
+8370,Ss_30_14_80_95,30,14,80,95,Woodchip and stone trim trail paving systems,TRUE
+8380,Ss_30_14_80_98,30,14,80,98,Woodchip and woodfibre surface paving systems,TRUE
+8390,Ss_30_14_90,30,14,90,,Unit paving systems,TRUE
+8400,Ss_30_14_90_11,30,14,90,11,Cellular plastics grass-filled paving systems,TRUE
+8410,Ss_30_14_90_12,30,14,90,12,Cellular plastics gravel-filled paving systems,TRUE
+8420,Ss_30_14_90_30,30,14,90,30,Flag and slab bound paving systems,TRUE
+8430,Ss_30_14_90_32,30,14,90,32,Flag and slab paving overlay systems,TRUE
+8440,Ss_30_14_90_34,30,14,90,34,Flag and slab pedestal-supported paving systems,TRUE
+8450,Ss_30_14_90_36,30,14,90,36,Flag and slab unbound paving systems,TRUE
+8460,Ss_30_14_90_50,30,14,90,50,Mosaic paving systems,TRUE
+8470,Ss_30_14_90_60,30,14,90,60,Permeable flag and slab paving systems,TRUE
+8480,Ss_30_14_90_62,30,14,90,62,Permeable small unit paving systems,TRUE
+8490,Ss_30_14_90_70,30,14,90,70,Rail track paving systems,TRUE
+8500,Ss_30_14_90_75,30,14,90,75,Small unit bound paving systems,TRUE
+8510,Ss_30_14_90_80,30,14,90,80,Small unit paving overlay systems,TRUE
+8520,Ss_30_14_90_85,30,14,90,85,Small unit unbound paving systems,TRUE
+8530,Ss_30_20,30,20,,,Flooring and decking systems,TRUE
+8540,Ss_30_20_10,30,20,10,,Board and rigid sheet floor systems,TRUE
+8550,Ss_30_20_10_10,30,20,10,10,Battened timber board floating floor systems,TRUE
+8560,Ss_30_20_10_15,30,20,10,15,Battened wood-based rigid sheet floating floor systems,TRUE
+8570,Ss_30_20_10_43,30,20,10,43,Joist-supported mineral-based sheet and board floor systems,TRUE
+8580,Ss_30_20_10_45,30,20,10,45,Joist-supported timber board floor systems,TRUE
+8590,Ss_30_20_10_50,30,20,10,50,Joist-supported wood-based rigid sheet floor systems,TRUE
+8600,Ss_30_20_10_95,30,20,10,95,Wood-based rigid sheet floating floor systems,TRUE
+8610,Ss_30_20_22,30,20,22,,Demountable athletics floor systems,TRUE
+8620,Ss_30_20_30,30,20,30,,External deck and boardwalk systems,TRUE
+8630,Ss_30_20_30_10,30,20,30,10,Boardwalk systems,TRUE
+8640,Ss_30_20_30_25,30,20,30,25,Decking systems,TRUE
+8650,Ss_30_20_70,30,20,70,,Raised flooring systems,TRUE
+8660,Ss_30_20_70_37,30,20,70,37,Hollow floor systems,TRUE
+8670,Ss_30_20_70_70,30,20,70,70,Raised access floor systems,TRUE
+8680,Ss_30_20_90,30,20,90,,Wood and composite unit flooring systems,TRUE
+8690,Ss_30_20_90_15,30,20,90,15,Composition block flooring systems,TRUE
+8700,Ss_30_20_90_50,30,20,90,50,Mosaic parquet panel flooring systems,TRUE
+8710,Ss_30_20_90_95,30,20,90,95,Wood block flooring systems,TRUE
+8720,Ss_30_20_95,30,20,95,,Wood strip and board fine flooring systems,TRUE
+8730,Ss_30_20_95_10,30,20,95,10,Battened wood floating floor systems,TRUE
+8740,Ss_30_20_95_15,30,20,95,15,Composite laminate floating floor systems,TRUE
+8750,Ss_30_20_95_20,30,20,95,20,Direct-fixed wood floor systems,TRUE
+8760,Ss_30_20_95_25,30,20,95,25,Direct-glued wood floor systems,TRUE
+8770,Ss_30_20_95_95,30,20,95,95,Wood floating floor systems,TRUE
+8780,Ss_30_25,30,25,,,Ceiling and soffit systems,TRUE
+8790,Ss_30_25_10,30,25,10,,Board and sheet ceiling systems,TRUE
+8800,Ss_30_25_10_10,30,25,10,10,Board suspended ceiling systems,TRUE
+8810,Ss_30_25_10_26,30,25,10,26,External ceiling systems,TRUE
+8820,Ss_30_25_10_28,30,25,10,28,External soffit systems,TRUE
+8830,Ss_30_25_10_35,30,25,10,35,Gypsum board suspended ceiling systems,TRUE
+8840,Ss_30_25_10_52,30,25,10,52,Monolithic suspended ceiling systems,TRUE
+8850,Ss_30_25_10_80,30,25,10,80,Soffit lining and beam casing systems,TRUE
+8860,Ss_30_25_22,30,25,22,,Demountable suspended ceiling systems,TRUE
+8870,Ss_30_25_22_01,30,25,22,01,Acoustic baffle suspended ceiling systems,TRUE
+8880,Ss_30_25_22_30,30,25,22,30,Fabric membrane ceiling systems,TRUE
+8890,Ss_30_25_22_47,30,25,22,47,Linear ceiling lining systems,TRUE
+8900,Ss_30_25_22_51,30,25,22,51,Modular suspended ceiling systems,TRUE
+8910,Ss_30_25_22_70,30,25,22,70,Raft or island suspended ceiling systems,TRUE
+8920,Ss_30_30,30,30,,,Roof and floor opening systems,TRUE
+8930,Ss_30_30_15,30,30,15,,Concrete roof and floor glazing systems,TRUE
+8940,Ss_30_30_15_42,30,30,15,42,In situ concrete roof and floor glazing systems,TRUE
+8950,Ss_30_30_15_64,30,30,15,64,Precast concrete lift-out access roof and floor glazing systems,TRUE
+8960,Ss_30_30_15_65,30,30,15,65,Precast concrete roof and floor glazing systems,TRUE
+8970,Ss_30_30_30,30,30,30,,Floor hatch systems,TRUE
+8980,Ss_30_30_34,30,30,34,,Glass unit masonry roof light systems,TRUE
+8990,Ss_30_30_71,30,30,71,,Roof hatch systems,TRUE
+9000,Ss_30_30_72,30,30,72,,Rooflight and roof window systems,TRUE
+9010,Ss_30_30_72_21,30,30,72,21,Daylight pipe systems,TRUE
+9020,Ss_30_30_72_72,30,30,72,72,Rooflight systems,TRUE
+9030,Ss_30_30_72_73,30,30,72,73,Roof window systems,TRUE
+9040,Ss_30_30_73,30,30,73,,Roof ventilator systems,TRUE
+9050,Ss_30_30_73_60,30,30,73,60,Passive roof natural ventilator systems,TRUE
+9060,Ss_30_30_73_72,30,30,73,72,Roof smoke ventilator systems,TRUE
+9070,Ss_30_34,30,34,,,Pavement opening systems,TRUE
+9080,Ss_30_34_03,30,34,03,,Animal grid systems,TRUE
+9090,Ss_30_34_03_11,30,34,03,11,Cattle grid systems,TRUE
+9100,Ss_30_34_15,30,34,15,,Pavement glazing systems,TRUE
+9110,Ss_30_34_15_15,30,34,15,15,Concrete pavement glazing systems,TRUE
+9120,Ss_30_34_15_64,30,34,15,64,Precast concrete lift-out access pavement glazing systems,TRUE
+9130,Ss_30_34_15_65,30,34,15,65,Precast concrete pavement glazing systems,TRUE
+9140,Ss_30_34_16,30,34,16,,Pavement smoke venting systems,TRUE
+9150,Ss_30_34_16_15,30,34,16,15,Concrete pavement glazing smoke venting systems,TRUE
+9160,Ss_30_34_16_16,30,34,16,16,Concrete pavement non-glazed smoke venting systems,TRUE
+9170,Ss_30_34_16_64,30,34,16,64,Precast concrete pavement glazing smoke venting systems,TRUE
+9180,Ss_30_34_16_65,30,34,16,65,Precast concrete pavement non-glazed smoke venting systems,TRUE
+9190,Ss_30_36,30,36,,,Ceiling and soffit opening systems,TRUE
+9200,Ss_30_36_10,30,36,10,,Ceiling hatch systems,TRUE
+9210,Ss_30_36_75,30,36,75,,Soffit vent systems,TRUE
+9220,Ss_30_40,30,40,,,Roof and balcony covering and finish systems,TRUE
+9230,Ss_30_40_10,30,40,10,,Board roof covering systems,TRUE
+9240,Ss_30_40_10_30,30,40,10,30,Flat board roof deck systems,TRUE
+9250,Ss_30_40_10_60,30,40,10,60,Pitched board roof sarking systems,TRUE
+9260,Ss_30_40_30,30,40,30,,Flat roof covering systems,TRUE
+9270,Ss_30_40_30_07,30,40,30,07,Blue roof systems,TRUE
+9280,Ss_30_40_30_40,30,40,30,40,Liquid-applied cold roof covering systems,TRUE
+9290,Ss_30_40_30_42,30,40,30,42,Liquid-applied inverted roof covering systems,TRUE
+9300,Ss_30_40_30_43,30,40,30,43,Liquid-applied warm roof covering systems,TRUE
+9310,Ss_30_40_30_50,30,40,30,50,Mastic asphalt cold roof covering systems,TRUE
+9320,Ss_30_40_30_52,30,40,30,52,Mastic asphalt inverted roof covering systems,TRUE
+9330,Ss_30_40_30_55,30,40,30,55,Mastic asphalt warm roof covering systems,TRUE
+9340,Ss_30_40_30_70,30,40,30,70,Reinforced bitumen membrane cold roof covering systems,TRUE
+9350,Ss_30_40_30_71,30,40,30,71,Reinforced bitumen membrane inverted roof covering systems,TRUE
+9360,Ss_30_40_30_72,30,40,30,72,Reinforced bitumen membrane warm roof covering systems,TRUE
+9370,Ss_30_40_30_78,30,40,30,78,Single-layer sheet cold roof covering systems,TRUE
+9380,Ss_30_40_30_79,30,40,30,79,Single-layer sheet inverted roof covering systems,TRUE
+9390,Ss_30_40_30_80,30,40,30,80,Single-layer sheet warm roof covering systems,TRUE
+9400,Ss_30_40_32,30,40,32,,Framed glazed roof systems,TRUE
+9410,Ss_30_40_32_75,30,40,32,75,Sloping patent glazing systems,TRUE
+9420,Ss_30_40_34,30,40,34,,Glass roofing systems,TRUE
+9430,Ss_30_40_34_15,30,40,34,15,Cantilevered structural glass beam canopy systems,TRUE
+9440,Ss_30_40_34_60,30,40,34,60,Point-fixed structural glass canopy systems,TRUE
+9450,Ss_30_40_34_65,30,40,34,65,Point-fixed structural glass roof systems,TRUE
+9460,Ss_30_40_34_70,30,40,34,70,Point-fixed structural glass soffit systems,TRUE
+9470,Ss_30_40_50,30,40,50,,Metal sheet fully supported roof and dormer covering systems,TRUE
+9480,Ss_30_40_50_05,30,40,50,05,Aluminium sheet dormer covering systems,TRUE
+9490,Ss_30_40_50_10,30,40,50,10,Aluminium sheet fully supported roof covering systems,TRUE
+9500,Ss_30_40_50_12,30,40,50,12,Carbon steel sheet dormer covering systems,TRUE
+9510,Ss_30_40_50_13,30,40,50,13,Carbon steel sheet fully supported roof covering systems,TRUE
+9520,Ss_30_40_50_15,30,40,50,15,Copper sheet dormer covering systems,TRUE
+9530,Ss_30_40_50_20,30,40,50,20,Copper sheet fully supported roof covering systems,TRUE
+9540,Ss_30_40_50_40,30,40,50,40,Lead sheet dormer covering systems,TRUE
+9550,Ss_30_40_50_45,30,40,50,45,Lead sheet fully supported roof covering systems,TRUE
+9560,Ss_30_40_50_50,30,40,50,50,Lead-wrapped panel roofing systems,TRUE
+9570,Ss_30_40_50_75,30,40,50,75,Stainless steel sheet dormer covering systems,TRUE
+9580,Ss_30_40_50_80,30,40,50,80,Stainless steel sheet fully supported roof covering systems,TRUE
+9590,Ss_30_40_50_90,30,40,50,90,Zinc sheet dormer covering systems,TRUE
+9600,Ss_30_40_50_95,30,40,50,95,Zinc sheet fully supported roof covering systems,TRUE
+9610,Ss_30_40_55,30,40,55,,Metal composite panel roof covering systems,TRUE
+9620,Ss_30_40_55_10,30,40,55,10,Built up metal insulating sandwich panel roof systems,TRUE
+9630,Ss_30_40_55_50,30,40,55,50,Metal composite panel roofing systems,TRUE
+9640,Ss_30_40_55_54,30,40,55,54,Metal insulating sandwich panel roof systems,TRUE
+9650,Ss_30_40_55_55,30,40,55,55,Metal semi-composite panel roofing systems,TRUE
+9660,Ss_30_40_65,30,40,65,,Profiled sheet self-supporting roof covering systems,TRUE
+9670,Ss_30_40_65_30,30,40,65,30,Fibre cement profiled self-supporting sheet roof covering systems,TRUE
+9680,Ss_30_40_65_50,30,40,65,50,Metal profiled sheet self-supporting roof covering systems,TRUE
+9690,Ss_30_40_65_60,30,40,65,60,Plastics profiled sheet self-supporting roof covering systems,TRUE
+9700,Ss_30_40_90,30,40,90,,Tensile fabric roofing systems,TRUE
+9710,Ss_30_40_90_40,30,40,90,40,Internal single-layer tensile fabric roofing systems,TRUE
+9720,Ss_30_40_90_50,30,40,90,50,Multilayer tensile fabric roofing systems,TRUE
+9730,Ss_30_40_90_75,30,40,90,75,Single-layer tensile fabric roofing systems,TRUE
+9740,Ss_30_40_92,30,40,92,,Thatch roof covering systems,TRUE
+9750,Ss_30_40_92_85,30,40,92,85,Thatch roofing systems,TRUE
+9760,Ss_30_40_95,30,40,95,,Unit roofing systems,TRUE
+9770,Ss_30_40_95_10,30,40,95,10,Bitumen membrane shingle roofing systems,TRUE
+9780,Ss_30_40_95_15,30,40,95,15,Ceramic slate roofing systems,TRUE
+9790,Ss_30_40_95_30,30,40,95,30,Fibre cement slate roofing systems,TRUE
+9800,Ss_30_40_95_40,30,40,95,40,Interlocking tile roofing systems,TRUE
+9810,Ss_30_40_95_50,30,40,95,50,Metal tile roofing systems,TRUE
+9820,Ss_30_40_95_55,30,40,95,55,Natural slate roofing systems,TRUE
+9830,Ss_30_40_95_60,30,40,95,60,Natural stone slate roofing systems,TRUE
+9840,Ss_30_40_95_65,30,40,95,65,Plain tile roofing systems,TRUE
+9850,Ss_30_40_95_70,30,40,95,70,Reconstituted slate roofing systems,TRUE
+9860,Ss_30_40_95_74,30,40,95,74,Roofing edges and junction systems,TRUE
+9870,Ss_30_40_95_95,30,40,95,95,Wood shake or shingle roofing systems,TRUE
+9880,Ss_30_42,30,42,,,Floor covering and finishing systems,TRUE
+9890,Ss_30_42_10,30,42,10,,Calcium sulfate-based screed systems,TRUE
+9900,Ss_30_42_10_10,30,42,10,10,Bonded calcium sulfate-based screed systems,TRUE
+9910,Ss_30_42_10_30,30,42,10,30,Floating calcium sulfate-based screed systems,TRUE
+9920,Ss_30_42_10_90,30,42,10,90,Unbonded calcium sulfate-based screed systems,TRUE
+9930,Ss_30_42_15,30,42,15,,Cementitious screed systems,TRUE
+9940,Ss_30_42_15_10,30,42,15,10,Bonded or partially bonded cementitious levelling screed systems,TRUE
+9950,Ss_30_42_15_15,30,42,15,15,Cementitious wearing screed systems,TRUE
+9960,Ss_30_42_15_30,30,42,15,30,Floating cementitious levelling screed systems,TRUE
+9970,Ss_30_42_15_90,30,42,15,90,Unbonded cementitious levelling screed systems,TRUE
+9980,Ss_30_42_20,30,42,20,,Deck covering systems,TRUE
+9990,Ss_30_42_30,30,42,30,,Floor coating and paint systems,TRUE
+10000,Ss_30_42_30_30,30,42,30,30,Floor coating systems,TRUE
+10010,Ss_30_42_32,30,42,32,,Floor tiling systems,TRUE
+10020,Ss_30_42_32_30,30,42,32,30,External floor tiling systems,TRUE
+10030,Ss_30_42_32_40,30,42,32,40,Internal floor tiling systems,TRUE
+10040,Ss_30_42_40,30,42,40,,Ice rink floor systems,TRUE
+10050,Ss_30_42_52,30,42,52,,Mastic asphalt flooring and floor underlay systems,TRUE
+10060,Ss_30_42_52_50,30,42,52,50,Mastic asphalt flooring systems,TRUE
+10070,Ss_30_42_52_52,30,42,52,52,Mastic asphalt floor underlay systems,TRUE
+10080,Ss_30_42_54,30,42,54,,Monolithic flooring systems,TRUE
+10090,Ss_30_42_54_75,30,42,54,75,Resin flooring systems,TRUE
+10100,Ss_30_42_56,30,42,56,,Natural stone flooring systems,TRUE
+10110,Ss_30_42_56_56,30,42,56,56,Natural stone slab flooring systems,TRUE
+10120,Ss_30_42_56_57,30,42,56,57,Natural stone tile flooring systems,TRUE
+10130,Ss_30_42_72,30,42,72,,Resilient and textile floor covering systems,TRUE
+10140,Ss_30_42_72_05,30,42,72,05,Adhesive-fixed rolled carpet systems,TRUE
+10150,Ss_30_42_72_10,30,42,72,10,Carpet tile systems,TRUE
+10160,Ss_30_42_72_25,30,42,72,25,Edge-fixed carpet systems,TRUE
+10170,Ss_30_42_72_72,30,42,72,72,Resilient sheet floor covering systems,TRUE
+10180,Ss_30_42_72_75,30,42,72,75,Resilient tile floor covering systems,TRUE
+10190,Ss_30_42_90,30,42,90,,Terrazzo floor tiling and screed systems,TRUE
+10200,Ss_30_42_90_90,30,42,90,90,Terrazzo floor covering systems,TRUE
+10210,Ss_30_45,30,45,,,Pavement covering and finishing systems,TRUE
+10220,Ss_30_47,30,47,,,Ceiling and soffit covering and finishing systems,TRUE
+10230,Ss_30_60,30,60,,,"Roof, floor and paving accessory systems",TRUE
+10240,Ss_30_60_30,30,60,30,,Floor feature systems,TRUE
+10250,Ss_30_60_30_26,30,60,30,26,Entrance matting systems,TRUE
+10260,Ss_30_60_45,30,60,45,,Kerb and traffic separation systems,TRUE
+10270,Ss_30_60_45_03,30,60,45,03,Asphalt kerb systems,TRUE
+10280,Ss_30_60_45_15,30,60,45,15,Concrete kerb systems,TRUE
+10290,Ss_30_60_45_20,30,60,45,20,Demarcation paving systems,TRUE
+10300,Ss_30_60_45_45,30,60,45,45,Light-duty kerb systems,TRUE
+10310,Ss_30_60_45_55,30,60,45,55,Multi-unit traffic-calming systems,TRUE
+10320,Ss_30_60_45_65,30,60,45,65,Precast kerb systems,TRUE
+10330,Ss_30_60_45_80,30,60,45,80,Single-unit traffic-calming systems,TRUE
+10340,Ss_30_60_45_85,30,60,45,85,Traffic kerb systems,TRUE
+10350,Ss_30_60_45_86,30,60,45,86,Traffic separation systems,TRUE
+10360,Ss_30_60_70,30,60,70,,Roof feature systems,TRUE
+10370,Ss_30_75,30,75,,,"Roof, floor and paving drainage systems",TRUE
+10380,Ss_30_75_40,30,75,40,,Surface drainage channel systems,TRUE
+10390,Ss_30_75_40_30,30,75,40,30,Footway grating systems,TRUE
+10400,Ss_30_75_40_50,30,75,40,50,Multi unit surface drainage channel systems,TRUE
+10410,Ss_30_75_40_75,30,75,40,75,Single unit surface drainage channel systems,TRUE
+10420,Ss_30_75_50,30,75,50,,Metal sheet gutter lining systems,TRUE
+10430,Ss_30_75_50_05,30,75,50,05,Aluminium sheet gutter lining systems,TRUE
+10440,Ss_30_75_50_11,30,75,50,11,Carbon steel sheet gutter lining systems,TRUE
+10450,Ss_30_75_50_15,30,75,50,15,Copper sheet gutter lining systems,TRUE
+10460,Ss_30_75_50_45,30,75,50,45,Lead sheet gutter lining systems,TRUE
+10470,Ss_30_75_50_75,30,75,50,75,Stainless steel sheet gutter lining systems,TRUE
+10480,Ss_30_75_50_95,30,75,50,95,Zinc sheet gutter lining systems,TRUE
+10490,Ss_32,32,,,,"Damp-proofing, waterproofing, insulating and plaster-finishing systems",TRUE
+10500,Ss_32_10,32,10,,,Insulating treatment systems,TRUE
+10510,Ss_32_10_10,32,10,10,,Cavity and void insulation systems,TRUE
+10520,Ss_32_10_10_40,32,10,10,40,Injected and blown insulation systems,TRUE
+10530,Ss_32_20,32,20,,,Damp-proofing systems,TRUE
+10540,Ss_32_20_20,32,20,20,,Damp-proof course renewal and insertion systems,TRUE
+10550,Ss_32_20_20_15,32,20,20,15,Chemical injection damp-proof course systems,TRUE
+10560,Ss_32_20_20_47,32,20,20,47,Lead damp-proof course systems,TRUE
+10570,Ss_32_20_20_62,32,20,20,62,Physical insertion horizontal damp-proof course systems,TRUE
+10580,Ss_32_20_20_63,32,20,20,63,Physical insertion horizontal or stepped cavity tray systems,TRUE
+10590,Ss_32_20_20_64,32,20,20,64,Physical insertion proprietary rising damp remedial systems,TRUE
+10600,Ss_32_20_20_65,32,20,20,65,Physical insertion vertical damp-proof course systems,TRUE
+10610,Ss_32_20_30,32,20,30,,Floor damp-proofing systems,TRUE
+10620,Ss_32_20_30_10,32,20,30,10,Cementitious mortar slurry floor damp-proofing systems,TRUE
+10630,Ss_32_20_30_15,32,20,30,15,Cold-applied liquid floor damp-proofing systems,TRUE
+10640,Ss_32_20_30_30,32,20,30,30,Fully bonded bitumen membrane overslab damp-proofing systems,TRUE
+10650,Ss_32_20_30_35,32,20,30,35,Fully bonded bitumen membrane underslab damp-proofing systems,TRUE
+10660,Ss_32_20_30_40,32,20,30,40,Hot-applied liquid floor damp-proofing systems,TRUE
+10670,Ss_32_20_30_45,32,20,30,45,Loose-laid bitumen membrane overslab damp-proofing systems,TRUE
+10680,Ss_32_20_30_46,32,20,30,46,Loose-laid bitumen membrane underslab damp-proofing systems,TRUE
+10690,Ss_32_20_30_48,32,20,30,48,Loose-laid polyethylene membrane oversite damp-proofing systems,TRUE
+10700,Ss_32_20_30_50,32,20,30,50,Loose-laid polyethylene membrane overslab damp-proofing systems,TRUE
+10710,Ss_32_20_30_51,32,20,30,51,Loose-laid polyethylene membrane underslab damp-proofing systems,TRUE
+10720,Ss_32_20_30_55,32,20,30,55,Mastic asphalt floor damp-proofing systems,TRUE
+10730,Ss_32_20_30_60,32,20,30,60,Plastics studded membrane floor damp-proofing systems,TRUE
+10740,Ss_32_20_30_65,32,20,30,65,Pre-applied anchored membrane underslab damp-proofing systems,TRUE
+10750,Ss_32_20_30_75,32,20,30,75,Self-adhesive bitumen membrane floor damp-proofing systems,TRUE
+10760,Ss_32_20_95,32,20,95,,Wall damp-proofing systems,TRUE
+10770,Ss_32_20_95_10,32,20,95,10,Cementitious mortar slurry internal wall damp-proofing systems,TRUE
+10780,Ss_32_20_95_15,32,20,95,15,Cold-applied liquid internal wall damp-proofing systems,TRUE
+10790,Ss_32_20_95_65,32,20,95,65,Plastics studded membrane internal wall damp-proofing systems,TRUE
+10800,Ss_32_30,32,30,,,Flashing and weathering systems,TRUE
+10810,Ss_32_30_30,32,30,30,,Flashing systems,TRUE
+10820,Ss_32_30_30_03,32,30,30,03,Aluminium flashing systems,TRUE
+10830,Ss_32_30_30_11,32,30,30,11,Carbon steel flashing systems,TRUE
+10840,Ss_32_30_30_14,32,30,30,14,Copper flashing systems,TRUE
+10850,Ss_32_30_30_47,32,30,30,47,Lead flashing systems,TRUE
+10860,Ss_32_30_30_84,32,30,30,84,Stainless steel flashing systems,TRUE
+10870,Ss_32_30_30_98,32,30,30,98,Zinc flashing systems,TRUE
+10880,Ss_32_30_90,32,30,90,,Weathering systems,TRUE
+10890,Ss_32_30_90_04,32,30,90,04,Aluminium weathering systems,TRUE
+10900,Ss_32_30_90_12,32,30,90,12,Carbon steel weathering systems,TRUE
+10910,Ss_32_30_90_15,32,30,90,15,Copper weathering systems,TRUE
+10920,Ss_32_30_90_48,32,30,90,48,Lead weathering systems,TRUE
+10930,Ss_32_30_90_85,32,30,90,85,Stainless steel weathering systems,TRUE
+10940,Ss_32_30_90_99,32,30,90,99,Zinc weathering systems,TRUE
+10950,Ss_32_46,32,46,,,Lath and plaster systems,TRUE
+10960,Ss_32_46_50,32,46,50,,Metal lathing and anchored mesh reinforcement systems,TRUE
+10970,Ss_32_46_50_05,32,46,50,05,Anchored mesh reinforcement systems,TRUE
+10980,Ss_32_46_50_50,32,46,50,50,Metal lathing casing systems,TRUE
+10990,Ss_32_46_50_51,32,46,50,51,Metal lathing on framing systems,TRUE
+11000,Ss_32_46_50_52,32,46,50,52,"Metal lathing on hangers, bearers and runners systems",TRUE
+11010,Ss_32_46_50_53,32,46,50,53,Metal lathing on solid substrate systems,TRUE
+11020,Ss_32_46_65,32,46,65,,Plaster-coating systems,TRUE
+11030,Ss_32_46_65_15,32,46,65,15,Clay plaster systems,TRUE
+11040,Ss_32_46_65_55,32,46,65,55,Multicoat plaster systems,TRUE
+11050,Ss_32_46_65_58,32,46,65,58,One-coat plaster systems,TRUE
+11060,Ss_32_46_65_90,32,46,65,90,Tiling and mosaic plaster substrate systems,TRUE
+11070,Ss_32_80,32,80,,,Waterproofing and tanking systems,TRUE
+11080,Ss_32_80_03,32,80,03,,Applied waterproofing and tanking systems,TRUE
+11090,Ss_32_80_03_10,32,80,03,10,Cementitious proprietary mortar slurry tanking systems,TRUE
+11100,Ss_32_80_03_12,32,80,03,12,Cementitious site-batched-and-mixed mortar tanking systems,TRUE
+11110,Ss_32_80_03_14,32,80,03,14,Cold-applied liquid waterproofing systems,TRUE
+11120,Ss_32_80_03_16,32,80,03,16,Cold-applied liquid sandwiched tanking systems,TRUE
+11130,Ss_32_80_03_18,32,80,03,18,Crystallization-active cementitious mortar dry shake tanking systems,TRUE
+11140,Ss_32_80_03_20,32,80,03,20,Crystallization-active cementitious mortar slurry tanking systems,TRUE
+11150,Ss_32_80_03_50,32,80,03,50,Mastic asphalt external tanking systems,TRUE
+11160,Ss_32_80_03_52,32,80,03,52,Mastic asphalt sandwiched tanking systems,TRUE
+11170,Ss_32_80_03_54,32,80,03,54,Mastic asphalt tank lining systems,TRUE
+11180,Ss_32_80_03_90,32,80,03,90,Tunnel spray-applied membrane systems,TRUE
+11190,Ss_32_80_79,32,80,79,,Sheeted waterproofing and tanking systems,TRUE
+11200,Ss_32_80_79_30,32,80,79,30,Fully bonded bitumen membrane external tanking systems,TRUE
+11210,Ss_32_80_79_32,32,80,79,32,Fully bonded bitumen membrane sandwiched tanking systems,TRUE
+11220,Ss_32_80_79_33,32,80,79,33,Fully bonded flexible sheet membrane waterproofing systems,TRUE
+11230,Ss_32_80_79_36,32,80,79,36,Hard rigid plastics sheet membrane waterproofing systems,TRUE
+11240,Ss_32_80_79_40,32,80,79,40,High-density plastics studded membrane cavity drain waterproofing systems,TRUE
+11250,Ss_32_80_79_45,32,80,79,45,Loose-laid bentonite membrane external or sandwiched tanking systems,TRUE
+11260,Ss_32_80_79_75,32,80,79,75,Self-adhesive bitumen membrane external tanking systems,TRUE
+11270,Ss_32_80_79_77,32,80,79,77,Self-adhesive bitumen membrane sandwiched tanking systems,TRUE
+11280,Ss_32_80_79_84,32,80,79,84,Steel membrane waterproofing systems,TRUE
+11290,Ss_32_80_79_86,32,80,79,86,Structure-supported sheet membrane waterproofing systems,TRUE
+11300,Ss_32_80_79_90,32,80,79,90,Tunnel sheet membrane systems,TRUE
+11310,Ss_32_80_79_92,32,80,79,92,Unbonded flexible sheet membrane waterproofing systems,TRUE
+11320,Ss_32_80_90,32,80,90,,Water feature and pond sheet lining systems,TRUE
+11330,Ss_32_80_90_35,32,80,90,35,Ground-supported water retention sheet lining systems,TRUE
+11340,Ss_32_80_90_85,32,80,90,85,Structure-supported water retention sheet lining systems,TRUE
+11350,Ss_35,35,,,,Stair and ramp systems,TRUE
+11360,Ss_35_10,35,10,,,Stair and ramp structure systems,TRUE
+11370,Ss_35_10_25,35,10,25,,External stair and ramp systems,TRUE
+11380,Ss_35_10_25_34,35,10,25,34,Ground bearing external ramp systems,TRUE
+11390,Ss_35_10_25_35,35,10,25,35,Ground bearing external stair systems,TRUE
+11400,Ss_35_10_25_83,35,10,25,83,Suspended external ramp systems,TRUE
+11410,Ss_35_10_25_85,35,10,25,85,Suspended external stair systems,TRUE
+11420,Ss_35_10_30,35,10,30,,Fixed utilitarian access systems,TRUE
+11430,Ss_35_10_30_15,35,10,30,15,Companionway ladder systems,TRUE
+11440,Ss_35_10_30_40,35,10,30,40,Industrial stair systems,TRUE
+11450,Ss_35_10_30_60,35,10,30,60,Permanently-fixed roof ladder systems,TRUE
+11460,Ss_35_10_30_62,35,10,30,62,Permanently-fixed vertical ladder systems,TRUE
+11470,Ss_35_10_30_95,35,10,30,95,Working platform and walkway systems,TRUE
+11480,Ss_35_10_40,35,10,40,,Internal stair and ramp systems,TRUE
+11490,Ss_35_10_40_20,35,10,40,20,Curved internal stair systems,TRUE
+11500,Ss_35_10_40_40,35,10,40,40,Internal ramp systems,TRUE
+11510,Ss_35_10_40_42,35,10,40,42,Internal composite material stair systems,TRUE
+11520,Ss_35_10_40_84,35,10,40,84,Straight internal loft ladder systems,TRUE
+11530,Ss_35_10_50,35,10,50,,Marine and waterside ramp systems,TRUE
+11540,Ss_35_10_50_29,35,10,50,29,Fixed ramp systems,TRUE
+11550,Ss_35_10_50_31,35,10,50,31,Floating pontoon ramp systems,TRUE
+11560,Ss_35_10_50_42,35,10,50,42,Integral pontoon ramp systems,TRUE
+11570,Ss_35_10_85,35,10,85,,Structural stair and ramp systems,TRUE
+11580,Ss_35_10_85_13,35,10,85,13,Concrete ramp systems,TRUE
+11590,Ss_35_10_85_15,35,10,85,15,Concrete stair systems,TRUE
+11600,Ss_35_10_85_33,35,10,85,33,Heavy steel ramp systems,TRUE
+11610,Ss_35_10_85_35,35,10,85,35,Heavy steel stair systems,TRUE
+11620,Ss_35_10_85_63,35,10,85,63,Precast concrete ramp systems,TRUE
+11630,Ss_35_10_85_65,35,10,85,65,Precast concrete stair systems,TRUE
+11640,Ss_35_10_85_88,35,10,85,88,Timber ramp systems,TRUE
+11650,Ss_35_10_85_90,35,10,85,90,Timber stair systems,TRUE
+11660,Ss_35_30,35,30,,,Stair and ramp opening systems,TRUE
+11670,Ss_35_30_15,35,30,15,,Concrete stair and ramp glazing systems,TRUE
+11680,Ss_35_30_15_15,35,30,15,15,Concrete stair tread glazing systems,TRUE
+11690,Ss_35_40,35,40,,,Stair and ramp covering and finishing systems,TRUE
+11700,Ss_35_40_82,35,40,82,,Stair carpeting systems,TRUE
+11710,Ss_35_40_82_05,35,40,82,05,Adhesive-fixed stair carpeting systems,TRUE
+11720,Ss_37,37,,,,"Tunnel, shaft, vessel and tower systems",TRUE
+11730,Ss_37_14,37,14,,,Chute systems,TRUE
+11740,Ss_37_14_10,37,14,10,,Bulk material chute systems,TRUE
+11750,Ss_37_14_25,37,14,25,,Escape chute systems,TRUE
+11760,Ss_37_14_70,37,14,70,,Refuse and linen chute systems,TRUE
+11770,Ss_37_14_70_08,37,14,70,08,Built-in linen chute systems,TRUE
+11780,Ss_37_14_70_10,37,14,70,10,Built-in refuse chute systems,TRUE
+11790,Ss_37_14_70_63,37,14,70,63,Post-fixed linen chute systems,TRUE
+11800,Ss_37_14_70_65,37,14,70,65,Post-fixed refuse chute systems,TRUE
+11810,Ss_37_16,37,16,,,Vessel and trench systems,TRUE
+11820,Ss_37_16_02,37,16,02,,Above-ground pool systems,TRUE
+11830,Ss_37_16_05,37,16,05,,Basement water-retaining systems,TRUE
+11840,Ss_37_16_10,37,16,10,,Bund and sump systems,TRUE
+11850,Ss_37_16_10_32,37,16,10,32,Fuel tank bund systems,TRUE
+11860,Ss_37_16_10_42,37,16,10,42,Impounding sump systems,TRUE
+11870,Ss_37_16_10_90,37,16,10,90,Transformer bund systems,TRUE
+11880,Ss_37_16_10_92,37,16,10,92,Tunnel drainage sump systems,TRUE
+11890,Ss_37_16_50,37,16,50,,Metal and plastics water-retaining systems,TRUE
+11900,Ss_37_16_65,37,16,65,,Pond and wetland systems,TRUE
+11910,Ss_37_16_65_40,37,16,65,40,Informal pond systems,TRUE
+11920,Ss_37_16_65_70,37,16,65,70,Raised formal pond systems,TRUE
+11930,Ss_37_16_65_85,37,16,65,85,Submerged formal pond systems,TRUE
+11940,Ss_37_16_65_95,37,16,65,95,Amenity wetland systems,TRUE
+11950,Ss_37_16_75,37,16,75,,Silo systems,TRUE
+11960,Ss_37_16_90,37,16,90,,"Trench, pipeway and pit systems",TRUE
+11970,Ss_37_16_90_11,37,16,90,11,Cable protection systems,TRUE
+11980,Ss_37_16_90_28,37,16,90,28,External underground service duct systems,TRUE
+11990,Ss_37_16_90_63,37,16,90,63,Pit systems,TRUE
+12000,Ss_37_16_95,37,16,95,,Watertight structural systems,TRUE
+12010,Ss_37_16_95_78,37,16,95,78,Sewage treatment vessel systems,TRUE
+12020,Ss_37_17,37,17,,,"Tower, chimney and mast systems",TRUE
+12030,Ss_37_17_13,37,17,13,,Chimney systems,TRUE
+12040,Ss_37_17_13_50,37,17,13,50,Masonry chimney stack systems,TRUE
+12050,Ss_37_17_13_65,37,17,13,65,Pollution control systems,TRUE
+12060,Ss_37_17_35,37,17,35,,Gantry systems,TRUE
+12070,Ss_37_17_35_11,37,17,35,11,Cantilever gantry systems,TRUE
+12080,Ss_37_17_35_32,37,17,35,32,Full span gantry systems,TRUE
+12090,Ss_37_17_35_50,37,17,35,50,Mast arm sign gantry systems,TRUE
+12100,Ss_37_17_35_60,37,17,35,60,Portal sign gantry systems,TRUE
+12110,Ss_37_17_35_70,37,17,35,70,Reefer gantry systems,TRUE
+12120,Ss_37_17_45,37,17,45,,Lattice tower and pylon systems,TRUE
+12130,Ss_37_17_50,37,17,50,,Mast and pole systems,TRUE
+12140,Ss_37_17_50_54,37,17,50,54,Multi-function pole systems,TRUE
+12150,Ss_37_17_50_72,37,17,50,72,Road mast systems,TRUE
+12160,Ss_37_17_90,37,17,90,,Tower systems,TRUE
+12170,Ss_37_40,37,40,,,"Tunnel, shaft, vessel and tower covering and finishing systems",TRUE
+12180,Ss_37_40_85,37,40,85,,Swimming pool tiling systems,TRUE
+12190,Ss_37_40_85_83,37,40,85,83,Swimming pool floor tiling systems,TRUE
+12200,Ss_37_40_85_85,37,40,85,85,Swimming pool wall tiling systems,TRUE
+12210,Ss_37_50,37,50,,,Shaft and tunnel structural systems,TRUE
+12220,Ss_37_50_80,37,50,80,,Shaft structure systems,TRUE
+12230,Ss_37_50_80_50,37,50,80,50,Masonry lined shaft systems,TRUE
+12240,Ss_37_50_80_71,37,50,80,71,Reinforced concrete shaft structure systems,TRUE
+12250,Ss_37_50_80_77,37,50,80,77,Segmental shaft structure systems,TRUE
+12260,Ss_37_50_80_83,37,50,80,83,Sprayed concrete shaft lining systems,TRUE
+12270,Ss_37_50_80_90,37,50,80,90,Unit lined shaft systems,TRUE
+12280,Ss_37_50_92,37,50,92,,Tunnel structure systems,TRUE
+12290,Ss_37_50_92_11,37,50,92,11,Cast concrete tunnel invert systems,TRUE
+12300,Ss_37_50_92_15,37,50,92,15,Colliery arch tunnel or adit systems,TRUE
+12310,Ss_37_50_92_50,37,50,92,50,Masonry tunnel structure systems,TRUE
+12320,Ss_37_50_92_64,37,50,92,64,Primary regulating layer sprayed concrete lining systems,TRUE
+12330,Ss_37_50_92_66,37,50,92,66,Primary sprayed concrete lining systems,TRUE
+12340,Ss_37_50_92_71,37,50,92,71,Reinforced concrete tunnel structure systems,TRUE
+12350,Ss_37_50_92_75,37,50,92,75,Secondary cast concrete lining systems,TRUE
+12360,Ss_37_50_92_76,37,50,92,76,Secondary regulating layer sprayed concrete lining systems,TRUE
+12370,Ss_37_50_92_77,37,50,92,77,Secondary sprayed concrete lining systems,TRUE
+12380,Ss_37_50_92_79,37,50,92,79,Sectional tunnel structure systems,TRUE
+12390,Ss_37_50_92_83,37,50,92,83,Sprayed concrete tunnel lining systems,TRUE
+12400,Ss_37_50_92_86,37,50,92,86,Tunnel support systems,TRUE
+12410,Ss_37_50_92_90,37,50,92,90,Unit lined tunnel systems,TRUE
+12420,Ss_37_55,37,55,,,Tunnel and shaft opening systems,TRUE
+12430,Ss_37_55_60,37,55,60,,Opening frame systems,TRUE
+12440,Ss_37_55_60_90,37,55,60,90,Tunnel opening frame systems,TRUE
+12450,Ss_37_60,37,60,,,"Tunnel, shaft, vessel and tower accessory systems",TRUE
+12460,Ss_37_60_30,37,60,30,,Tunnel and shaft expansion joint systems,TRUE
+12470,Ss_37_60_30_30,37,60,30,30,Fire-rated tunnel expansion joint systems,TRUE
+12480,Ss_37_60_90,37,60,90,,Tunnel and shaft waterproofing systems,TRUE
+12490,Ss_37_60_90_70,37,60,90,70,Tunnel regrouting systems,TRUE
+12500,Ss_40,40,,,,"Signage, fittings, furnishings and equipment (FF&E) and general finishing systems",TRUE
+12510,Ss_40_05,40,05,,,Modular systems,TRUE
+12520,Ss_40_05_80,40,05,80,,Sanitary modular systems,TRUE
+12530,Ss_40_05_80_10,40,05,80,10,Bathroom pod systems,TRUE
+12540,Ss_40_10,40,10,,,Signage systems,TRUE
+12550,Ss_40_10_20,40,10,20,,Direction signage systems,TRUE
+12560,Ss_40_10_20_70,40,10,20,70,Route marker signage systems,TRUE
+12570,Ss_40_10_20_96,40,10,20,96,Wayfinding signage systems,TRUE
+12580,Ss_40_10_25,40,10,25,,External signage and interpretation systems,TRUE
+12590,Ss_40_10_25_25,40,10,25,25,Electrical external signage systems,TRUE
+12600,Ss_40_10_25_30,40,10,25,30,Fixed external signage systems,TRUE
+12610,Ss_40_10_25_32,40,10,25,32,Free-standing external architectural signage systems,TRUE
+12620,Ss_40_10_30,40,10,30,,Fire and safety signage systems,TRUE
+12630,Ss_40_10_30_20,40,10,30,20,Emergency 'do not enter' signage systems,TRUE
+12640,Ss_40_10_30_25,40,10,30,25,Evacuation and safe condition signage systems,TRUE
+12650,Ss_40_10_30_27,40,10,30,27,Evacuation and safety way guidance systems,TRUE
+12660,Ss_40_10_30_30,40,10,30,30,Fire signage systems,TRUE
+12670,Ss_40_10_30_36,40,10,30,36,Hazard signage systems,TRUE
+12680,Ss_40_10_30_70,40,10,30,70,Regulatory signage systems,TRUE
+12690,Ss_40_10_30_75,40,10,30,75,Safety signage systems,TRUE
+12700,Ss_40_10_30_93,40,10,30,93,Warning signage systems,TRUE
+12710,Ss_40_10_30_95,40,10,30,95,Water safety signage systems,TRUE
+12720,Ss_40_10_35,40,10,35,,Identification signage systems,TRUE
+12730,Ss_40_10_35_10,40,10,35,10,Building signage systems,TRUE
+12740,Ss_40_10_35_70,40,10,35,70,Room signage systems,TRUE
+12750,Ss_40_10_35_80,40,10,35,80,Spaces signage systems,TRUE
+12760,Ss_40_10_40,40,10,40,,Internal architectural signage systems,TRUE
+12770,Ss_40_10_40_25,40,10,40,25,Electrical internal architectural signage systems,TRUE
+12780,Ss_40_10_40_30,40,10,40,30,Fixed internal architectural signage systems,TRUE
+12790,Ss_40_10_40_32,40,10,40,32,Free-standing internal architectural signage systems,TRUE
+12800,Ss_40_10_50,40,10,50,,Information signage systems,TRUE
+12810,Ss_40_10_50_03,40,10,50,03,Advertising signage systems,TRUE
+12820,Ss_40_10_50_05,40,10,50,05,Advisory signage systems,TRUE
+12830,Ss_40_10_50_22,40,10,50,22,Descriptive signage systems,TRUE
+12840,Ss_40_10_50_24,40,10,50,24,Directory signage systems,TRUE
+12850,Ss_40_10_50_42,40,10,50,42,Interpretive signage systems,TRUE
+12860,Ss_40_10_90,40,10,90,,Traffic signage and marking systems,TRUE
+12870,Ss_40_10_90_03,40,10,90,03,Air traffic signage systems,TRUE
+12880,Ss_40_10_90_18,40,10,90,18,Crossing road marking systems,TRUE
+12890,Ss_40_10_90_20,40,10,90,20,Cycle traffic signage systems,TRUE
+12900,Ss_40_10_90_23,40,10,90,23,Diagrammatic road marking systems,TRUE
+12910,Ss_40_10_90_36,40,10,90,36,Hatched road marking systems,TRUE
+12920,Ss_40_10_90_50,40,10,90,50,Marine traffic signage systems,TRUE
+12930,Ss_40_10_90_70,40,10,90,70,Rail traffic signage systems,TRUE
+12940,Ss_40_10_90_71,40,10,90,71,Road marker post systems,TRUE
+12950,Ss_40_10_90_72,40,10,90,72,Road traffic signage systems,TRUE
+12960,Ss_40_15,40,15,,,"General fittings, furnishings and equipment (FF&E) systems",TRUE
+12970,Ss_40_15_25,40,15,25,,Catering FF&E systems,TRUE
+12980,Ss_40_15_25_15,40,15,25,15,Commercial catering FF&E systems,TRUE
+12990,Ss_40_15_25_20,40,15,25,20,Domestic catering FF&E systems,TRUE
+13000,Ss_40_15_35,40,15,35,,General FF&E systems,TRUE
+13010,Ss_40_15_35_19,40,15,35,19,Curtain and blind systems,TRUE
+13020,Ss_40_15_35_29,40,15,35,29,Fireplace furniture systems,TRUE
+13030,Ss_40_15_35_31,40,15,35,31,Free-standing furniture systems,TRUE
+13040,Ss_40_15_35_35,40,15,35,35,General fixtures systems,TRUE
+13050,Ss_40_15_35_80,40,15,35,80,"Shelving, storage and enclosures systems",TRUE
+13060,Ss_40_15_44,40,15,44,,Joinery FF&E systems,TRUE
+13070,Ss_40_15_44_50,40,15,44,50,Minor joinery systems,TRUE
+13080,Ss_40_15_44_90,40,15,44,90,"Trims, guards and finishing systems",TRUE
+13090,Ss_40_15_46,40,15,46,,Laundry FF&E systems,TRUE
+13100,Ss_40_15_46_15,40,15,46,15,Commercial laundry FF&E systems,TRUE
+13110,Ss_40_15_46_20,40,15,46,20,Domestic laundry FF&E systems,TRUE
+13120,Ss_40_15_58,40,15,58,,Office equipment systems,TRUE
+13130,Ss_40_15_58_50,40,15,58,50,Meeting booth or pod systems,TRUE
+13140,Ss_40_15_70,40,15,70,,Sanitary appliances and FF&E systems,TRUE
+13150,Ss_40_15_70_06,40,15,70,06,Bathroom appliances and FF&E systems,TRUE
+13160,Ss_40_15_75,40,15,75,,Sanitary appliance systems,TRUE
+13170,Ss_40_15_75_02,40,15,75,02,Accessible WC package systems,TRUE
+13180,Ss_40_15_75_05,40,15,75,05,Bath systems,TRUE
+13190,Ss_40_15_75_10,40,15,75,10,Bidet systems,TRUE
+13200,Ss_40_15_75_20,40,15,75,20,Disposal unit (slop hopper) systems,TRUE
+13210,Ss_40_15_75_25,40,15,75,25,Drinking fountain systems,TRUE
+13220,Ss_40_15_75_35,40,15,75,35,Health care macerator systems,TRUE
+13230,Ss_40_15_75_45,40,15,75,45,Janitorial unit systems,TRUE
+13240,Ss_40_15_75_75,40,15,75,75,Sanitary accessory systems,TRUE
+13250,Ss_40_15_75_77,40,15,75,77,Scrub-up trough systems,TRUE
+13260,Ss_40_15_75_78,40,15,75,78,Shower area systems,TRUE
+13270,Ss_40_15_75_79,40,15,75,79,Shower cubicle systems,TRUE
+13280,Ss_40_15_75_80,40,15,75,80,Sink systems,TRUE
+13290,Ss_40_15_75_83,40,15,75,83,Squatting WC systems,TRUE
+13300,Ss_40_15_75_91,40,15,75,91,Urinal systems,TRUE
+13310,Ss_40_15_75_92,40,15,75,92,Washbasin systems,TRUE
+13320,Ss_40_15_75_93,40,15,75,93,Wash fountain systems,TRUE
+13330,Ss_40_15_75_94,40,15,75,94,Wash trough systems,TRUE
+13340,Ss_40_15_75_95,40,15,75,95,Waterless toilet systems,TRUE
+13350,Ss_40_15_75_96,40,15,75,96,WC and washbasin combination systems,TRUE
+13360,Ss_40_15_75_97,40,15,75,97,WC systems,TRUE
+13370,Ss_40_15_75_98,40,15,75,98,WC wash and dry combination systems,TRUE
+13380,Ss_40_15_77,40,15,77,,Sauna FF&E systems,TRUE
+13390,Ss_40_15_77_76,40,15,77,76,Sauna package systems,TRUE
+13400,Ss_40_15_85,40,15,85,,Steam bath FF&E systems,TRUE
+13410,Ss_40_15_85_85,40,15,85,85,Steam bath package systems,TRUE
+13420,Ss_40_20,40,20,,,"Administrative, commercial and protective service FF&E systems",TRUE
+13430,Ss_40_20_01,40,20,01,,Administrative FF&E systems,TRUE
+13440,Ss_40_20_01_60,40,20,01,60,Office FF&E systems,TRUE
+13450,Ss_40_20_01_71,40,20,01,71,Reception FF&E systems,TRUE
+13460,Ss_40_20_15,40,20,15,,Commercial FF&E systems,TRUE
+13470,Ss_40_20_15_71,40,20,15,71,Retail FF&E systems,TRUE
+13480,Ss_40_20_15_89,40,20,15,89,Trading floor FF&E systems,TRUE
+13490,Ss_40_20_30,40,20,30,,External public realm FF&E systems,TRUE
+13500,Ss_40_20_30_01,40,20,30,01,Acceptance and dispensing systems,TRUE
+13510,Ss_40_20_30_28,40,20,30,28,External furniture systems,TRUE
+13520,Ss_40_20_30_30,40,20,30,30,Fixed bin systems,TRUE
+13530,Ss_40_20_30_65,40,20,30,65,Playground equipment systems,TRUE
+13540,Ss_40_20_65,40,20,65,,Protective service FF&E systems,TRUE
+13550,Ss_40_20_65_22,40,20,65,22,Detention FF&E systems,TRUE
+13560,Ss_40_20_65_25,40,20,65,25,Emergency shelter FF&E systems,TRUE
+13570,Ss_40_20_65_46,40,20,65,46,Law court FF&E systems,TRUE
+13580,Ss_40_25,40,25,,,"Cultural, educational, scientific and information FF&E systems",TRUE
+13590,Ss_40_25_20,40,25,20,,Cultural FF&E systems,TRUE
+13600,Ss_40_25_20_02,40,25,20,02,Aquarium FF&E systems,TRUE
+13610,Ss_40_25_20_03,40,25,20,03,Art gallery FF&E systems,TRUE
+13620,Ss_40_25_20_04,40,25,20,04,Artwork systems,TRUE
+13630,Ss_40_25_20_05,40,25,20,05,Auditorium FF&E systems,TRUE
+13640,Ss_40_25_20_22,40,25,20,22,Display FF&E systems,TRUE
+13650,Ss_40_25_20_28,40,25,20,28,Exhibition FF&E systems,TRUE
+13660,Ss_40_25_20_85,40,25,20,85,Studio FF&E systems,TRUE
+13670,Ss_40_25_20_90,40,25,20,90,Theatre FF&E systems,TRUE
+13680,Ss_40_25_26,40,25,26,,Education and information FF&E systems,TRUE
+13690,Ss_40_25_26_15,40,25,26,15,Classroom FF&E systems,TRUE
+13700,Ss_40_25_26_47,40,25,26,47,Library FF&E systems,TRUE
+13710,Ss_40_25_32,40,25,32,,Funerary FF&E systems,TRUE
+13720,Ss_40_25_32_12,40,25,32,12,Cemetery equipment systems,TRUE
+13730,Ss_40_25_71,40,25,71,,Religious FF&E systems,TRUE
+13740,Ss_40_25_71_11,40,25,71,11,"Cathedral, church and chapel FF&E systems",TRUE
+13750,Ss_40_25_71_52,40,25,71,52,Mosque FF&E systems,TRUE
+13760,Ss_40_25_71_86,40,25,71,86,Synagogue FF&E systems,TRUE
+13770,Ss_40_25_71_90,40,25,71,90,Temple FF&E systems,TRUE
+13780,Ss_40_25_75,40,25,75,,Scientific FF&E systems,TRUE
+13790,Ss_40_25_75_21,40,25,75,21,Dark room FF&E systems,TRUE
+13800,Ss_40_25_75_45,40,25,75,45,Laboratory FF&E systems,TRUE
+13810,Ss_40_25_75_58,40,25,75,58,Observatory FF&E systems,TRUE
+13820,Ss_40_25_80,40,25,80,,Stage FF&E systems,TRUE
+13830,Ss_40_25_80_90,40,25,80,90,Tension wire grid systems,TRUE
+13840,Ss_40_30,40,30,,,Industrial and agricultural FF&E systems,TRUE
+13850,Ss_40_30_02,40,30,02,,Agricultural FF&E systems,TRUE
+13860,Ss_40_30_02_37,40,30,02,37,Horticultural FF&E systems,TRUE
+13870,Ss_40_30_02_47,40,30,02,47,Livestock FF&E systems,TRUE
+13880,Ss_40_30_42,40,30,42,,Industrial FF&E systems,TRUE
+13890,Ss_40_30_42_29,40,30,42,29,Factory FF&E systems,TRUE
+13900,Ss_40_30_42_52,40,30,42,52,Mine FF&E systems,TRUE
+13910,Ss_40_30_42_58,40,30,42,58,Offshore platform FF&E systems,TRUE
+13920,Ss_40_30_42_96,40,30,42,96,Warehouse FF&E systems,TRUE
+13930,Ss_40_30_85,40,30,85,,Static permanent access and safety equipment systems,TRUE
+13940,Ss_40_30_85_55,40,30,85,55,Netting systems,TRUE
+13950,Ss_40_45,40,45,,,Living space FF&E systems,TRUE
+13960,Ss_40_45_37,40,45,37,,Hotel living space FF&E systems,TRUE
+13970,Ss_40_45_37_28,40,45,37,28,External FF&E systems,TRUE
+13980,Ss_40_45_37_36,40,45,37,36,Hotel bedroom FF&E systems,TRUE
+13990,Ss_40_45_37_38,40,45,37,38,Hotel dining room FF&E systems,TRUE
+14000,Ss_40_45_37_45,40,45,37,45,Kitchen FF&E systems,TRUE
+14010,Ss_40_45_37_47,40,45,37,47,Lounge FF&E systems,TRUE
+14020,Ss_40_45_70,40,45,70,,Residential living space FF&E systems,TRUE
+14030,Ss_40_45_70_07,40,45,70,07,Bedroom FF&E systems,TRUE
+14040,Ss_40_45_70_22,40,45,70,22,Dining room FF&E systems,TRUE
+14050,Ss_40_45_70_24,40,45,70,24,Domestic kitchen FF&E systems,TRUE
+14060,Ss_40_45_70_33,40,45,70,33,Garden FF&E systems,TRUE
+14070,Ss_40_45_70_47,40,45,70,47,Living room FF&E systems,TRUE
+14080,Ss_40_50,40,50,,,"Medical, health and welfare FF&E systems",TRUE
+14090,Ss_40_50_50,40,50,50,,Medical and health FF&E systems,TRUE
+14100,Ss_40_50_50_18,40,50,50,18,Crèche FF&E systems,TRUE
+14110,Ss_40_50_50_37,40,50,50,37,Hospital ward FF&E systems,TRUE
+14120,Ss_40_50_50_50,40,50,50,50,Medical and dental surgery FF&E systems,TRUE
+14130,Ss_40_50_50_59,40,50,50,59,Operating theatre FF&E systems,TRUE
+14140,Ss_40_50_96,40,50,96,,Welfare FF&E systems,TRUE
+14150,Ss_40_50_96_04,40,50,96,04,Animal welfare FF&E systems,TRUE
+14160,Ss_40_50_96_71,40,50,96,71,Rehabilitation FF&E systems,TRUE
+14170,Ss_40_70,40,70,,,Recreational FF&E systems,TRUE
+14180,Ss_40_70_20,40,70,20,,Casino FF&E systems,TRUE
+14190,Ss_40_70_55,40,70,55,,Play FF&E systems,TRUE
+14200,Ss_40_70_55_10,40,70,55,10,Climbing equipment systems,TRUE
+14210,Ss_40_70_55_15,40,70,55,15,Combination play equipment systems,TRUE
+14220,Ss_40_70_55_35,40,70,55,35,Gymnastics and exercising equipment systems,TRUE
+14230,Ss_40_70_55_70,40,70,55,70,Rocking equipment systems,TRUE
+14240,Ss_40_70_55_73,40,70,55,73,Runway equipment systems,TRUE
+14250,Ss_40_70_55_75,40,70,55,75,Sand and water play equipment systems,TRUE
+14260,Ss_40_70_55_80,40,70,55,80,Slide equipment systems,TRUE
+14270,Ss_40_70_55_83,40,70,55,83,Spinning equipment systems,TRUE
+14280,Ss_40_70_55_85,40,70,55,85,Swinging equipment systems,TRUE
+14290,Ss_40_70_60,40,70,60,,Pool FF&E systems,TRUE
+14300,Ss_40_70_60_15,40,70,60,15,Competitive swimming pool FF&E systems,TRUE
+14310,Ss_40_70_60_25,40,70,60,25,Diving pool FF&E systems,TRUE
+14320,Ss_40_70_60_45,40,70,60,45,Leisure swimming pool FF&E systems,TRUE
+14330,Ss_40_70_60_62,40,70,60,62,Pool transfer aid equipment systems,TRUE
+14340,Ss_40_70_65,40,70,65,,Public house FF&E systems,TRUE
+14350,Ss_40_70_70,40,70,70,,Restaurant FF&E systems,TRUE
+14360,Ss_40_70_75,40,70,75,,Sports FF&E systems,TRUE
+14370,Ss_40_70_75_05,40,70,75,05,Ball court FF&E systems,TRUE
+14380,Ss_40_70_75_20,40,70,75,20,Cycle course FF&E systems,TRUE
+14390,Ss_40_70_75_27,40,70,75,27,Equestrian equipment systems,TRUE
+14400,Ss_40_70_75_50,40,70,75,50,Multi-use games area FF&E systems,TRUE
+14410,Ss_40_70_75_80,40,70,75,80,Skate park FF&E systems,TRUE
+14420,Ss_40_70_75_85,40,70,75,85,Sports pitch FF&E systems,TRUE
+14430,Ss_40_70_75_90,40,70,75,90,Trim trail FF&E systems,TRUE
+14440,Ss_40_70_80,40,70,80,,Stadium FF&E systems,TRUE
+14450,Ss_40_70_95,40,70,95,,"Wildlife, eco site and nature conservation FF&E systems",TRUE
+14460,Ss_40_85,40,85,,,Transport FF&E systems,TRUE
+14470,Ss_40_85_01,40,85,01,,Aerospace FF&E systems,TRUE
+14480,Ss_40_85_01_01,40,85,01,01,Aircraft fire training simulation systems,TRUE
+14490,Ss_40_85_11,40,85,11,,Cable transport FF&E systems,TRUE
+14500,Ss_40_85_50,40,85,50,,Marine and waterway FF&E systems,TRUE
+14510,Ss_40_85_50_95,40,85,50,95,Waterside FF&E systems,TRUE
+14520,Ss_40_85_70,40,85,70,,Rail FF&E systems,TRUE
+14530,Ss_40_85_70_60,40,85,70,60,Passenger concourse FF&E systems,TRUE
+14540,Ss_40_85_72,40,85,72,,Road FF&E systems,TRUE
+14550,Ss_40_85_72_11,40,85,72,11,Car park equipment systems,TRUE
+14560,Ss_40_85_72_20,40,85,72,20,Cycle parking equipment systems,TRUE
+14570,Ss_40_85_72_33,40,85,72,33,Garage FF&E systems,TRUE
+14580,Ss_40_85_75,40,85,75,,Rolling stock depot systems,TRUE
+14590,Ss_40_85_75_07,40,85,75,07,Bogie handling systems,TRUE
+14600,Ss_40_85_75_15,40,85,75,15,Controlled emission toilet (CET) systems,TRUE
+14610,Ss_40_85_75_24,40,85,75,24,Drop systems,TRUE
+14620,Ss_40_85_75_65,40,85,75,65,Press systems,TRUE
+14630,Ss_40_85_75_70,40,85,75,70,Rail lifting systems,TRUE
+14640,Ss_40_85_75_75,40,85,75,75,Sand feeding systems,TRUE
+14650,Ss_40_85_75_97,40,85,75,97,Wheel lathe systems,TRUE
+14660,Ss_40_90,40,90,,,General finishing systems,TRUE
+14670,Ss_40_90_05,40,90,05,,Anodizing systems,TRUE
+14680,Ss_40_90_05_05,40,90,05,05,Aluminium anodic coating systems,TRUE
+14690,Ss_40_90_35,40,90,35,,Galvanizing systems,TRUE
+14700,Ss_40_90_35_26,40,90,35,26,Electroplated galvanizing systems,TRUE
+14710,Ss_40_90_35_35,40,90,35,35,Hot-dip galvanizing systems,TRUE
+14720,Ss_40_90_40,40,90,40,,Intumescent systems,TRUE
+14730,Ss_40_90_40_40,40,90,40,40,Intumescent casting systems,TRUE
+14740,Ss_40_90_40_42,40,90,40,42,Intumescent coating systems,TRUE
+14750,Ss_40_90_60,40,90,60,,Painting and clear finishing systems,TRUE
+14760,Ss_40_90_60_05,40,90,60,05,Anti-graffiti coating systems,TRUE
+14770,Ss_40_90_60_20,40,90,60,20,Decorative varnish or lacquer systems,TRUE
+14780,Ss_40_90_60_22,40,90,60,22,Decorative wood stain or dye systems,TRUE
+14790,Ss_40_90_60_55,40,90,60,55,Multicolour coating systems,TRUE
+14800,Ss_40_90_60_60,40,90,60,60,Oil gilding systems,TRUE
+14810,Ss_40_90_60_65,40,90,60,65,Plastic texture coating systems,TRUE
+14820,Ss_40_90_60_80,40,90,60,80,Solvent-borne paint systems,TRUE
+14830,Ss_40_90_60_85,40,90,60,85,Special coating systems,TRUE
+14840,Ss_40_90_60_94,40,90,60,94,Water-based anti-corrosion systems,TRUE
+14850,Ss_40_90_60_95,40,90,60,95,Waterborne paint systems,TRUE
+14860,Ss_40_90_65,40,90,65,,Powder-coating systems,TRUE
+14870,Ss_40_90_65_05,40,90,65,05,Powder-coating for aluminium systems,TRUE
+14880,Ss_40_90_65_85,40,90,65,85,Powder-coating for steel systems,TRUE
+14890,Ss_40_90_95,40,90,95,,Wood preservative and fire retardant treatment systems,TRUE
+14900,Ss_40_90_95_30,40,90,95,30,Fire retardant treatment systems,TRUE
+14910,Ss_40_90_95_65,40,90,95,65,Preservative treatment systems,TRUE
+14920,Ss_45,45,,,,Flora and fauna systems,TRUE
+14930,Ss_45_05,45,05,,,Ecosystems,TRUE
+14940,Ss_45_10,45,10,,,Flora and fauna control systems,TRUE
+14950,Ss_45_10_10,45,10,10,,"Bird, insect and vermin control systems",TRUE
+14960,Ss_45_10_10_04,45,10,10,04,Animal control systems,TRUE
+14970,Ss_45_10_10_10,45,10,10,10,Bird control systems,TRUE
+14980,Ss_45_10_10_14,45,10,10,14,Chemical termite protection systems,TRUE
+14990,Ss_45_10_10_40,45,10,10,40,Insect control systems,TRUE
+15000,Ss_45_10_10_64,45,10,10,64,Physical termite protection systems,TRUE
+15010,Ss_45_10_10_72,45,10,10,72,Rodent control systems,TRUE
+15020,Ss_45_10_40,45,10,40,,Invasive microbial and invertebrate control systems,TRUE
+15030,Ss_45_10_40_40,45,10,40,40,Invertebrate control systems,TRUE
+15040,Ss_45_10_40_50,45,10,40,50,Microbial control systems,TRUE
+15050,Ss_45_10_95,45,10,95,,Vegetation control systems,TRUE
+15060,Ss_45_10_95_50,45,10,95,50,"Moss, algae and lichen control systems",TRUE
+15070,Ss_45_10_95_72,45,10,95,72,Rooted plants on hard surfaces control systems,TRUE
+15080,Ss_45_10_95_80,45,10,95,80,Selective vegetation control systems,TRUE
+15090,Ss_45_10_95_81,45,10,95,81,Self-clinging plants on hard surfaces control systems,TRUE
+15100,Ss_45_10_95_83,45,10,95,83,Site vegetation control systems,TRUE
+15110,Ss_45_10_95_95,45,10,95,95,Waterborne vegetation control systems,TRUE
+15120,Ss_45_30,45,30,,,Aquatic flora systems,TRUE
+15130,Ss_45_30_05,45,30,05,,Aquatic and wetland planting systems,TRUE
+15140,Ss_45_30_05_05,45,30,05,05,Aquatic planting systems,TRUE
+15150,Ss_45_30_05_50,45,30,05,50,Marginal planting systems,TRUE
+15160,Ss_45_30_05_70,45,30,05,70,Reed bed planting systems,TRUE
+15170,Ss_45_30_40,45,30,40,,Hydroponic planting systems,TRUE
+15180,Ss_45_35,45,35,,,Ground-based flora systems,TRUE
+15190,Ss_45_35_05,45,35,05,,Amenity and ornamental planting systems,TRUE
+15200,Ss_45_35_05_08,45,35,05,08,"Bed-planted annual, perennial and bulb systems",TRUE
+15210,Ss_45_35_05_35,45,35,05,35,Grass-planted bulb and wildflower systems,TRUE
+15220,Ss_45_35_05_37,45,35,05,37,Grass-planted small tree and shrub systems,TRUE
+15230,Ss_45_35_05_42,45,35,05,42,Long-stem-planted small tree and shrub systems,TRUE
+15240,Ss_45_35_05_62,45,35,05,62,Pit-planted climber systems,TRUE
+15250,Ss_45_35_05_64,45,35,05,64,Pit-planted perennial systems,TRUE
+15260,Ss_45_35_05_66,45,35,05,66,Pit-planted large tree systems,TRUE
+15270,Ss_45_35_05_67,45,35,05,67,Pit-planted small tree and shrub systems,TRUE
+15280,Ss_45_35_08,45,35,08,,Biodiversity and environmental conservation systems,TRUE
+15290,Ss_45_35_08_29,45,35,08,29,Flora species introduction systems,TRUE
+15300,Ss_45_35_08_30,45,35,08,30,Flora species protection systems,TRUE
+15310,Ss_45_35_08_35,45,35,08,35,Habitat creation systems,TRUE
+15320,Ss_45_35_08_37,45,35,08,37,Habitat management and enhancement systems,TRUE
+15330,Ss_45_35_08_38,45,35,08,38,Habitat protection systems,TRUE
+15340,Ss_45_35_30,45,35,30,,"Forestry, biomass, hedging and roadside planting systems",TRUE
+15350,Ss_45_35_30_40,45,35,30,40,Hydraulic seeded tree and shrub systems,TRUE
+15360,Ss_45_35_30_55,45,35,30,55,Notch-planted tree and shrub systems,TRUE
+15370,Ss_45_35_30_62,45,35,30,62,Pit-planted tree and shrub systems,TRUE
+15380,Ss_45_35_30_72,45,35,30,72,Ridge and furrow-planted tree and shrub systems,TRUE
+15390,Ss_45_35_30_75,45,35,30,75,Seeded tree and shrub systems,TRUE
+15400,Ss_45_35_30_90,45,35,30,90,Trench-planted tree and shrub systems,TRUE
+15410,Ss_45_35_45,45,35,45,,Lawn and meadow planting systems,TRUE
+15420,Ss_45_35_45_33,45,35,45,33,Grass and wildflower seeding systems,TRUE
+15430,Ss_45_35_45_35,45,35,45,35,Grass seeding systems,TRUE
+15440,Ss_45_35_45_40,45,35,45,40,Hydraulic seeding systems,TRUE
+15450,Ss_45_35_45_62,45,35,45,62,Plastics paving and turf systems,TRUE
+15460,Ss_45_35_45_65,45,35,45,65,Pre-seeded mat systems,TRUE
+15470,Ss_45_35_45_70,45,35,45,70,Reinforced grass planting systems,TRUE
+15480,Ss_45_35_45_90,45,35,45,90,Turf planting systems,TRUE
+15490,Ss_45_40,45,40,,,Artificially supported flora systems,TRUE
+15500,Ss_45_40_28,45,40,28,,External container planting systems,TRUE
+15510,Ss_45_40_28_25,45,40,28,25,External planter systems,TRUE
+15520,Ss_45_40_28_32,45,40,28,32,Free-standing external container planting systems,TRUE
+15530,Ss_45_40_28_35,45,40,28,35,Hanging container planting systems,TRUE
+15540,Ss_45_40_28_85,45,40,28,85,External planting systems,TRUE
+15550,Ss_45_40_40,45,40,40,,Internal container planting systems,TRUE
+15560,Ss_45_40_40_32,45,40,40,32,Free-standing internal container planting systems,TRUE
+15570,Ss_45_40_40_34,45,40,40,34,Ground level internal container planting systems,TRUE
+15580,Ss_45_40_40_41,45,40,40,41,Internal hanging container planting systems,TRUE
+15590,Ss_45_40_40_42,45,40,40,42,Internal planter systems,TRUE
+15600,Ss_45_40_47,45,40,47,,Living roof systems,TRUE
+15610,Ss_45_40_47_09,45,40,47,09,Biodiverse roof systems,TRUE
+15620,Ss_45_40_47_28,45,40,47,28,Extensive green roof systems,TRUE
+15630,Ss_45_40_47_40,45,40,47,40,Intensive green roof systems,TRUE
+15640,Ss_45_40_47_75,45,40,47,75,Semi-intensive green roof systems,TRUE
+15650,Ss_45_40_95,45,40,95,,Vertical planting systems,TRUE
+15660,Ss_45_40_95_08,45,40,95,08,Biofiltration vertical planting systems,TRUE
+15670,Ss_45_40_95_52,45,40,95,52,Membranous vertical planting systems,TRUE
+15680,Ss_45_40_95_54,45,40,95,54,Modular unit vertical planting systems,TRUE
+15690,Ss_45_50,45,50,,,Artificial flora systems,TRUE
+15700,Ss_45_50_05,45,50,05,,Artificial planting systems,TRUE
+15710,Ss_45_50_05_40,45,50,05,40,Internal artificial planting systems,TRUE
+15720,Ss_45_55,45,55,,,Land fauna systems,TRUE
+15730,Ss_45_55_05,45,55,05,,Animal conservation systems,TRUE
+15740,Ss_45_55_05_29,45,55,05,29,Animal species introduction systems,TRUE
+15750,Ss_45_55_05_30,45,55,05,30,Animal species protection systems,TRUE
+15760,Ss_45_55_10,45,55,10,,Avian fauna systems,TRUE
+15770,Ss_45_55_27,45,55,27,,Animal crossing systems,TRUE
+15780,Ss_45_55_27_02,45,55,27,02,Amphibian tunnel systems,TRUE
+15790,Ss_45_55_27_04,45,55,27,04,Animal resting post systems,TRUE
+15800,Ss_45_55_27_06,45,55,27,06,Animal underpass systems,TRUE
+15810,Ss_45_55_27_11,45,55,27,11,Canopy bridge systems,TRUE
+15820,Ss_45_55_27_13,45,55,27,13,Cattle creep systems,TRUE
+15830,Ss_45_55_27_18,45,55,27,18,Crab bridge systems,TRUE
+15840,Ss_45_55_27_34,45,55,27,34,Green bridge systems,TRUE
+15850,Ss_45_55_27_59,45,55,27,59,Overhead rope crossing systems,TRUE
+15860,Ss_45_55_40,45,55,40,,Invertebrate fauna systems,TRUE
+15870,Ss_45_55_50,45,55,50,,Mammalian fauna systems,TRUE
+15880,Ss_45_55_70,45,55,70,,Reptilian fauna systems,TRUE
+15890,Ss_45_75,45,75,,,Piscine fauna systems,TRUE
+15900,Ss_45_75_05,45,75,05,,Baffle fish pass systems,TRUE
+15910,Ss_45_75_05_03,45,75,05,03,Alaskan A baffle fish pass systems,TRUE
+15920,Ss_45_75_05_13,45,75,05,13,Chevron bottom baffle fish pass systems,TRUE
+15930,Ss_45_75_05_35,45,75,05,35,Hurn-type baffle fish pass systems,TRUE
+15940,Ss_45_75_05_46,45,75,05,46,Larinier super-active baffle fish pass systems,TRUE
+15950,Ss_45_75_05_63,45,75,05,63,Plane baffle Denil fish pass systems,TRUE
+15960,Ss_45_75_08,45,75,08,,Brush and bristle fish pass systems,TRUE
+15970,Ss_45_75_08_13,45,75,08,13,Combined baffle-brush fish pass systems,TRUE
+15980,Ss_45_75_08_16,45,75,08,16,Cylindrical bristle cluster brush fish pass systems,TRUE
+15990,Ss_45_75_08_35,45,75,08,35,Hassinger brush-furnished fish pass systems,TRUE
+16000,Ss_45_75_20,45,75,20,,Culvert fish pass systems,TRUE
+16010,Ss_45_75_20_13,45,75,20,13,Corner baffle pipe culvert fish pass systems,TRUE
+16020,Ss_45_75_20_16,45,75,20,16,Culvert brush fish pass systems,TRUE
+16030,Ss_45_75_20_26,45,75,20,26,Embedded blockstone culvert fish pass systems,TRUE
+16040,Ss_45_75_20_35,45,75,20,35,Horizontal slotted baffle culvert fish pass systems,TRUE
+16050,Ss_45_75_20_55,45,75,20,55,Notch baffle pipe culvert fish pass systems,TRUE
+16060,Ss_45_75_20_59,45,75,20,59,Offset baffle culvert fish pass systems,TRUE
+16070,Ss_45_75_20_82,45,75,20,82,Spoiler baffle culvert fish pass systems,TRUE
+16080,Ss_45_75_20_88,45,75,20,88,Triangular-crested baffle culvert fish pass systems,TRUE
+16090,Ss_45_75_20_95,45,75,20,95,Weir baffle culvert fish pass systems,TRUE
+16100,Ss_45_75_25,45,75,25,,Fish deterrent systems,TRUE
+16110,Ss_45_75_25_05,45,75,25,05,Fish barrier systems,TRUE
+16120,Ss_45_75_25_35,45,75,25,35,Fish guidance systems,TRUE
+16130,Ss_45_75_26,45,75,26,,Elevator fish pass systems,TRUE
+16140,Ss_45_75_26_10,45,75,26,10,Borland lift fish pass systems,TRUE
+16150,Ss_45_75_26_30,45,75,26,30,Fish lock fish pass systems,TRUE
+16160,Ss_45_75_26_80,45,75,26,80,Siphon fish pass systems,TRUE
+16170,Ss_45_75_26_94,45,75,26,94,Venturi pump fish pass systems,TRUE
+16180,Ss_45_75_30,45,75,30,,Flap gate and sluice fish pass systems,TRUE
+16190,Ss_45_75_30_04,45,75,30,04,Automated gate fish pass systems,TRUE
+16200,Ss_45_75_30_15,45,75,30,15,Counter-balanced gate fish pass systems,TRUE
+16210,Ss_45_75_30_20,45,75,30,20,Damper and retarder fish pass systems,TRUE
+16220,Ss_45_75_30_24,45,75,30,24,Duckbill valve fish pass systems,TRUE
+16230,Ss_45_75_30_62,45,75,30,62,Petflap fish pass systems,TRUE
+16240,Ss_45_75_30_76,45,75,30,76,Self-regulating gate fish pass systems,TRUE
+16250,Ss_45_75_30_79,45,75,30,79,Side-hung gate fish pass systems,TRUE
+16260,Ss_45_75_34,45,75,34,,Gravity eel pass systems,TRUE
+16270,Ss_45_75_34_04,45,75,34,04,Bristle substrate cassette eel pass systems,TRUE
+16280,Ss_45_75_34_05,45,75,34,05,Bristle substrate channel eel pass systems,TRUE
+16290,Ss_45_75_34_07,45,75,34,07,Bristle substrate recessed eel pass systems,TRUE
+16300,Ss_45_75_34_10,45,75,34,10,Bristle substrate tilting weir eel pass systems,TRUE
+16310,Ss_45_75_34_15,45,75,34,15,Combined substrate eel pass systems,TRUE
+16320,Ss_45_75_34_53,45,75,34,53,Netting substrate eel pass systems,TRUE
+16330,Ss_45_75_34_61,45,75,34,61,Peg substrate cassette eel pass systems,TRUE
+16340,Ss_45_75_34_62,45,75,34,62,Peg substrate channel eel pass systems,TRUE
+16350,Ss_45_75_34_64,45,75,34,64,Peg substrate recessed eel pass systems,TRUE
+16360,Ss_45_75_34_70,45,75,34,70,Rope eel pass systems,TRUE
+16370,Ss_45_75_34_85,45,75,34,85,Textured substrate eel pass systems,TRUE
+16380,Ss_45_75_44,45,75,44,,Lamprey pass systems,TRUE
+16390,Ss_45_75_55,45,75,55,,Nature-like fish pass systems,TRUE
+16400,Ss_45_75_55_10,45,75,55,10,Bypass channel fish pass systems,TRUE
+16410,Ss_45_75_55_15,45,75,55,15,Column bypass fish pass systems,TRUE
+16420,Ss_45_75_55_72,45,75,55,72,Rock ramp fish pass systems,TRUE
+16430,Ss_45_75_55_85,45,75,55,85,Sweep fish pass systems,TRUE
+16440,Ss_45_75_60,45,75,60,,Pool fish pass systems,TRUE
+16450,Ss_45_75_60_21,45,75,60,21,Deep notch and orifice pool fish pass systems,TRUE
+16460,Ss_45_75_60_23,45,75,60,23,Deep notch no-orifice pool fish pass systems,TRUE
+16470,Ss_45_75_60_40,45,75,60,40,Informal pool fish pass systems,TRUE
+16480,Ss_45_75_60_63,45,75,60,63,Pool and chute fish pass systems,TRUE
+16490,Ss_45_75_60_65,45,75,60,65,Pool and orifice fish pass systems,TRUE
+16500,Ss_45_75_60_67,45,75,60,67,Pool and traverse fish pass systems,TRUE
+16510,Ss_45_75_60_69,45,75,60,69,Pre-barrage fish pass systems,TRUE
+16520,Ss_45_75_60_77,45,75,60,77,Shallow ‘V’ notch pool fish pass systems,TRUE
+16530,Ss_45_75_60_94,45,75,60,94,Vertical slot pool fish pass systems,TRUE
+16540,Ss_45_75_67,45,75,67,,Pumped eel pass systems,TRUE
+16550,Ss_45_75_67_05,45,75,67,05,Bristle substrate pumped eel pass systems,TRUE
+16560,Ss_45_75_67_15,45,75,67,15,Combined substrate pumped eel pass systems,TRUE
+16570,Ss_45_75_67_65,45,75,67,65,Peg substrate pumped eel pass systems,TRUE
+16580,Ss_45_75_67_85,45,75,67,85,Textured substrate pumped eel pass systems,TRUE
+16590,Ss_45_75_85,45,75,85,,Simple fish pass systems,TRUE
+16600,Ss_45_75_85_10,45,75,85,10,Baulk fish pass systems,TRUE
+16610,Ss_45_75_85_13,45,75,85,13,Chute fish pass systems,TRUE
+16620,Ss_45_75_85_55,45,75,85,55,Notch fish pass systems,TRUE
+16630,Ss_45_75_85_59,45,75,85,59,Orifice fish pass systems,TRUE
+16640,Ss_45_75_85_69,45,75,85,69,Pre-obstacle bed modification fish pass systems,TRUE
+16650,Ss_45_75_85_88,45,75,85,88,Slot fish pass systems,TRUE
+16660,Ss_45_85,45,85,,,Artificial fauna systems,TRUE
+16670,Ss_45_85_05,45,85,05,,Artificial fauna habitat systems,TRUE
+16680,Ss_45_85_05_06,45,85,05,06,Artificial badger sett systems,TRUE
+16690,Ss_45_85_05_56,45,85,05,56,Artificial nesting platform systems,TRUE
+16700,Ss_45_85_05_70,45,85,05,70,Artificial reef systems,TRUE
+16710,Ss_50,50,,,,Disposal systems,TRUE
+16720,Ss_50_10,50,10,,,Gas waste collection and distribution systems,TRUE
+16730,Ss_50_10_45,50,10,45,,Landfill gas collection and distribution systems,TRUE
+16740,Ss_50_10_95,50,10,95,,Waste gas collection and distribution systems,TRUE
+16750,Ss_50_20,50,20,,,Non-aqueous liquid waste collection and distribution systems,TRUE
+16760,Ss_50_20_45,50,20,45,,Landfill liquid collection and distribution systems,TRUE
+16770,Ss_50_20_90,50,20,90,,Waste liquid fuel collection and distribution systems,TRUE
+16780,Ss_50_20_95,50,20,95,,Waste process liquid collection and distribution systems,TRUE
+16790,Ss_50_30,50,30,,,Above-ground drainage collection systems,TRUE
+16800,Ss_50_30_02,50,30,02,,Rainwater drainage systems,TRUE
+16810,Ss_50_30_02_28,50,30,02,28,External gravity rainwater drainage systems,TRUE
+16820,Ss_50_30_02_40,50,30,02,40,Internal gravity rainwater drainage systems,TRUE
+16830,Ss_50_30_02_65,50,30,02,65,Pressure-assisted full bore rainwater drainage systems,TRUE
+16840,Ss_50_30_02_80,50,30,02,80,Siphonic full bore rainwater drainage systems,TRUE
+16850,Ss_50_30_04,50,30,04,,Above-ground wastewater drainage systems,TRUE
+16860,Ss_50_30_04_03,50,30,04,03,Above-ground drainage oil and petrol separator systems,TRUE
+16870,Ss_50_30_04_05,50,30,04,05,Basement wastewater drainage systems,TRUE
+16880,Ss_50_30_04_12,50,30,04,12,Chemical wastewater drainage systems,TRUE
+16890,Ss_50_30_04_15,50,30,04,15,Commercial catering wastewater drainage systems,TRUE
+16900,Ss_50_30_04_46,50,30,04,46,Laboratory wastewater drainage systems,TRUE
+16910,Ss_50_30_04_70,50,30,04,70,Radioactive wastewater drainage systems,TRUE
+16920,Ss_50_30_04_93,50,30,04,93,Above-ground vacuum drainage systems,TRUE
+16930,Ss_50_30_04_95,50,30,04,95,Above-ground external stack wastewater drainage systems,TRUE
+16940,Ss_50_30_04_97,50,30,04,97,Above-ground internal stack wastewater drainage systems,TRUE
+16950,Ss_50_35,50,35,,,Wastewater collection systems,TRUE
+16960,Ss_50_35_03,50,35,03,,Wastewater collection pipeline systems,TRUE
+16970,Ss_50_35_03_08,50,35,03,08,Brine gravity collection pipeline systems,TRUE
+16980,Ss_50_35_03_09,50,35,03,09,Brine pressure collection pipeline systems,TRUE
+16990,Ss_50_35_03_13,50,35,03,13,Wastewater channel systems,TRUE
+17000,Ss_50_35_03_15,50,35,03,15,Wastewater control chamber systems,TRUE
+17010,Ss_50_35_03_26,50,35,03,26,Wastewater emergency relief structure systems,TRUE
+17020,Ss_50_35_03_34,50,35,03,34,Wastewater gravity pipeline systems,TRUE
+17030,Ss_50_35_03_40,50,35,03,40,Wastewater inspection chamber systems,TRUE
+17040,Ss_50_35_03_50,50,35,03,50,Wastewater maintenance hole systems,TRUE
+17050,Ss_50_35_03_59,50,35,03,59,Wastewater overflow structure systems,TRUE
+17060,Ss_50_35_03_65,50,35,03,65,Wastewater pressure pipeline systems,TRUE
+17070,Ss_50_35_03_67,50,35,03,67,Wastewater pressure relief systems,TRUE
+17080,Ss_50_35_03_78,50,35,03,78,Wastewater siphon systems,TRUE
+17090,Ss_50_35_06,50,35,06,,Below-ground inspection systems,TRUE
+17100,Ss_50_35_06_06,50,35,06,06,Brick manhole systems,TRUE
+17110,Ss_50_35_06_08,50,35,06,08,Brick shallow inspection chamber systems,TRUE
+17120,Ss_50_35_06_10,50,35,06,10,Brick shallow silt trap and flow control chamber systems,TRUE
+17130,Ss_50_35_06_12,50,35,06,12,Concrete deep manhole systems,TRUE
+17140,Ss_50_35_06_14,50,35,06,14,Concrete manhole systems,TRUE
+17150,Ss_50_35_06_16,50,35,06,16,Concrete shallow inspection chamber systems,TRUE
+17160,Ss_50_35_06_18,50,35,06,18,Concrete silt trap and flow control chamber systems,TRUE
+17170,Ss_50_35_06_62,50,35,06,62,Plastics deep non-entry inspection chamber systems,TRUE
+17180,Ss_50_35_06_64,50,35,06,64,Plastics distribution and sampling chamber systems,TRUE
+17190,Ss_50_35_06_66,50,35,06,66,Plastics shallow inspection chamber systems,TRUE
+17200,Ss_50_35_08,50,35,08,,Below-ground gravity drainage systems,TRUE
+17210,Ss_50_35_08_15,50,35,08,15,Combined below-ground drainage pipeline systems,TRUE
+17220,Ss_50_35_08_16,50,35,08,16,Combined sewer overflow systems,TRUE
+17230,Ss_50_35_08_30,50,35,08,30,Foul wastewater below-ground drainage pipeline systems,TRUE
+17240,Ss_50_35_08_40,50,35,08,40,Highways drainage systems,TRUE
+17250,Ss_50_35_08_85,50,35,08,85,Surface water below-ground drainage pipeline systems,TRUE
+17260,Ss_50_35_10,50,35,10,,Below-ground pumped drainage systems,TRUE
+17270,Ss_50_35_10_06,50,35,10,06,Below-ground package pumping station and pressure pipeline drainage systems,TRUE
+17280,Ss_50_35_10_08,50,35,10,08,Below-ground pressure pipeline drainage systems,TRUE
+17290,Ss_50_35_10_10,50,35,10,10,Below-ground pumping station drainage systems,TRUE
+17300,Ss_50_35_68,50,35,68,,Wastewater collection pumping systems,TRUE
+17310,Ss_50_35_68_24,50,35,68,24,Wastewater collection dry well pumping systems,TRUE
+17320,Ss_50_35_68_96,50,35,68,96,Wastewater collection wet well pumping systems,TRUE
+17330,Ss_50_35_85,50,35,85,,Wastewater collection storage systems,TRUE
+17340,Ss_50_35_85_02,50,35,85,02,Wastewater collection above-ground storage systems,TRUE
+17350,Ss_50_35_85_07,50,35,85,07,Wastewater collection below-ground storage systems,TRUE
+17360,Ss_50_35_85_64,50,35,85,64,Wastewater collection pipeline storage systems,TRUE
+17370,Ss_50_40,50,40,,,Solid waste collection and distribution systems,TRUE
+17380,Ss_50_40_95,50,40,95,,Waste collection systems,TRUE
+17390,Ss_50_40_95_65,50,40,95,65,Pneumatic waste collection systems,TRUE
+17400,Ss_50_50,50,50,,,"Gas waste storage, treatment and disposal systems",TRUE
+17410,Ss_50_50_45,50,50,45,,Landfill gas disposal systems,TRUE
+17420,Ss_50_50_95,50,50,95,,Waste gas treatment and disposal systems,TRUE
+17430,Ss_50_60,50,60,,,"Non-aqueous liquid waste storage, treatment and disposal systems",TRUE
+17440,Ss_50_60_45,50,60,45,,Landfill liquid disposal systems,TRUE
+17450,Ss_50_60_90,50,60,90,,Waste liquid fuel storage and treatment systems,TRUE
+17460,Ss_50_60_95,50,60,95,,Waste process liquid storage and treatment systems,TRUE
+17470,Ss_50_60_95_25,50,60,95,25,Waste process liquid disposal systems,TRUE
+17480,Ss_50_60_95_85,50,60,95,85,Waste process liquid storage systems,TRUE
+17490,Ss_50_60_95_90,50,60,95,90,Waste process liquid treatment systems,TRUE
+17500,Ss_50_70,50,70,,,"Drainage storage, treatment and disposal systems",TRUE
+17510,Ss_50_70_05,50,70,05,,Below-ground drainage disposal systems,TRUE
+17520,Ss_50_70_05_20,50,70,05,20,Below-ground drainage wastewater drainage field systems,TRUE
+17530,Ss_50_70_05_22,50,70,05,22,Below-ground drainage foul wastewater grease separator and converter systems,TRUE
+17540,Ss_50_70_05_23,50,70,05,23,Below-ground drainage septic tank systems,TRUE
+17550,Ss_50_70_05_24,50,70,05,24,Below-ground drainage packaged sewage treatment systems,TRUE
+17560,Ss_50_70_05_25,50,70,05,25,Below-ground drainage foul wastewater storage tank systems,TRUE
+17570,Ss_50_70_05_79,50,70,05,79,Below-ground drainage concrete soakaway systems,TRUE
+17580,Ss_50_70_05_80,50,70,05,80,Below-ground drainage granular fill soakaway systems,TRUE
+17590,Ss_50_70_05_81,50,70,05,81,Below-ground drainage modular plastics attenuation or storage tank systems,TRUE
+17600,Ss_50_70_05_82,50,70,05,82,Below-ground drainage modular plastics soakaway systems,TRUE
+17610,Ss_50_70_05_83,50,70,05,83,Below-ground drainage oil and petrol separator systems,TRUE
+17620,Ss_50_70_05_84,50,70,05,84,Below-ground drainage packaged silt trap systems,TRUE
+17630,Ss_50_70_05_85,50,70,05,85,Below-ground drainage surface water storage tank systems,TRUE
+17640,Ss_50_70_05_86,50,70,05,86,Below-ground drainage wet well systems,TRUE
+17650,Ss_50_70_05_95,50,70,05,95,Below-ground drainage outfall systems,TRUE
+17660,Ss_50_70_24,50,70,24,,Drainage disposal systems,TRUE
+17670,Ss_50_70_24_80,50,70,24,80,Soakaway borehole systems,TRUE
+17680,Ss_50_70_45,50,70,45,,Land drainage systems,TRUE
+17690,Ss_50_70_45_08,50,70,45,08,Blanket drain land drainage systems,TRUE
+17700,Ss_50_70_45_20,50,70,45,20,Culvert land drainage systems,TRUE
+17710,Ss_50_70_45_30,50,70,45,30,Filter drain land drainage systems,TRUE
+17720,Ss_50_70_45_32,50,70,45,32,Fin drain land drainage systems,TRUE
+17730,Ss_50_70_45_53,50,70,45,53,Mole and subsoiling drain land drainage systems,TRUE
+17740,Ss_50_70_45_75,50,70,45,75,Slitting and grooving drain land drainage systems,TRUE
+17750,Ss_50_70_45_85,50,70,45,85,Subsoil drainage pipe drain systems,TRUE
+17760,Ss_50_70_45_90,50,70,45,90,Trenchless drain land drainage systems,TRUE
+17770,Ss_50_70_60,50,70,60,,Private drainage treatment systems,TRUE
+17780,Ss_50_70_60_70,50,70,60,70,Radioactive wastewater treatment systems,TRUE
+17790,Ss_50_70_65,50,70,65,,Pressure relief drainage systems,TRUE
+17800,Ss_50_70_65_08,50,70,65,08,Blanket drain pressure relief systems,TRUE
+17810,Ss_50_70_65_30,50,70,65,30,Filter drain pressure relief systems,TRUE
+17820,Ss_50_70_65_35,50,70,65,35,Geocomposite sheet fin drain pressure relief systems,TRUE
+17830,Ss_50_70_80,50,70,80,,Storm water gravity drainage systems,TRUE
+17840,Ss_50_70_80_10,50,70,80,10,Bifurcation storm water overflow systems,TRUE
+17850,Ss_50_70_80_72,50,70,80,72,Rigid attenuation or storage tank for storm water flood attenuation systems,TRUE
+17860,Ss_50_70_82,50,70,82,,Surface and wastewater gravity drainage systems,TRUE
+17870,Ss_50_70_82_41,50,70,82,41,Inlet drainage systems,TRUE
+17880,Ss_50_70_82_59,50,70,82,59,Outlet drainage systems,TRUE
+17890,Ss_50_70_82_73,50,70,82,73,Road drainage systems,TRUE
+17900,Ss_50_70_83,50,70,83,,Surface water tank systems,TRUE
+17910,Ss_50_70_85,50,70,85,,Sustainable drainage systems (SuDS),TRUE
+17920,Ss_50_70_85_00,50,70,85,00,SuDS management train systems,TRUE
+17930,Ss_50_70_85_06,50,70,85,06,Below-ground surface water storage tank systems,TRUE
+17940,Ss_50_70_85_08,50,70,85,08,Bioretention area systems,TRUE
+17950,Ss_50_70_85_15,50,70,85,15,Conveyance swale systems,TRUE
+17960,Ss_50_70_85_21,50,70,85,21,Detention basin systems,TRUE
+17970,Ss_50_70_85_24,50,70,85,24,Dry swale systems,TRUE
+17980,Ss_50_70_85_30,50,70,85,30,Filter strip systems,TRUE
+17990,Ss_50_70_85_31,50,70,85,31,Filter drain systems,TRUE
+18000,Ss_50_70_85_32,50,70,85,32,Filtration and separation systems,TRUE
+18010,Ss_50_70_85_33,50,70,85,33,Geocellular attenuation tank systems,TRUE
+18020,Ss_50_70_85_34,50,70,85,34,Geocellular soakaway systems,TRUE
+18030,Ss_50_70_85_35,50,70,85,35,Granular fill soakaway systems,TRUE
+18040,Ss_50_70_85_41,50,70,85,41,Infiltration basin systems,TRUE
+18050,Ss_50_70_85_42,50,70,85,42,Infiltration trench systems,TRUE
+18060,Ss_50_70_85_58,50,70,85,58,Open channel conveyance systems,TRUE
+18070,Ss_50_70_85_61,50,70,85,61,Pervious pavement systems,TRUE
+18080,Ss_50_70_85_64,50,70,85,64,Pond systems,TRUE
+18090,Ss_50_70_85_66,50,70,85,66,Precast concrete soakaway systems,TRUE
+18100,Ss_50_70_85_70,50,70,85,70,Rainwater harvesting systems,TRUE
+18110,Ss_50_70_85_75,50,70,85,75,Sand filter bed systems,TRUE
+18120,Ss_50_70_85_76,50,70,85,76,Sand filter bed surface systems,TRUE
+18130,Ss_50_70_85_85,50,70,85,85,Swale systems,TRUE
+18140,Ss_50_70_85_96,50,70,85,96,Water butt systems,TRUE
+18150,Ss_50_70_85_97,50,70,85,97,Wet swale systems,TRUE
+18160,Ss_50_70_85_98,50,70,85,98,Wetland systems,TRUE
+18170,Ss_50_75,50,75,,,"Wastewater storage, treatment and disposal systems",TRUE
+18180,Ss_50_75_01,50,75,01,,Aeration systems,TRUE
+18190,Ss_50_75_01_22,50,75,01,22,Diffused aeration systems,TRUE
+18200,Ss_50_75_01_44,50,75,01,44,Jet aeration systems,TRUE
+18210,Ss_50_75_01_51,50,75,01,51,Mechanical aeration systems,TRUE
+18220,Ss_50_75_01_90,50,75,01,90,Tray cascade aeration systems,TRUE
+18230,Ss_50_75_03,50,75,03,,Aquaculture disposal systems,TRUE
+18240,Ss_50_75_03_21,50,75,03,21,Aquaculture degasser systems,TRUE
+18250,Ss_50_75_03_23,50,75,03,23,Aquaculture discharge systems,TRUE
+18260,Ss_50_75_03_80,50,75,03,80,Aquaculture sludge treatment systems,TRUE
+18270,Ss_50_75_20,50,75,20,,Decanting systems,TRUE
+18280,Ss_50_75_20_96,50,75,20,96,Wastewater decanting systems,TRUE
+18290,Ss_50_75_21,50,75,21,,Wastewater sludge management systems,TRUE
+18300,Ss_50_75_21_13,50,75,21,13,Wastewater sludge collection systems,TRUE
+18310,Ss_50_75_21_15,50,75,21,15,Wastewater sludge concentrate treatment systems,TRUE
+18320,Ss_50_75_21_23,50,75,21,23,Wastewater sludge drying systems,TRUE
+18330,Ss_50_75_21_33,50,75,21,33,Wastewater sludge gas treatment systems,TRUE
+18340,Ss_50_75_21_64,50,75,21,64,Wastewater sludge post-treatment systems,TRUE
+18350,Ss_50_75_21_66,50,75,21,66,Wastewater sludge pre-treatment systems,TRUE
+18360,Ss_50_75_21_70,50,75,21,70,Wastewater sludge recuperation systems,TRUE
+18370,Ss_50_75_21_76,50,75,21,76,Wastewater sludge blanket settling systems,TRUE
+18380,Ss_50_75_21_79,50,75,21,79,Wastewater sludge biosolids systems,TRUE
+18390,Ss_50_75_21_81,50,75,21,81,Wastewater sludge dewatering systems,TRUE
+18400,Ss_50_75_21_82,50,75,21,82,Sludge treatment systems,TRUE
+18410,Ss_50_75_21_83,50,75,21,83,Wastewater sludge digestion systems,TRUE
+18420,Ss_50_75_21_95,50,75,21,95,Wastewater sludge thickening systems,TRUE
+18430,Ss_50_75_22,50,75,22,,Wastewater disinfection systems,TRUE
+18440,Ss_50_75_22_13,50,75,22,13,Wastewater chloramine disinfection systems,TRUE
+18450,Ss_50_75_22_15,50,75,22,15,Wastewater chlorine dioxide disinfection systems,TRUE
+18460,Ss_50_75_22_17,50,75,22,17,Wastewater chlorine disinfection systems,TRUE
+18470,Ss_50_75_22_21,50,75,22,21,Wastewater dechlorination systems,TRUE
+18480,Ss_50_75_22_59,50,75,22,59,Wastewater ozone disinfection systems,TRUE
+18490,Ss_50_75_22_93,50,75,22,93,Wastewater ultraviolet (UV) radiation disinfection systems,TRUE
+18500,Ss_50_75_26,50,75,26,,Effluent transfer and disposal pipeline systems,TRUE
+18510,Ss_50_75_26_08,50,75,26,08,Brine gravity pipeline systems,TRUE
+18520,Ss_50_75_26_09,50,75,26,09,Brine pressure pipeline systems,TRUE
+18530,Ss_50_75_26_34,50,75,26,34,Effluent gravity pipeline systems,TRUE
+18540,Ss_50_75_26_65,50,75,26,65,Effluent pressure pipeline systems,TRUE
+18550,Ss_50_75_27,50,75,27,,Effluent transfer and disposal pumping systems,TRUE
+18560,Ss_50_75_27_24,50,75,27,24,Effluent dry well pumping systems,TRUE
+18570,Ss_50_75_27_68,50,75,27,68,Effluent storage systems,TRUE
+18580,Ss_50_75_27_96,50,75,27,96,Effluent wet well pumping systems,TRUE
+18590,Ss_50_75_30,50,75,30,,Wastewater fixed-film attached-growth process systems,TRUE
+18600,Ss_50_75_30_08,50,75,30,08,Wastewater biological aerated filter systems,TRUE
+18610,Ss_50_75_30_30,50,75,30,30,Wastewater filter bed systems,TRUE
+18620,Ss_50_75_30_70,50,75,30,70,Wastewater rotating biological contactor systems,TRUE
+18630,Ss_50_75_30_80,50,75,30,80,Wastewater soil biotechnology systems,TRUE
+18640,Ss_50_75_34,50,75,34,,Grit treatment and removal systems,TRUE
+18650,Ss_50_75_34_16,50,75,34,16,Cross-flow grit removal systems,TRUE
+18660,Ss_50_75_34_60,50,75,34,60,Package grit treatment and removal systems,TRUE
+18670,Ss_50_75_34_94,50,75,34,94,Vortex grit removal systems,TRUE
+18680,Ss_50_75_36,50,75,36,,Groundwater treatment systems,TRUE
+18690,Ss_50_75_36_30,50,75,36,30,Groundwater settlement lagoon systems,TRUE
+18700,Ss_50_75_36_34,50,75,36,34,Groundwater sludge mixing systems,TRUE
+18710,Ss_50_75_36_38,50,75,36,38,Groundwater treatment vessel systems,TRUE
+18720,Ss_50_75_41,50,75,41,,Inlet works systems,TRUE
+18730,Ss_50_75_41_15,50,75,41,15,Concrete inlet works systems,TRUE
+18740,Ss_50_75_41_60,50,75,41,60,Package inlet works systems,TRUE
+18750,Ss_50_75_41_66,50,75,41,66,Prefabricated inlet works systems,TRUE
+18760,Ss_50_75_56,50,75,56,,Wastewater nutrient removal systems,TRUE
+18770,Ss_50_75_56_08,50,75,56,08,Biological nutrient removal systems,TRUE
+18780,Ss_50_75_56_13,50,75,56,13,Chemical nutrient removal systems,TRUE
+18790,Ss_50_75_72,50,75,72,,Wastewater receival systems,TRUE
+18800,Ss_50_75_72_08,50,75,72,08,Wastewater brine receival systems,TRUE
+18810,Ss_50_75_72_78,50,75,72,78,Wastewater septage receival systems,TRUE
+18820,Ss_50_75_72_81,50,75,72,81,Wastewater solid organic waste receival systems,TRUE
+18830,Ss_50_75_75,50,75,75,,Wastewater floatables removal systems,TRUE
+18840,Ss_50_75_75_96,50,75,75,96,Wastewater scum removal systems,TRUE
+18850,Ss_50_75_77,50,75,77,,Wastewater activated sludge systems,TRUE
+18860,Ss_50_75_77_01,50,75,77,01,Wastewater activated sludge aeration tank systems,TRUE
+18870,Ss_50_75_77_07,50,75,77,07,Wastewater biological filter tank systems,TRUE
+18880,Ss_50_75_77_70,50,75,77,70,Wastewater return activated sludge systems,TRUE
+18890,Ss_50_75_82,50,75,82,,Wastewater lagoon systems,TRUE
+18900,Ss_50_75_82_02,50,75,82,02,Wastewater aerobic lagoon systems,TRUE
+18910,Ss_50_75_82_04,50,75,82,04,Wastewater anaerobic lagoon systems,TRUE
+18920,Ss_50_75_92,50,75,92,,Wastewater chemical dosing systems,TRUE
+18930,Ss_50_75_92_32,50,75,92,32,Wastewater gas dosing systems,TRUE
+18940,Ss_50_75_92_48,50,75,92,48,Wastewater liquid dosing systems,TRUE
+18950,Ss_50_75_92_82,50,75,92,82,Wastewater solid dosing systems,TRUE
+18960,Ss_50_75_93,50,75,93,,Wastewater filtration systems,TRUE
+18970,Ss_50_75_93_07,50,75,93,07,Wastewater biological percolating filtration systems,TRUE
+18980,Ss_50_75_93_31,50,75,93,31,Wastewater fixed media bed filtration systems,TRUE
+18990,Ss_50_75_93_33,50,75,93,33,Wastewater fluidized bed filtration systems,TRUE
+19000,Ss_50_75_93_52,50,75,93,52,Wastewater membrane filtration systems,TRUE
+19010,Ss_50_75_94,50,75,94,,Wastewater screenings handling systems,TRUE
+19020,Ss_50_75_94_16,50,75,94,16,Combined screenings capture and handling systems,TRUE
+19030,Ss_50_75_94_56,50,75,94,56,Screenings capture systems,TRUE
+19040,Ss_50_75_94_64,50,75,94,64,Screenings handling systems,TRUE
+19050,Ss_50_75_95,50,75,95,,Wastewater treatment pumping systems,TRUE
+19060,Ss_50_75_95_24,50,75,95,24,Wastewater treatment dry well pumping systems,TRUE
+19070,Ss_50_75_95_96,50,75,95,96,Wastewater treatment wet well pumping systems,TRUE
+19080,Ss_50_75_98,50,75,98,,Wastewater storage systems,TRUE
+19090,Ss_50_75_98_01,50,75,98,01,Wastewater treatment above-ground storage systems,TRUE
+19100,Ss_50_75_98_10,50,75,98,10,Wastewater treatment below-ground storage systems,TRUE
+19110,Ss_50_75_98_96,50,75,98,96,Wastewater tank flushing systems,TRUE
+19120,Ss_50_80,50,80,,,"Solid waste storage, treatment and disposal systems",TRUE
+19130,Ss_50_80_40,50,80,40,,Incinerator systems,TRUE
+19140,Ss_50_80_80,50,80,80,,Solid waste systems,TRUE
+19150,Ss_50_80_80_80,50,80,80,80,Solid waste disposal systems,TRUE
+19160,Ss_50_80_80_82,50,80,80,82,Solid waste sorting systems,TRUE
+19170,Ss_50_80_80_96,50,80,80,96,Waste compactor systems,TRUE
+19180,Ss_50_80_96,50,80,96,,Weighbridge systems,TRUE
+19190,Ss_50_80_96_00,50,80,96,00,Above-ground weighbridge systems,TRUE
+19200,Ss_50_80_96_63,50,80,96,63,Pit weighbridge systems,TRUE
+19210,Ss_55,55,,,,Piped supply systems,TRUE
+19220,Ss_55_05,55,05,,,"Gas extraction, treatment and storage systems",TRUE
+19230,Ss_55_05_30,55,05,30,,Gas extraction systems,TRUE
+19240,Ss_55_05_75,55,05,75,,Gas storage tank systems,TRUE
+19250,Ss_55_05_85,55,05,85,,Gas treatment systems,TRUE
+19260,Ss_55_05_95,55,05,95,,Gas well systems,TRUE
+19270,Ss_55_10,55,10,,,"Liquid fuel extraction, treatment and storage systems",TRUE
+19280,Ss_55_10_70,55,10,70,,Liquid fuel extraction systems,TRUE
+19290,Ss_55_10_75,55,10,75,,Liquid fuel storage tank systems,TRUE
+19300,Ss_55_10_85,55,10,85,,Liquid fuel treatment systems,TRUE
+19310,Ss_55_10_95,55,10,95,,Liquid fuel well systems,TRUE
+19320,Ss_55_15,55,15,,,"Water extraction, treatment and storage systems",TRUE
+19330,Ss_55_15_10,55,15,10,,Raw water pipeline systems,TRUE
+19340,Ss_55_15_10_13,55,15,10,13,Raw water channel systems,TRUE
+19350,Ss_55_15_10_35,55,15,10,35,Raw water gravity pipeline systems,TRUE
+19360,Ss_55_15_10_65,55,15,10,65,Raw water pressure pipeline systems,TRUE
+19370,Ss_55_15_10_85,55,15,10,85,Raw water siphon systems,TRUE
+19380,Ss_55_15_20,55,15,20,,Raw water pumping systems,TRUE
+19390,Ss_55_15_20_23,55,15,20,23,Raw water dry well pumping systems,TRUE
+19400,Ss_55_15_20_95,55,15,20,95,Raw water wet well pumping systems,TRUE
+19410,Ss_55_15_30,55,15,30,,Raw water storage systems,TRUE
+19420,Ss_55_15_30_02,55,15,30,02,Raw water above-ground storage systems,TRUE
+19430,Ss_55_15_30_06,55,15,30,06,Raw water below-ground storage systems,TRUE
+19440,Ss_55_15_30_65,55,15,30,65,Raw water pipeline storage systems,TRUE
+19450,Ss_55_15_50,55,15,50,,Water treatment pre-oxidation systems,TRUE
+19460,Ss_55_15_50_10,55,15,50,10,Chlorine dioxide pre-disinfection systems,TRUE
+19470,Ss_55_15_50_12,55,15,50,12,Chlorine pre-disinfection systems,TRUE
+19480,Ss_55_15_50_14,55,15,50,14,Chloramine pre-disinfection systems,TRUE
+19490,Ss_55_15_50_16,55,15,50,16,Coagulation systems,TRUE
+19500,Ss_55_15_50_30,55,15,50,30,Flocculation systems,TRUE
+19510,Ss_55_15_50_60,55,15,50,60,Ozone pre-disinfection systems,TRUE
+19520,Ss_55_15_50_64,55,15,50,64,Potassium permanganate pre-disinfection systems,TRUE
+19530,Ss_55_15_55,55,15,55,,Water treatment sludge management systems,TRUE
+19540,Ss_55_15_55_15,55,15,55,15,Sludge collection systems,TRUE
+19550,Ss_55_15_55_22,55,15,55,22,Water treatment sludge dewatering systems,TRUE
+19560,Ss_55_15_55_44,55,15,55,44,Sludge lagoon systems,TRUE
+19570,Ss_55_15_55_46,55,15,55,46,Sludge lamella plate settling systems,TRUE
+19580,Ss_55_15_55_70,55,15,55,70,Sludge-removal systems,TRUE
+19590,Ss_55_15_55_76,55,15,55,76,Sludge blanket settling systems,TRUE
+19600,Ss_55_15_55_78,55,15,55,78,Sludge contact systems,TRUE
+19610,Ss_55_15_55_87,55,15,55,87,Sludge-thickening systems,TRUE
+19620,Ss_55_15_60,55,15,60,,Water treatment adsorption systems,TRUE
+19630,Ss_55_15_60_34,55,15,60,34,Granular activated carbon adsorption systems,TRUE
+19640,Ss_55_15_60_64,55,15,60,64,Powdered activated carbon adsorption systems,TRUE
+19650,Ss_55_15_60_72,55,15,60,72,Resin adsorption systems,TRUE
+19660,Ss_55_15_72,55,15,72,,Water extraction and monitoring systems,TRUE
+19670,Ss_55_15_72_20,55,15,72,20,Water extraction borehole systems,TRUE
+19680,Ss_55_15_72_50,55,15,72,50,Water monitoring borehole systems,TRUE
+19690,Ss_55_15_80,55,15,80,,Water treatment disinfection systems,TRUE
+19700,Ss_55_15_80_10,55,15,80,10,Chlorine dioxide disinfection systems,TRUE
+19710,Ss_55_15_80_12,55,15,80,12,Chlorine disinfection systems,TRUE
+19720,Ss_55_15_80_14,55,15,80,14,Chloramine disinfection systems,TRUE
+19730,Ss_55_15_80_60,55,15,80,60,Ozone disinfection systems,TRUE
+19740,Ss_55_15_80_90,55,15,80,90,Ultraviolet (UV) radiation disinfection systems,TRUE
+19750,Ss_55_15_85,55,15,85,,Water treatment filtration systems,TRUE
+19760,Ss_55_15_85_08,55,15,85,08,Biological aerated flooded filtration systems,TRUE
+19770,Ss_55_15_85_31,55,15,85,31,Fixed media bed filtration systems,TRUE
+19780,Ss_55_15_85_33,55,15,85,33,Fluidized bed filtration systems,TRUE
+19790,Ss_55_15_85_46,55,15,85,46,Lamella plate filtration systems,TRUE
+19800,Ss_55_15_85_50,55,15,85,50,Water treatment membrane filtration systems,TRUE
+19810,Ss_55_15_85_85,55,15,85,85,Submerged aerated filtration systems,TRUE
+19820,Ss_55_15_90,55,15,90,,Water treatment chemical dosing systems,TRUE
+19830,Ss_55_15_90_32,55,15,90,32,Water treatment gas dosing systems,TRUE
+19840,Ss_55_15_90_48,55,15,90,48,Water treatment liquid dosing systems,TRUE
+19850,Ss_55_15_90_82,55,15,90,82,Water treatment solid dosing systems,TRUE
+19860,Ss_55_20,55,20,,,Gas and vacuum distribution and supply systems,TRUE
+19870,Ss_55_20_14,55,20,14,,Central vacuum systems,TRUE
+19880,Ss_55_20_14_40,55,20,14,40,Industrial central vacuum systems,TRUE
+19890,Ss_55_20_14_70,55,20,14,70,Residential central vacuum systems,TRUE
+19900,Ss_55_20_33,55,20,33,,Gas distribution network systems,TRUE
+19910,Ss_55_20_33_56,55,20,33,56,Natural gas distribution network systems,TRUE
+19920,Ss_55_20_34,55,20,34,,Gas supply systems,TRUE
+19930,Ss_55_20_34_05,55,20,34,05,Biogas supply systems,TRUE
+19940,Ss_55_20_34_40,55,20,34,40,Incoming gas supply systems,TRUE
+19950,Ss_55_20_34_46,55,20,34,46,Liquefied petroleum gas (LPG) supply systems,TRUE
+19960,Ss_55_20_34_57,55,20,34,57,Natural gas supply systems,TRUE
+19970,Ss_55_20_34_95,55,20,34,95,Welding gas supply systems,TRUE
+19980,Ss_55_20_40,55,20,40,,Inert gas supply systems,TRUE
+19990,Ss_55_20_45,55,20,45,,Laboratory gas supply systems,TRUE
+20000,Ss_55_20_45_05,55,20,45,05,Laboratory argon supply systems,TRUE
+20010,Ss_55_20_45_15,55,20,45,15,Laboratory compressed air supply systems,TRUE
+20020,Ss_55_20_45_36,55,20,45,36,Laboratory helium supply systems,TRUE
+20030,Ss_55_20_45_39,55,20,45,39,Laboratory hydrogen supply systems,TRUE
+20040,Ss_55_20_45_56,55,20,45,56,Laboratory nitrogen supply systems,TRUE
+20050,Ss_55_20_45_59,55,20,45,59,Laboratory oxygen supply systems,TRUE
+20060,Ss_55_20_51,55,20,51,,Medical gas and vacuum systems,TRUE
+20070,Ss_55_20_51_03,55,20,51,03,Medical anaesthetic gas scavenging systems,TRUE
+20080,Ss_55_20_51_15,55,20,51,15,Medical compressed air supply systems,TRUE
+20090,Ss_55_20_51_36,55,20,51,36,Medical helium/ oxygen mixture supply systems,TRUE
+20100,Ss_55_20_51_56,55,20,51,56,Medical nitrous oxide supply systems,TRUE
+20110,Ss_55_20_51_57,55,20,51,57,Medical nitrous oxide/ oxygen mixture supply systems,TRUE
+20120,Ss_55_20_51_59,55,20,51,59,Medical oxygen supply systems,TRUE
+20130,Ss_55_20_51_94,55,20,51,94,Medical vacuum systems,TRUE
+20140,Ss_55_20_60,55,20,60,,Process gas systems,TRUE
+20150,Ss_55_20_60_05,55,20,60,05,Process argon supply systems,TRUE
+20160,Ss_55_20_60_15,55,20,60,15,Compressed air supply systems,TRUE
+20170,Ss_55_20_60_33,55,20,60,33,Gas vaporizing systems,TRUE
+20180,Ss_55_20_60_56,55,20,60,56,Process nitrogen supply systems,TRUE
+20190,Ss_55_20_60_59,55,20,60,59,Process oxygen supply systems,TRUE
+20200,Ss_55_20_85,55,20,85,,Specialist and high purity gas supply systems,TRUE
+20210,Ss_55_30,55,30,,,Fire-extinguishing systems,TRUE
+20220,Ss_55_30_30,55,30,30,,Foam fire-extinguishing and fire-suppression systems,TRUE
+20230,Ss_55_30_30_31,55,30,30,31,Foam fire-extinguishing systems,TRUE
+20240,Ss_55_30_35,55,30,35,,Gaseous fire-extinguishing systems,TRUE
+20250,Ss_55_30_35_10,55,30,35,10,Carbon dioxide fire-extinguishing systems,TRUE
+20260,Ss_55_30_35_35,55,30,35,35,Halocarbon gas total flooding fire-extinguishing systems,TRUE
+20270,Ss_55_30_35_40,55,30,35,40,Inert gas total flooding fire-extinguishing systems,TRUE
+20280,Ss_55_30_60,55,30,60,,Particle-based fire-extinguishing systems,TRUE
+20290,Ss_55_30_60_15,55,30,60,15,Condensed aerosol fire-suppression systems,TRUE
+20300,Ss_55_30_60_24,55,30,60,24,Dry chemical fire-extinguishing systems,TRUE
+20310,Ss_55_30_65,55,30,65,,Portable fire-extinguishing systems,TRUE
+20320,Ss_55_30_65_30,55,30,65,30,Fire blanket systems,TRUE
+20330,Ss_55_30_65_35,55,30,65,35,Fire bucket systems,TRUE
+20340,Ss_55_30_65_65,55,30,65,65,Portable fire extinguisher systems,TRUE
+20350,Ss_55_30_96,55,30,96,,Water firefighting systems,TRUE
+20360,Ss_55_30_96_24,55,30,96,24,Dry dropper systems,TRUE
+20370,Ss_55_30_96_25,55,30,96,25,Dry riser systems,TRUE
+20380,Ss_55_30_96_29,55,30,96,29,Fire hose reel systems,TRUE
+20390,Ss_55_30_96_30,55,30,96,30,Fire hydrant systems,TRUE
+20400,Ss_55_30_96_95,55,30,96,95,Water cannon firefighting systems,TRUE
+20410,Ss_55_30_96_97,55,30,96,97,Wet riser systems,TRUE
+20420,Ss_55_30_98,55,30,98,,Water fire suppression systems,TRUE
+20430,Ss_55_30_98_21,55,30,98,21,Deluge systems,TRUE
+20440,Ss_55_30_98_23,55,30,98,23,Domestic and residential sprinkler systems,TRUE
+20450,Ss_55_30_98_70,55,30,98,70,Residential water mist systems,TRUE
+20460,Ss_55_30_98_85,55,30,98,85,Sprinkler systems,TRUE
+20470,Ss_55_30_98_96,55,30,98,96,Water mist systems,TRUE
+20480,Ss_55_40,55,40,,,Steam distribution and supply systems,TRUE
+20490,Ss_55_40_85,55,40,85,,Steam supply and condensate systems,TRUE
+20500,Ss_55_40_85_38,55,40,85,38,Hospital steam supply and condensate systems,TRUE
+20510,Ss_55_40_85_41,55,40,85,41,Industrial steam supply and condensate systems,TRUE
+20520,Ss_55_50,55,50,,,Liquid fuel distribution and supply systems,TRUE
+20530,Ss_55_50_46,55,50,46,,Liquid fuel distribution network systems,TRUE
+20540,Ss_55_50_46_58,55,50,46,58,Oil distribution network systems,TRUE
+20550,Ss_55_50_47,55,50,47,,Liquid fuel supply systems,TRUE
+20560,Ss_55_50_47_10,55,50,47,10,Biodiesel supply systems,TRUE
+20570,Ss_55_50_47_12,55,50,47,12,Bioethanol supply systems,TRUE
+20580,Ss_55_50_47_21,55,50,47,21,Diesel supply systems,TRUE
+20590,Ss_55_50_47_32,55,50,47,32,Fuel oil supply systems,TRUE
+20600,Ss_55_50_47_45,55,50,47,45,Kerosene/ jet fuel supply systems,TRUE
+20610,Ss_55_50_47_46,55,50,47,46,Liquid biofuel supply systems,TRUE
+20620,Ss_55_50_47_61,55,50,47,61,Petrol supply systems,TRUE
+20630,Ss_55_60,55,60,,,Process liquid distribution and supply systems,TRUE
+20640,Ss_55_60_45,55,60,45,,Liquid acids and bases supply systems,TRUE
+20650,Ss_55_60_47,55,60,47,,Liquid chemicals supply systems,TRUE
+20660,Ss_55_60_47_27,55,60,47,27,Electrolyte supply systems,TRUE
+20670,Ss_55_60_47_56,55,60,47,56,N-Methyl-2-pyrrolidone (NMP) supply systems,TRUE
+20680,Ss_55_60_50,55,60,50,,Liquid polymer supply systems,TRUE
+20690,Ss_55_60_55,55,60,55,,Lubrication supply systems,TRUE
+20700,Ss_55_60_55_70,55,60,55,70,Rail lubrication supply systems,TRUE
+20710,Ss_55_70,55,70,,,Water distribution and supply systems,TRUE
+20720,Ss_55_70_03,55,70,03,,Aquaculture supply and recirculation systems,TRUE
+20730,Ss_55_70_03_29,55,70,03,29,Feeding systems,TRUE
+20740,Ss_55_70_03_31,55,70,03,31,Freshwater intake systems,TRUE
+20750,Ss_55_70_03_70,55,70,03,70,Recirculating aquaculture systems,TRUE
+20760,Ss_55_70_03_78,55,70,03,78,Seawater intake systems,TRUE
+20770,Ss_55_70_03_80,55,70,03,80,Skimming systems,TRUE
+20780,Ss_55_70_03_94,55,70,03,94,Vaccination systems,TRUE
+20790,Ss_55_70_38,55,70,38,,Hot and cold water supply systems,TRUE
+20800,Ss_55_70_38_15,55,70,38,15,Cold water supply systems,TRUE
+20810,Ss_55_70_38_20,55,70,38,20,Direct hot water storage supply systems,TRUE
+20820,Ss_55_70_38_40,55,70,38,40,Incoming water supply systems,TRUE
+20830,Ss_55_70_38_42,55,70,38,42,Indirect hot water storage supply systems,TRUE
+20840,Ss_55_70_38_45,55,70,38,45,Instantaneous hot water supply systems,TRUE
+20850,Ss_55_70_38_65,55,70,38,65,Pumped cold water supply systems,TRUE
+20860,Ss_55_70_38_72,55,70,38,72,Reclaimed water distribution systems,TRUE
+20870,Ss_55_70_38_92,55,70,38,92,Ultrapure water supply systems,TRUE
+20880,Ss_55_70_39,55,70,39,,Hydroelectric pressure water supply systems,TRUE
+20890,Ss_55_70_39_10,55,70,39,10,Buried pressure pipeline systems,TRUE
+20900,Ss_55_70_42,55,70,42,,Irrigation and aeration systems,TRUE
+20910,Ss_55_70_42_20,55,70,42,20,Drip irrigation systems,TRUE
+20920,Ss_55_70_42_50,55,70,42,50,Manual irrigation systems,TRUE
+20930,Ss_55_70_42_60,55,70,42,60,Passive irrigation and aeration systems,TRUE
+20940,Ss_55_70_42_85,55,70,42,85,Sprinkler irrigation systems,TRUE
+20950,Ss_55_70_42_87,55,70,42,87,Subirrigation and aeration systems,TRUE
+20960,Ss_55_70_65,55,70,65,,Treated water storage systems,TRUE
+20970,Ss_55_70_65_02,55,70,65,02,Treated water above-ground storage systems,TRUE
+20980,Ss_55_70_65_06,55,70,65,06,Treated water below-ground storage systems,TRUE
+20990,Ss_55_70_70,55,70,70,,Treated water pumping systems,TRUE
+21000,Ss_55_70_70_23,55,70,70,23,Treated water dry well pumping systems,TRUE
+21010,Ss_55_70_70_95,55,70,70,95,Treated water wet well pumping systems,TRUE
+21020,Ss_55_70_94,55,70,94,,Washing systems,TRUE
+21030,Ss_55_70_94_94,55,70,94,94,Wash plant systems,TRUE
+21040,Ss_55_70_94_96,55,70,94,96,Wheel washing systems,TRUE
+21050,Ss_55_70_95,55,70,95,,Water distribution network systems,TRUE
+21060,Ss_55_70_95_34,55,70,95,34,Treated water gravity pipeline systems,TRUE
+21070,Ss_55_70_95_50,55,70,95,50,Treated water pressure pipeline systems,TRUE
+21080,Ss_55_70_95_66,55,70,95,66,Private water distribution network systems,TRUE
+21090,Ss_55_70_95_85,55,70,95,85,Treated water siphon systems,TRUE
+21100,Ss_55_70_96,55,70,96,,Water feature systems,TRUE
+21110,Ss_55_70_96_15,55,70,96,15,Cascade and waterfall systems,TRUE
+21120,Ss_55_70_96_31,55,70,96,31,Fountain and jet systems,TRUE
+21130,Ss_55_70_96_83,55,70,96,83,Self-contained water feature systems,TRUE
+21140,Ss_55_70_96_96,55,70,96,96,Water play systems,TRUE
+21150,Ss_55_70_97,55,70,97,,Consumer water reclamation systems,TRUE
+21160,Ss_55_70_97_08,55,70,97,08,Black water reclamation systems,TRUE
+21170,Ss_55_70_97_35,55,70,97,35,Grey water reclamation systems,TRUE
+21180,Ss_55_70_97_70,55,70,97,70,Rainwater reclamation systems,TRUE
+21190,Ss_55_70_98,55,70,98,,Consumer water treatment systems,TRUE
+21200,Ss_55_70_98_08,55,70,98,08,Bore water treatment systems,TRUE
+21210,Ss_55_70_98_13,55,70,98,13,Chemical-free water treatment systems,TRUE
+21220,Ss_55_70_98_85,55,70,98,85,Swimming pool water treatment systems,TRUE
+21230,Ss_55_70_98_92,55,70,98,92,Ultrapure water treatment systems,TRUE
+21240,Ss_55_70_99,55,70,99,,Water movement systems,TRUE
+21250,Ss_55_70_99_84,55,70,99,84,Stoplog systems,TRUE
+21260,Ss_55_70_99_96,55,70,99,96,Water baffle systems,TRUE
+21270,Ss_55_90,55,90,,,Piped solids distribution and supply systems,TRUE
+21280,Ss_55_90_65,55,90,65,,Piped granule and powder supply systems,TRUE
+21290,Ss_60,60,,,,"Heating, cooling and refrigeration systems",TRUE
+21300,Ss_60_30,60,30,,,Rail and paving heating systems,TRUE
+21310,Ss_60_30_60,60,30,60,,Pavement heating systems,TRUE
+21320,Ss_60_30_60_27,60,30,60,27,Electric pavement heating systems,TRUE
+21330,Ss_60_30_70,60,30,70,,Railway heating systems,TRUE
+21340,Ss_60_30_70_65,60,30,70,65,Points heating systems,TRUE
+21350,Ss_60_30_75,60,30,75,,Runway heating systems,TRUE
+21360,Ss_60_30_90,60,30,90,,Tramway heating systems,TRUE
+21370,Ss_60_40,60,40,,,Space heating and cooling systems,TRUE
+21380,Ss_60_40_13,60,40,13,,Climatic ceiling and beam systems,TRUE
+21390,Ss_60_40_13_13,60,40,13,13,Climatic beam systems,TRUE
+21400,Ss_60_40_13_14,60,40,13,14,Climatic ceiling systems,TRUE
+21410,Ss_60_40_15,60,40,15,,"Combined heating, cooling and power systems",TRUE
+21420,Ss_60_40_15_40,60,40,15,40,Combined heat and power systems,TRUE
+21430,Ss_60_40_17,60,40,17,,Cooling systems,TRUE
+21440,Ss_60_40_17_12,60,40,17,12,Chilled water systems,TRUE
+21450,Ss_60_40_17_15,60,40,17,15,Condenser water systems,TRUE
+21460,Ss_60_40_17_21,60,40,17,21,District cooling systems,TRUE
+21470,Ss_60_40_17_40,60,40,17,40,Ice storage systems,TRUE
+21480,Ss_60_40_17_96,60,40,17,96,Water cooling systems,TRUE
+21490,Ss_60_40_36,60,40,36,,Heat pump systems,TRUE
+21500,Ss_60_40_36_05,60,40,36,05,Air source heat pump systems,TRUE
+21510,Ss_60_40_36_35,60,40,36,35,Ground source heat pump systems,TRUE
+21520,Ss_60_40_36_96,60,40,36,96,Water source heat pump systems,TRUE
+21530,Ss_60_40_37,60,40,37,,Heating systems,TRUE
+21540,Ss_60_40_37_21,60,40,37,21,Direct-fired heating systems,TRUE
+21550,Ss_60_40_37_22,60,40,37,22,District heating systems,TRUE
+21560,Ss_60_40_37_26,60,40,37,26,Electric heating systems,TRUE
+21570,Ss_60_40_37_42,60,40,37,42,Indirect-fired heating systems,TRUE
+21580,Ss_60_40_37_48,60,40,37,48,Low-temperature hot water heating systems,TRUE
+21590,Ss_60_40_37_51,60,40,37,51,Medium-temperature hot water heating systems,TRUE
+21600,Ss_60_40_37_81,60,40,37,81,Solar heating systems,TRUE
+21610,Ss_60_40_37_85,60,40,37,85,Steam heating systems,TRUE
+21620,Ss_60_40_84,60,40,84,,"District heating, cooling or ambient network systems",TRUE
+21630,Ss_60_40_84_21,60,40,84,21,District cooling – primary distribution network systems,TRUE
+21640,Ss_60_40_84_22,60,40,84,22,District heating - primary distribution network systems,TRUE
+21650,Ss_60_40_84_23,60,40,84,23,District cooling – primary energy centre cooling systems,TRUE
+21660,Ss_60_40_84_24,60,40,84,24,District heating – primary energy centre heating systems,TRUE
+21670,Ss_60_40_84_25,60,40,84,25,District cooling – secondary/ building distribution network systems,TRUE
+21680,Ss_60_40_84_26,60,40,84,26,District heating – secondary/ building distribution network systems,TRUE
+21690,Ss_60_40_90,60,40,90,,Trace heating systems,TRUE
+21700,Ss_60_40_90_28,60,40,90,28,Electrical resistance trace heating systems,TRUE
+21710,Ss_60_40_92,60,40,92,,Underfloor heating and cooling systems,TRUE
+21720,Ss_60_40_92_15,60,40,92,15,Combined underfloor heating and cooling systems,TRUE
+21730,Ss_60_40_92_27,60,40,92,27,Electric underfloor heating systems,TRUE
+21740,Ss_60_40_92_92,60,40,92,92,Underfloor chilled water systems,TRUE
+21750,Ss_60_40_92_94,60,40,92,94,Underfloor low-temperature hot water heating systems,TRUE
+21760,Ss_60_60,60,60,,,Refrigeration systems,TRUE
+21770,Ss_60_60_15,60,60,15,,Cold room systems,TRUE
+21780,Ss_60_60_15_10,60,60,15,10,Catering cold room systems,TRUE
+21790,Ss_60_60_15_15,60,60,15,15,Cold storage room systems,TRUE
+21800,Ss_60_60_15_50,60,60,15,50,Mortuary cold room systems,TRUE
+21810,Ss_60_60_17,60,60,17,,Cold storage systems,TRUE
+21820,Ss_60_60_70,60,60,70,,Refrigerant systems,TRUE
+21830,Ss_60_60_70_15,60,60,70,15,Refrigerant charging systems,TRUE
+21840,Ss_60_60_70_70,60,60,70,70,Refrigerant recovery systems,TRUE
+21850,Ss_60_60_70_71,60,60,70,71,Refrigerant cooling systems,TRUE
+21860,Ss_60_60_70_94,60,60,70,94,Variable refrigerant flow (VRF) systems,TRUE
+21870,Ss_60_80,60,80,,,Drying systems,TRUE
+21880,Ss_60_80_08,60,80,08,,Bottle and can drying systems,TRUE
+21890,Ss_65,65,,,,Ventilation and air conditioning systems,TRUE
+21900,Ss_65_40,65,40,,,Ventilation systems,TRUE
+21910,Ss_65_40_32,65,40,32,,Fume extract systems,TRUE
+21920,Ss_65_40_32_32,65,40,32,32,Fume cupboard extract systems,TRUE
+21930,Ss_65_40_32_70,65,40,32,70,Recirculatory fume cupboard systems,TRUE
+21940,Ss_65_40_32_75,65,40,32,75,Safety cabinet extract systems,TRUE
+21950,Ss_65_40_33,65,40,33,,General space ventilation systems,TRUE
+21960,Ss_65_40_33_23,65,40,33,23,Destratification air distribution systems,TRUE
+21970,Ss_65_40_33_45,65,40,33,45,Kitchen extract ventilation systems,TRUE
+21980,Ss_65_40_33_48,65,40,33,48,Local extract ventilation systems,TRUE
+21990,Ss_65_40_33_49,65,40,33,49,Mechanical supply and extract ventilation systems,TRUE
+22000,Ss_65_40_33_50,65,40,33,50,Mechanical extract ventilation systems,TRUE
+22010,Ss_65_40_33_51,65,40,33,51,Mechanical supply ventilation systems,TRUE
+22020,Ss_65_40_33_52,65,40,33,52,Mechanical whole-house ventilation systems,TRUE
+22030,Ss_65_40_33_56,65,40,33,56,Natural ventilation systems,TRUE
+22040,Ss_65_40_33_60,65,40,33,60,Passive stack ventilation systems,TRUE
+22050,Ss_65_40_33_90,65,40,33,90,Toilet extract ventilation systems,TRUE
+22060,Ss_65_40_42,65,40,42,,Industrial fume extract systems,TRUE
+22070,Ss_65_40_42_25,65,40,42,25,Dust extract systems,TRUE
+22080,Ss_65_40_42_36,65,40,42,36,Hazardous area extract systems,TRUE
+22090,Ss_65_40_42_45,65,40,42,45,Local exhaust ventilation systems,TRUE
+22100,Ss_65_40_42_95,65,40,42,95,Vehicle exhaust extract systems,TRUE
+22110,Ss_65_40_80,65,40,80,,Smoke extract and control systems,TRUE
+22120,Ss_65_40_80_56,65,40,80,56,Natural smoke and heat exhaust ventilation systems,TRUE
+22130,Ss_65_40_80_65,65,40,80,65,Pressure differential systems,TRUE
+22140,Ss_65_40_80_80,65,40,80,80,Smoke and heat exhaust ventilation systems,TRUE
+22150,Ss_65_40_94,65,40,94,,Vehicular space ventilation systems,TRUE
+22160,Ss_65_40_94_10,65,40,94,10,Car park extract systems,TRUE
+22170,Ss_65_40_94_11,65,40,94,11,Car park supply systems,TRUE
+22180,Ss_65_40_94_88,65,40,94,88,Tunnel pressurization systems,TRUE
+22190,Ss_65_40_94_90,65,40,94,90,Tunnel ventilation systems,TRUE
+22200,Ss_65_60,65,60,,,Specialist ventilation systems,TRUE
+22210,Ss_65_60_55,65,60,55,,Hazardous processes ventilation systems,TRUE
+22220,Ss_65_60_55_22,65,60,55,22,Decontamination areas ventilation systems,TRUE
+22230,Ss_65_60_55_36,65,60,55,36,Helium quench pipe systems,TRUE
+22240,Ss_65_60_95,65,60,95,,Wind tunnel systems,TRUE
+22250,Ss_65_80,65,80,,,Air conditioning systems,TRUE
+22260,Ss_65_80_05,65,80,05,,Central air conditioning systems,TRUE
+22270,Ss_65_80_05_10,65,80,05,10,Centralized all-air conditioning systems,TRUE
+22280,Ss_65_80_05_30,65,80,05,30,Fan coil unit air conditioning systems,TRUE
+22290,Ss_65_80_05_40,65,80,05,40,Induction unit air conditioning systems,TRUE
+22300,Ss_65_80_15,65,80,15,,Controlled environment systems,TRUE
+22310,Ss_65_80_15_14,65,80,15,14,Chilled air aisle containment systems,TRUE
+22320,Ss_65_80_15_16,65,80,15,16,Clean room air supply systems,TRUE
+22330,Ss_65_80_15_30,65,80,15,30,Fan wall systems,TRUE
+22340,Ss_65_80_15_36,65,80,15,36,Hot air aisle containment systems,TRUE
+22350,Ss_65_80_45,65,80,45,,Local air conditioning systems,TRUE
+22360,Ss_65_80_45_25,65,80,45,25,Evaporative cooling systems,TRUE
+22370,Ss_65_80_45_48,65,80,45,48,Local underfloor air conditioning systems,TRUE
+22380,Ss_65_80_45_72,65,80,45,72,Room air conditioning systems,TRUE
+22390,Ss_70,70,,,,Electrical systems,TRUE
+22400,Ss_70_10,70,10,,,Electrical power generation systems,TRUE
+22410,Ss_70_10_30,70,10,30,,Fossil fuel power generation systems,TRUE
+22420,Ss_70_10_30_33,70,10,30,33,Gas power generating systems,TRUE
+22430,Ss_70_10_30_70,70,10,30,70,Reciprocating internal combustion engine,TRUE
+22440,Ss_70_10_30_72,70,10,30,72,Reciprocating internal combustion engine driven alternating current generator systems,TRUE
+22450,Ss_70_10_70,70,10,70,,Renewable power generation systems,TRUE
+22460,Ss_70_10_70_33,70,10,70,33,Geothermal power generation systems,TRUE
+22470,Ss_70_10_70_35,70,10,70,35,Grid-connected photovoltaic systems,TRUE
+22480,Ss_70_10_70_36,70,10,70,36,Hydroelectric power generation systems,TRUE
+22490,Ss_70_10_70_80,70,10,70,80,Small-scale wave and tidal power generation systems,TRUE
+22500,Ss_70_10_70_82,70,10,70,82,Small-scale wind-powered electricity generation systems,TRUE
+22510,Ss_70_10_70_85,70,10,70,85,Stand-alone photovoltaic systems,TRUE
+22520,Ss_70_10_70_95,70,10,70,95,Water mill systems,TRUE
+22530,Ss_70_10_70_97,70,10,70,97,Water turbine systems,TRUE
+22540,Ss_70_10_70_98,70,10,70,98,Wind power generating systems,TRUE
+22550,Ss_70_20,70,20,,,Electrical power transmission and distribution systems,TRUE
+22560,Ss_70_20_25,70,20,25,,High-voltage power transformation systems,TRUE
+22570,Ss_70_20_25_62,70,20,25,62,Phase-shifting power transformer systems,TRUE
+22580,Ss_70_20_25_65,70,20,25,65,Prefabricated distribution substation systems,TRUE
+22590,Ss_70_20_25_89,70,20,25,89,Transmission and distribution power transformer systems,TRUE
+22600,Ss_70_20_30,70,20,30,,High-voltage substation systems,TRUE
+22610,Ss_70_20_30_10,70,20,30,10,Breaker-and-a-half substation systems,TRUE
+22620,Ss_70_20_30_22,70,20,30,22,Double bus double breaker substation systems,TRUE
+22630,Ss_70_20_30_24,70,20,30,24,Double bus single breaker substation systems,TRUE
+22640,Ss_70_20_30_50,70,20,30,50,Main bus and transfer bus substation systems,TRUE
+22650,Ss_70_20_30_70,70,20,30,70,Ring bus substation systems,TRUE
+22660,Ss_70_20_30_80,70,20,30,80,Single bus substation systems,TRUE
+22670,Ss_70_20_35,70,20,35,,High-voltage transmission and distribution systems,TRUE
+22680,Ss_70_20_35_24,70,20,35,24,Double-circuit transmission line section systems,TRUE
+22690,Ss_70_20_35_34,70,20,35,34,Grid battery systems,TRUE
+22700,Ss_70_20_35_36,70,20,35,36,High-voltage outage group systems,TRUE
+22710,Ss_70_20_35_37,70,20,35,37,High-voltage power reactor systems,TRUE
+22720,Ss_70_20_35_76,70,20,35,76,Series variable compensation systems,TRUE
+22730,Ss_70_20_35_78,70,20,35,78,Shunt capacitor systems,TRUE
+22740,Ss_70_20_35_80,70,20,35,80,Single-circuit transmission line section systems,TRUE
+22750,Ss_70_20_35_84,70,20,35,84,Static VAR (volt-ampere reactive) compensator systems,TRUE
+22760,Ss_70_20_35_86,70,20,35,86,Synchronous condenser systems,TRUE
+22770,Ss_70_20_35_90,70,20,35,90,Transmission cable systems,TRUE
+22780,Ss_70_20_60,70,20,60,,High-voltage control and protection systems,TRUE
+22790,Ss_70_20_60_09,70,20,60,09,Bus coupler protection systems,TRUE
+22800,Ss_70_20_60_10,70,20,60,10,Busbar protection system,TRUE
+22810,Ss_70_20_60_12,70,20,60,12,Capacitor protection system,TRUE
+22820,Ss_70_20_60_41,70,20,60,41,Inter-zone unit protection systems,TRUE
+22830,Ss_70_20_60_47,70,20,60,47,Line protection system,TRUE
+22840,Ss_70_20_60_60,70,20,60,60,Network protection systems,TRUE
+22850,Ss_70_20_60_76,70,20,60,76,Series reactor protection system,TRUE
+22860,Ss_70_20_60_78,70,20,60,78,Shunt reactor protection system,TRUE
+22870,Ss_70_20_60_84,70,20,60,84,"Substation protection, automation and control systems (PACS)",TRUE
+22880,Ss_70_20_60_90,70,20,60,90,Transformer protection system,TRUE
+22890,Ss_70_20_70,70,20,70,,Electricity network monitoring systems,TRUE
+22900,Ss_70_20_70_23,70,20,70,23,Disturbance monitoring systems,TRUE
+22910,Ss_70_20_70_29,70,20,70,29,Fault monitoring and location systems,TRUE
+22920,Ss_70_20_70_58,70,20,70,58,Online condition monitoring systems,TRUE
+22930,Ss_70_20_70_69,70,20,70,69,Quality-of-supply monitoring systems,TRUE
+22940,Ss_70_20_70_72,70,20,70,72,Revenue metering systems,TRUE
+22950,Ss_70_30,70,30,,,Electricity distribution systems,TRUE
+22960,Ss_70_30_10,70,30,10,,Cable management systems,TRUE
+22970,Ss_70_30_10_28,70,30,10,28,Extra-low-voltage cable management systems,TRUE
+22980,Ss_70_30_10_35,70,30,10,35,High-voltage cable management systems,TRUE
+22990,Ss_70_30_10_45,70,30,10,45,Low-voltage cable management systems,TRUE
+23000,Ss_70_30_25,70,30,25,,Electrical protection systems,TRUE
+23010,Ss_70_30_25_25,70,30,25,25,Earthing and bonding systems,TRUE
+23020,Ss_70_30_25_28,70,30,25,28,Earth grid systems,TRUE
+23030,Ss_70_30_25_45,70,30,25,45,Lightning protection systems,TRUE
+23040,Ss_70_30_35,70,30,35,,High-voltage systems,TRUE
+23050,Ss_70_30_35_30,70,30,35,30,High-voltage site connection systems,TRUE
+23060,Ss_70_30_35_35,70,30,35,35,High-voltage distribution systems,TRUE
+23070,Ss_70_30_45,70,30,45,,Low-voltage systems,TRUE
+23080,Ss_70_30_45_23,70,30,45,23,Direct current (d.c.) supply systems,TRUE
+23090,Ss_70_30_45_28,70,30,45,28,Extra-low-voltage distribution systems,TRUE
+23100,Ss_70_30_45_40,70,30,45,40,Low-voltage site connection systems,TRUE
+23110,Ss_70_30_45_45,70,30,45,45,Low-voltage distribution systems,TRUE
+23120,Ss_70_30_45_51,70,30,45,51,Medical power supply systems,TRUE
+23130,Ss_70_30_45_92,70,30,45,92,Uninterruptible power supply systems,TRUE
+23140,Ss_70_30_50,70,30,50,,Medium-voltage systems,TRUE
+23150,Ss_70_30_50_50,70,30,50,50,Medium-voltage site connection systems,TRUE
+23160,Ss_70_30_50_55,70,30,50,55,Medium-voltage distribution systems,TRUE
+23170,Ss_70_30_60,70,30,60,,Overhead line traction power distribution systems,TRUE
+23180,Ss_70_30_60_05,70,30,60,05,Autotransformer feeder (ATF) systems,TRUE
+23190,Ss_70_30_60_11,70,30,60,11,Catenary cantilever overhead line systems,TRUE
+23200,Ss_70_30_60_58,70,30,60,58,Overhead wiring mast arm gantry systems,TRUE
+23210,Ss_70_30_60_59,70,30,60,59,Overhead wiring portal gantry systems,TRUE
+23220,Ss_70_30_60_71,70,30,60,71,Retractable overhead wiring systems,TRUE
+23230,Ss_70_30_60_89,70,30,60,89,Trolley wire overhead line systems,TRUE
+23240,Ss_70_30_80,70,30,80,,Small power systems,TRUE
+23250,Ss_70_30_80_35,70,30,80,35,Hardwired low-voltage small power systems,TRUE
+23260,Ss_70_30_80_45,70,30,80,45,Low-voltage small power systems with prefabricated wiring,TRUE
+23270,Ss_70_30_90,70,30,90,,Conductor rail traction power distribution systems,TRUE
+23280,Ss_70_30_90_15,70,30,90,15,Conductor rail electrification systems,TRUE
+23290,Ss_70_30_94,70,30,94,,Vehicle charging systems,TRUE
+23300,Ss_70_30_94_27,70,30,94,27,Electric vehicle charging systems,TRUE
+23310,Ss_70_80,70,80,,,Lighting systems,TRUE
+23320,Ss_70_80_01,70,80,01,,Aeronautical lighting systems,TRUE
+23330,Ss_70_80_01_02,70,80,01,02,Approach lighting systems,TRUE
+23340,Ss_70_80_01_03,70,80,01,03,Apron lighting systems,TRUE
+23350,Ss_70_80_01_36,70,80,01,36,Heliport lighting systems,TRUE
+23360,Ss_70_80_01_47,70,80,01,47,Lighting beacon systems,TRUE
+23370,Ss_70_80_01_65,70,80,01,65,Precision approach path indicator systems,TRUE
+23380,Ss_70_80_01_74,70,80,01,74,Runway lighting systems,TRUE
+23390,Ss_70_80_01_87,70,80,01,87,Taxiway lighting systems,TRUE
+23400,Ss_70_80_25,70,80,25,,External lighting systems,TRUE
+23410,Ss_70_80_25_05,70,80,25,05,Amenity lighting systems,TRUE
+23420,Ss_70_80_25_59,70,80,25,59,Outdoor workplace lighting systems,TRUE
+23430,Ss_70_80_25_65,70,80,25,65,Platform lighting systems,TRUE
+23440,Ss_70_80_25_69,70,80,25,69,Railway lighting systems,TRUE
+23450,Ss_70_80_25_70,70,80,25,70,Roadway lighting systems,TRUE
+23460,Ss_70_80_25_80,70,80,25,80,Shaft lighting systems,TRUE
+23470,Ss_70_80_25_88,70,80,25,88,Tunnel emergency lighting systems,TRUE
+23480,Ss_70_80_25_90,70,80,25,90,Tunnel lighting systems,TRUE
+23490,Ss_70_80_33,70,80,33,,General lighting systems,TRUE
+23500,Ss_70_80_33_12,70,80,33,12,Central battery-supplied emergency lighting systems,TRUE
+23510,Ss_70_80_33_30,70,80,33,30,Fibre-optic lighting systems,TRUE
+23520,Ss_70_80_33_33,70,80,33,33,General lighting systems with prefabricated wiring,TRUE
+23530,Ss_70_80_33_35,70,80,33,35,Hardwired general lighting systems,TRUE
+23540,Ss_70_80_33_78,70,80,33,78,Self-contained emergency lighting systems,TRUE
+23550,Ss_70_80_33_88,70,80,33,88,Theatrical/ stage lighting systems,TRUE
+23560,Ss_70_80_85,70,80,85,,Submersible lighting systems,TRUE
+23570,Ss_70_80_85_92,70,80,85,92,Underwater lighting systems,TRUE
+23580,Ss_70_80_95,70,80,95,,Vehicle lighting systems,TRUE
+23590,Ss_70_80_95_28,70,80,95,28,External vehicle lighting systems,TRUE
+23600,Ss_70_80_95_40,70,80,95,40,Internal vehicle lighting systems,TRUE
+23610,Ss_75,75,,,,"Communications, security, safety, control and protection systems",TRUE
+23620,Ss_75_10,75,10,,,Communications systems,TRUE
+23630,Ss_75_10_21,75,10,21,,Data distribution and telecommunications systems,TRUE
+23640,Ss_75_10_21_21,75,10,21,21,Data distribution systems,TRUE
+23650,Ss_75_10_21_48,75,10,21,48,Local area network (LAN) systems,TRUE
+23660,Ss_75_10_21_52,75,10,21,52,Mobile telecommunications systems,TRUE
+23670,Ss_75_10_21_55,75,10,21,55,Multiplexing systems,TRUE
+23680,Ss_75_10_21_88,75,10,21,88,Telecommunications systems,TRUE
+23690,Ss_75_10_21_97,75,10,21,97,Wide area network (WAN) systems,TRUE
+23700,Ss_75_10_46,75,10,46,,Listening systems,TRUE
+23710,Ss_75_10_46_05,75,10,46,05,Audio frequency induction loop systems,TRUE
+23720,Ss_75_10_46_42,75,10,46,42,Infrared listening systems,TRUE
+23730,Ss_75_10_51,75,10,51,,Medical communications systems,TRUE
+23740,Ss_75_10_51_51,75,10,51,51,Medical audiovisual systems,TRUE
+23750,Ss_75_10_68,75,10,68,,Public communications systems,TRUE
+23760,Ss_75_10_68_02,75,10,68,02,Advertising display systems,TRUE
+23770,Ss_75_10_68_07,75,10,68,07,Bell communication systems,TRUE
+23780,Ss_75_10_68_13,75,10,68,13,Clock systems,TRUE
+23790,Ss_75_10_68_42,75,10,68,42,Information display systems,TRUE
+23800,Ss_75_10_68_68,75,10,68,68,Public address systems,TRUE
+23810,Ss_75_10_68_69,75,10,68,69,Queue management systems,TRUE
+23820,Ss_75_10_70,75,10,70,,Radio and television distribution systems,TRUE
+23830,Ss_75_10_70_70,75,10,70,70,Radio distribution systems,TRUE
+23840,Ss_75_10_70_88,75,10,70,88,Television distribution systems,TRUE
+23850,Ss_75_10_72,75,10,72,,Emergency communication systems,TRUE
+23860,Ss_75_10_72_30,75,10,72,30,Firefighting intercom systems,TRUE
+23870,Ss_75_10_72_70,75,10,72,70,Radio communications systems,TRUE
+23880,Ss_75_10_72_72,75,10,72,72,Roadway emergency communication systems,TRUE
+23890,Ss_75_10_88,75,10,88,,Timing and scoring systems,TRUE
+23900,Ss_75_10_88_05,75,10,88,05,Athletics timing and scoring systems,TRUE
+23910,Ss_75_10_88_86,75,10,88,86,Swimming pool timing and scoring systems,TRUE
+23920,Ss_75_30,75,30,,,Signal systems,TRUE
+23930,Ss_75_30_35,75,30,35,,Road signal and control systems,TRUE
+23940,Ss_75_30_35_60,75,30,35,60,Pedestrian crossing signal systems,TRUE
+23950,Ss_75_30_35_70,75,30,35,70,Ramp metering systems,TRUE
+23960,Ss_75_30_35_86,75,30,35,86,Toll systems,TRUE
+23970,Ss_75_30_35_88,75,30,35,88,Traffic signal systems,TRUE
+23980,Ss_75_30_50,75,30,50,,Marine signal systems,TRUE
+23990,Ss_75_30_60,75,30,60,,Obstacle beacon systems,TRUE
+24000,Ss_75_30_70,75,30,70,,Railway signal and control systems,TRUE
+24010,Ss_75_30_70_02,75,30,70,02,Automatic train operation (ATO) systems,TRUE
+24020,Ss_75_30_70_03,75,30,70,03,Automatic train protection (ATP) systems,TRUE
+24030,Ss_75_30_70_04,75,30,70,04,Automatic train stop (ATS) systems,TRUE
+24040,Ss_75_30_70_05,75,30,70,05,Automatic warning systems (AWS),TRUE
+24050,Ss_75_30_70_15,75,30,70,15,Communications based train control (CBTC) systems,TRUE
+24060,Ss_75_30_70_27,75,30,70,27,Emergency traction current discharge systems (ETCDS),TRUE
+24070,Ss_75_30_70_30,75,30,70,30,Fixed block signalling systems,TRUE
+24080,Ss_75_30_70_42,75,30,70,42,Interlocking systems,TRUE
+24090,Ss_75_30_70_53,75,30,70,53,Moving block signalling systems,TRUE
+24100,Ss_75_30_70_70,75,30,70,70,Rail signal systems,TRUE
+24110,Ss_75_30_70_90,75,30,70,90,Train protection warning systems (TPWS),TRUE
+24120,Ss_75_30_90,75,30,90,,Tramway signal systems,TRUE
+24130,Ss_75_30_97,75,30,97,,Waterway signal systems,TRUE
+24140,Ss_75_30_98,75,30,98,,Wind direction indication systems,TRUE
+24150,Ss_75_30_98_96,75,30,98,96,Windsock systems,TRUE
+24160,Ss_75_40,75,40,,,Security systems,TRUE
+24170,Ss_75_40_02,75,40,02,,Access control systems,TRUE
+24180,Ss_75_40_02_05,75,40,02,05,Audio intercom systems,TRUE
+24190,Ss_75_40_02_11,75,40,02,11,Credential access control systems,TRUE
+24200,Ss_75_40_02_94,75,40,02,94,Video intercom systems,TRUE
+24210,Ss_75_40_53,75,40,53,,Monitoring systems,TRUE
+24220,Ss_75_40_53_70,75,40,53,70,Radio-frequency identification (RFID) tagging systems,TRUE
+24230,Ss_75_40_53_86,75,40,53,86,Surveillance CCTV systems,TRUE
+24240,Ss_75_40_53_90,75,40,53,90,Train dispatch CCTV systems,TRUE
+24250,Ss_75_40_53_95,75,40,53,95,Voice recording systems,TRUE
+24260,Ss_75_40_73,75,40,73,,Security screening systems,TRUE
+24270,Ss_75_40_73_11,75,40,73,11,Cabin baggage screening systems,TRUE
+24280,Ss_75_40_73_60,75,40,73,60,Passenger screening systems,TRUE
+24290,Ss_75_40_75,75,40,75,,Security detection alarm systems,TRUE
+24300,Ss_75_40_75_02,75,40,75,02,Aerospace security detection and warning systems,TRUE
+24310,Ss_75_40_75_40,75,40,75,40,Intrusion and hold-up alarm systems,TRUE
+24320,Ss_75_40_75_50,75,40,75,50,Marine and waterway security detection and warning systems,TRUE
+24330,Ss_75_50,75,50,,,Safety and protection systems,TRUE
+24340,Ss_75_50_08,75,50,08,,Critical incident alert systems,TRUE
+24350,Ss_75_50_08_47,75,50,08,47,Lockdown systems,TRUE
+24360,Ss_75_50_11,75,50,11,,Emergency call systems,TRUE
+24370,Ss_75_50_11_07,75,50,11,07,Baby protection systems,TRUE
+24380,Ss_75_50_11_18,75,50,11,18,Custody suite call systems,TRUE
+24390,Ss_75_50_11_25,75,50,11,25,Emergency assistance call systems,TRUE
+24400,Ss_75_50_11_27,75,50,11,27,Emergency voice communication systems,TRUE
+24410,Ss_75_50_11_57,75,50,11,57,Nurse call systems,TRUE
+24420,Ss_75_50_26,75,50,26,,Debris detection systems,TRUE
+24430,Ss_75_50_26_30,75,50,26,30,Foreign object debris (FOD) detection systems,TRUE
+24440,Ss_75_50_28,75,50,28,,Fire and smoke detection and alarm systems,TRUE
+24450,Ss_75_50_28_05,75,50,28,05,Aspirating smoke detector systems,TRUE
+24460,Ss_75_50_28_22,75,50,28,22,Domestic premises' fire detection and alarm systems,TRUE
+24470,Ss_75_50_28_24,75,50,28,24,Duct smoke detector systems,TRUE
+24480,Ss_75_50_28_27,75,50,28,27,Evacuation alert systems,TRUE
+24490,Ss_75_50_28_29,75,50,28,29,Fire detection and alarm systems,TRUE
+24500,Ss_75_50_28_95,75,50,28,95,Voice alarm systems,TRUE
+24510,Ss_75_50_33,75,50,33,,Gas detection and alarm systems,TRUE
+24520,Ss_75_50_33_30,75,50,33,30,Fixed gas detection and alarm systems,TRUE
+24530,Ss_75_50_33_32,75,50,33,32,Flow sample gas detection and alarm systems,TRUE
+24540,Ss_75_50_33_71,75,50,33,71,Refrigerant leak detection and alarm systems,TRUE
+24550,Ss_75_50_35,75,50,35,,Healthcare imaging systems,TRUE
+24560,Ss_75_50_50,75,50,50,,Liquid detection and alarm systems,TRUE
+24570,Ss_75_50_50_45,75,50,50,45,Liquid presence detection and alarm systems,TRUE
+24580,Ss_75_50_50_96,75,50,50,96,Water leak detection and alarm systems,TRUE
+24590,Ss_75_50_60,75,50,60,,Patient monitoring and telemetry systems,TRUE
+24600,Ss_75_60,75,60,,,Environmental safety systems,TRUE
+24610,Ss_75_60_45,75,60,45,,Manmade disaster warning systems,TRUE
+24620,Ss_75_60_45_15,75,60,45,15,Chemical spill detection and alarm systems,TRUE
+24630,Ss_75_60_45_60,75,60,45,60,Oil spill detection and alarm systems,TRUE
+24640,Ss_75_60_45_70,75,60,45,70,Radiation detection and alarm systems,TRUE
+24650,Ss_75_60_50,75,60,50,,Meteorological systems,TRUE
+24660,Ss_75_60_50_50,75,60,50,50,Meteorological detection and warning systems,TRUE
+24670,Ss_75_60_50_95,75,60,50,95,Weather observation systems,TRUE
+24680,Ss_75_60_55,75,60,55,,Natural disaster warning and protection systems,TRUE
+24690,Ss_75_60_55_25,75,60,55,25,Earthquake warning systems,TRUE
+24700,Ss_75_60_55_29,75,60,55,29,Flood resilience systems,TRUE
+24710,Ss_75_60_55_30,75,60,55,30,Flood warning systems,TRUE
+24720,Ss_75_60_55_75,75,60,55,75,Seismic instrumentation systems,TRUE
+24730,Ss_75_60_55_90,75,60,55,90,Tsunami warning systems,TRUE
+24740,Ss_75_60_55_95,75,60,55,95,Volcanic eruption warning systems,TRUE
+24750,Ss_75_70,75,70,,,Control and management systems,TRUE
+24760,Ss_75_70_05,75,70,05,,Airport control systems,TRUE
+24770,Ss_75_70_05_04,75,70,05,04,Automatic aircraft docking systems,TRUE
+24780,Ss_75_70_06,75,70,06,,Automation and intelligence systems,TRUE
+24790,Ss_75_70_06_09,75,70,06,09,Building automation and intelligence systems,TRUE
+24800,Ss_75_70_06_35,75,70,06,35,Guest room management systems,TRUE
+24810,Ss_75_70_10,75,70,10,,Bridge control systems,TRUE
+24820,Ss_75_70_20,75,70,20,,Dam control systems,TRUE
+24830,Ss_75_70_50,75,70,50,,Marine control systems,TRUE
+24840,Ss_75_70_52,75,70,52,,Mechanical engineering services control and management systems,TRUE
+24850,Ss_75_70_52_03,75,70,52,03,Air-to-air heat pump control systems,TRUE
+24860,Ss_75_70_52_14,75,70,52,14,Climatic ceiling panels and beams control systems,TRUE
+24870,Ss_75_70_52_15,75,70,52,15,Combined heat and power control systems,TRUE
+24880,Ss_75_70_52_16,75,70,52,16,Constant volume air conditioning control systems,TRUE
+24890,Ss_75_70_52_17,75,70,52,17,Cooling system control systems,TRUE
+24900,Ss_75_70_52_23,75,70,52,23,Domestic heating system control systems,TRUE
+24910,Ss_75_70_52_28,75,70,52,28,Extract ventilation control systems,TRUE
+24920,Ss_75_70_52_29,75,70,52,29,Fan coil unit air conditioning control systems,TRUE
+24930,Ss_75_70_52_32,75,70,52,32,Fuel supply control systems,TRUE
+24940,Ss_75_70_52_33,75,70,52,33,Gas-fired heating control systems,TRUE
+24950,Ss_75_70_52_36,75,70,52,36,Heating system control systems,TRUE
+24960,Ss_75_70_52_38,75,70,52,38,Heat pump control systems,TRUE
+24970,Ss_75_70_52_52,75,70,52,52,Mixed mode ventilation control systems,TRUE
+24980,Ss_75_70_52_56,75,70,52,56,Natural ventilation control systems,TRUE
+24990,Ss_75_70_52_70,75,70,52,70,Radiant heating control systems,TRUE
+25000,Ss_75_70_52_80,75,70,52,80,Smoke and heat detection extract control systems,TRUE
+25010,Ss_75_70_52_81,75,70,52,81,Smoke and heat detection shut down control systems,TRUE
+25020,Ss_75_70_52_85,75,70,52,85,Steam and condensate control systems,TRUE
+25030,Ss_75_70_52_93,75,70,52,93,Variable volume air conditioning control systems,TRUE
+25040,Ss_75_70_52_94,75,70,52,94,Ventilation control systems,TRUE
+25050,Ss_75_70_52_96,75,70,52,96,Water supply control systems,TRUE
+25060,Ss_75_70_52_97,75,70,52,97,Water-to-air heat pump control systems,TRUE
+25070,Ss_75_70_54,75,70,54,,"Metering, monitoring and management systems",TRUE
+25080,Ss_75_70_54_03,75,70,54,03,Active water monitoring systems,TRUE
+25090,Ss_75_70_54_05,75,70,54,05,Air quality monitoring systems,TRUE
+25100,Ss_75_70_54_10,75,70,54,10,Building monitoring and management systems,TRUE
+25110,Ss_75_70_54_15,75,70,54,15,Communications monitoring and management systems,TRUE
+25120,Ss_75_70_54_25,75,70,54,25,Electricity metering systems,TRUE
+25130,Ss_75_70_54_28,75,70,54,28,Fire systems management and control systems,TRUE
+25140,Ss_75_70_54_30,75,70,54,30,Fuel metering systems,TRUE
+25150,Ss_75_70_54_36,75,70,54,36,Heat metering systems,TRUE
+25160,Ss_75_70_54_41,75,70,54,41,"Instrumentation, automation and control systems",TRUE
+25170,Ss_75_70_54_60,75,70,54,60,Passive water monitoring systems,TRUE
+25180,Ss_75_70_54_75,75,70,54,75,Supervisory control and data acquisition (SCADA) systems,TRUE
+25190,Ss_75_70_54_88,75,70,54,88,Telemetry systems,TRUE
+25200,Ss_75_70_54_95,75,70,54,95,Water metering systems,TRUE
+25210,Ss_75_70_54_96,75,70,54,96,Water quality monitoring systems,TRUE
+25220,Ss_75_70_54_97,75,70,54,97,Wastewater quality monitoring systems,TRUE
+25230,Ss_75_70_75,75,70,75,,Rail control and monitoring systems,TRUE
+25240,Ss_75_70_75_10,75,70,75,10,Brake monitoring systems (BMS),TRUE
+25250,Ss_75_70_75_70,75,70,75,70,Railway power control systems,TRUE
+25260,Ss_75_70_85,75,70,85,,Structural monitoring systems,TRUE
+25270,Ss_75_70_85_18,75,70,85,18,Crack gauge monitoring systems,TRUE
+25280,Ss_75_70_85_27,75,70,85,27,Electrolevel monitoring systems,TRUE
+25290,Ss_75_70_85_30,75,70,85,30,Fibre-optic monitoring systems,TRUE
+25300,Ss_75_70_85_47,75,70,85,47,Liquid levelling monitoring systems,TRUE
+25310,Ss_75_70_85_48,75,70,85,48,Load cell monitoring systems,TRUE
+25320,Ss_75_70_85_62,75,70,85,62,Piezometer monitoring systems,TRUE
+25330,Ss_75_70_85_66,75,70,85,66,Precise levelling monitoring systems,TRUE
+25340,Ss_75_70_85_67,75,70,85,67,Prism monitoring systems,TRUE
+25350,Ss_75_70_85_84,75,70,85,84,Strain gauge monitoring systems,TRUE
+25360,Ss_75_70_85_86,75,70,85,86,Subsurface monitoring array systems,TRUE
+25370,Ss_75_70_85_87,75,70,85,87,Tape extensometer monitoring systems,TRUE
+25380,Ss_75_70_85_90,75,70,85,90,Tilt sensor monitoring systems,TRUE
+25390,Ss_75_70_85_92,75,70,85,92,Total station monitoring systems,TRUE
+25400,Ss_75_70_90,75,70,90,,Transport management systems,TRUE
+25410,Ss_75_70_90_05,75,70,90,05,Automatic number plate recognition (ANPR) systems,TRUE
+25420,Ss_75_70_90_06,75,70,90,06,Automatic traffic counter and classifier (ATCC) systems,TRUE
+25430,Ss_75_70_90_89,75,70,90,89,Traffic electronic signage systems,TRUE
+25440,Ss_75_70_90_90,75,70,90,90,Traffic enforcement camera systems,TRUE
+25450,Ss_75_70_90_91,75,70,90,91,Traffic management control systems,TRUE
+25460,Ss_75_70_90_92,75,70,90,92,Traveller information systems,TRUE
+25470,Ss_75_70_90_94,75,70,90,94,Vehicle tag-reading systems,TRUE
+25480,Ss_75_70_90_96,75,70,90,96,Vehicle monitoring and management systems,TRUE
+25490,Ss_75_70_96,75,70,96,,Water supply and wastewater control systems,TRUE
+25500,Ss_75_70_96_21,75,70,96,21,Desludging control systems,TRUE
+25510,Ss_75_70_96_30,75,70,96,30,Flow measurement and control systems,TRUE
+25520,Ss_75_70_96_96,75,70,96,96,Wastewater supply control systems,TRUE
+25530,Ss_75_70_96_98,75,70,96,98,Water supply quality control systems,TRUE
+25540,Ss_75_70_97,75,70,97,,Waterway control systems,TRUE
+25550,Ss_75_90,75,90,,,Ticket management systems,TRUE
+25560,Ss_75_90_80,75,90,80,,Ticketing systems,TRUE
+25570,Ss_75_90_80_88,75,90,80,88,Ticket-dispensing systems,TRUE
+25580,Ss_75_90_93,75,90,93,,Ticket validation systems,TRUE
+25590,Ss_75_90_93_11,75,90,93,11,Card reading systems,TRUE
+25600,Ss_75_90_93_60,75,90,93,60,Passenger check-in systems,TRUE
+25610,Ss_75_90_93_88,75,90,93,88,Ticket reading systems,TRUE
+25620,Ss_80,80,,,,Transport systems,TRUE
+25630,Ss_80_10,80,10,,,Cable transport systems,TRUE
+25640,Ss_80_10_05,80,10,05,,Aerial tram systems,TRUE
+25650,Ss_80_10_10,80,10,10,,Cable car systems,TRUE
+25660,Ss_80_10_15,80,10,15,,Chairlift systems,TRUE
+25670,Ss_80_10_30,80,10,30,,Funicular systems,TRUE
+25680,Ss_80_10_35,80,10,35,,Gondola systems,TRUE
+25690,Ss_80_10_70,80,10,70,,Ropeway tow systems,TRUE
+25700,Ss_80_10_85,80,10,85,,Surface lift systems,TRUE
+25710,Ss_80_20,80,20,,,Conveying systems,TRUE
+25720,Ss_80_20_05,80,20,05,,Automatic guided vehicle systems,TRUE
+25730,Ss_80_20_06,80,20,06,,Baggage handling and tray systems,TRUE
+25740,Ss_80_20_06_04,80,20,06,04,Airport baggage handling systems,TRUE
+25750,Ss_80_20_06_90,80,20,06,90,Tray return systems,TRUE
+25760,Ss_80_20_10,80,20,10,,Bulk material conveying systems,TRUE
+25770,Ss_80_20_11,80,20,11,,Cargo handling systems,TRUE
+25780,Ss_80_20_23,80,20,23,,Document conveying systems,TRUE
+25790,Ss_80_20_23_65,80,20,23,65,Pneumatic document conveying systems,TRUE
+25800,Ss_80_20_60,80,20,60,,Parcel sorting systems,TRUE
+25810,Ss_80_20_62,80,20,62,,People conveying systems,TRUE
+25820,Ss_80_20_62_28,80,20,62,28,Escalator systems,TRUE
+25830,Ss_80_20_62_53,80,20,62,53,Moving walkway systems,TRUE
+25840,Ss_80_20_63,80,20,63,,Piece conveying systems,TRUE
+25850,Ss_80_20_63_59,80,20,63,59,Overhead piece conveying systems,TRUE
+25860,Ss_80_20_65,80,20,65,,Pneumatic conveying systems,TRUE
+25870,Ss_80_30,80,30,,,Crane and hoist systems,TRUE
+25880,Ss_80_30_15,80,30,15,,Crane systems,TRUE
+25890,Ss_80_30_15_10,80,30,15,10,Bulk handling crane systems,TRUE
+25900,Ss_80_30_15_15,80,30,15,15,Container handling crane systems,TRUE
+25910,Ss_80_30_15_59,80,30,15,59,Overhead crane systems,TRUE
+25920,Ss_80_30_20,80,30,20,,Derrick systems,TRUE
+25930,Ss_80_30_25,80,30,25,,Dynamic permanent access and safety equipment systems,TRUE
+25940,Ss_80_30_25_30,80,30,25,30,Fixed rig suspended access systems,TRUE
+25950,Ss_80_30_25_32,80,30,25,32,Gantry access systems,TRUE
+25960,Ss_80_30_25_35,80,30,25,35,Guided type fall arrest systems,TRUE
+25970,Ss_80_30_25_50,80,30,25,50,Mobile rig monorail suspended access systems,TRUE
+25980,Ss_80_30_25_52,80,30,25,52,Mobile rig tracked suspended access systems,TRUE
+25990,Ss_80_30_25_55,80,30,25,55,Mobile rig trackless suspended access systems,TRUE
+26000,Ss_80_30_25_75,80,30,25,75,Robotic cleaning systems,TRUE
+26010,Ss_80_30_25_80,80,30,25,80,Single point anchorage fall arrest systems,TRUE
+26020,Ss_80_30_25_90,80,30,25,90,Travelling ladder access systems,TRUE
+26030,Ss_80_30_40,80,30,40,,Hoist systems,TRUE
+26040,Ss_80_50,80,50,,,Lift systems,TRUE
+26050,Ss_80_50_01,80,50,01,,Accessible goods-only and service lift systems,TRUE
+26060,Ss_80_50_01_05,80,50,01,05,Electric accessible goods-only lift (AGOL) systems,TRUE
+26070,Ss_80_50_01_26,80,50,01,26,Electric service lift systems,TRUE
+26080,Ss_80_50_01_39,80,50,01,39,Hydraulic accessible goods-only lift (AGOL) systems,TRUE
+26090,Ss_80_50_01_40,80,50,01,40,Hydraulic service lift systems,TRUE
+26100,Ss_80_50_01_50,80,50,01,50,Manual dumb waiter systems,TRUE
+26110,Ss_80_50_02,80,50,02,,Accessibility lifts and platform systems,TRUE
+26120,Ss_80_50_02_65,80,50,02,65,Powered homelift systems,TRUE
+26130,Ss_80_50_02_83,80,50,02,83,Stairlift systems,TRUE
+26140,Ss_80_50_02_85,80,50,02,85,Step lift systems,TRUE
+26150,Ss_80_50_02_94,80,50,02,94,Vertical lifting platform systems,TRUE
+26160,Ss_80_50_60,80,50,60,,Passenger and goods lift systems,TRUE
+26170,Ss_80_50_60_26,80,50,60,26,Electric passenger and goods-passenger lift systems,TRUE
+26180,Ss_80_50_60_39,80,50,60,39,Hydraulic passenger and goods-passenger lift systems,TRUE
+26190,Ss_80_50_60_60,80,50,60,60,Paternoster systems,TRUE
+26200,Ss_80_50_92,80,50,92,,Vehicle and boat lifting systems,TRUE
+26210,Ss_80_50_92_08,80,50,92,08,Boat lifting systems,TRUE
+26220,Ss_80_50_92_95,80,50,92,95,Vehicle maintenance lifting systems,TRUE
+26230,Ss_80_50_94,80,50,94,,Vehicle and boat stacking systems,TRUE
+26240,Ss_80_50_94_08,80,50,94,08,Boat-stacking systems,TRUE
+26250,Ss_80_50_94_11,80,50,94,11,Car-stacking systems,TRUE
+26260,Ss_80_50_96,80,50,96,,Warehouse stacking systems,TRUE
+26270,Ss_80_70,80,70,,,Track systems,TRUE
+26280,Ss_80_70_46,80,70,46,,Level crossing systems,TRUE
+26290,Ss_80_70_46_60,80,70,46,60,Pedestrian level crossing systems,TRUE
+26300,Ss_80_70_46_93,80,70,46,93,User worked level crossing systems,TRUE
+26310,Ss_80_70_46_95,80,70,46,95,Vehicular level crossing systems,TRUE
+26320,Ss_80_70_50,80,70,50,,Monorail systems,TRUE
+26330,Ss_80_70_70,80,70,70,,Rail track systems,TRUE
+26340,Ss_80_70_70_06,80,70,70,06,Ballasted rail track systems,TRUE
+26350,Ss_80_70_70_27,80,70,70,27,Embedded rail systems,TRUE
+26360,Ss_80_70_70_56,80,70,70,56,Non-embedded slab track rail systems,TRUE
+26370,Ss_80_70_70_65,80,70,70,65,Precast track bed systems,TRUE
+26380,Ss_80_70_89,80,70,89,,Train arrestor systems,TRUE
+26390,Ss_80_70_89_30,80,70,89,30,Fixed train arrestor systems,TRUE
+26400,Ss_80_70_89_50,80,70,89,50,Moveable train arrestor systems,TRUE
+26410,Ss_80_80,80,80,,,Turntable systems,TRUE
+26420,Ss_80_80_20,80,80,20,,Display turntable systems,TRUE
+26430,Ss_80_80_30,80,80,30,,Floor turntable systems,TRUE
+26440,Ss_80_80_40,80,80,40,,Industrial turntable systems,TRUE
+26450,Ss_80_80_70,80,80,70,,Railway turntable systems,TRUE
+26460,Ss_80_80_85,80,80,85,,Stage turntable systems,TRUE
+26470,Ss_80_90,80,90,,,Vehicle access systems,TRUE
+26480,Ss_80_90_05,80,90,05,,Aircraft passenger loading bridge systems,TRUE
+26490,Ss_80_90_05_60,80,90,05,60,Passenger loading bridge systems,TRUE
+26500,Ss_80_90_70,80,90,70,,Spacecraft passenger access systems,TRUE
+26510,Ss_80_90_75,80,90,75,,Ship passenger loading bridge systems,TRUE
+26520,Ss_82,82,,,,Vehicle systems,TRUE
+26530,Ss_82_70,82,70,,,Rolling stock systems,TRUE
+26540,Ss_82_70_65,82,70,65,,Rail power supply systems,TRUE
+26550,Ss_82_70_65_05,82,70,65,05,Auxiliary power supply systems,TRUE
+26560,Ss_82_70_70,82,70,70,,Rail wagon systems,TRUE
+26570,Ss_82_70_70_09,82,70,70,09,Brake systems,TRUE
+26580,Ss_82_70_70_84,82,70,70,84,Steering systems,TRUE
+26590,Ss_82_70_70_94,82,70,70,94,Vehicle body systems,TRUE
+26600,Ss_82_70_70_95,82,70,70,95,Vehicle door systems,TRUE
+26610,Ss_82_70_70_97,82,70,70,97,Wheelset systems,TRUE
+26620,Ss_85,85,,,,Process engineering systems,TRUE
+26630,Ss_85_30,85,30,,,General process systems,TRUE
+26640,Ss_85_30_58,85,30,58,,Odour control systems,TRUE
+26650,Ss_85_30_58_07,85,30,58,07,Biofiltration systems,TRUE
+26660,Ss_85_30_58_08,85,30,58,08,Bio-scrubber systems,TRUE
+26670,Ss_85_30_58_10,85,30,58,10,Carbon filter systems,TRUE
+26680,Ss_85_30_58_11,85,30,58,11,Catalytic iron filter systems,TRUE
+26690,Ss_85_30_58_23,85,30,58,23,Dry installation systems,TRUE
+26700,Ss_85_30_58_25,85,30,58,25,Dust and odour suppression systems,TRUE
+26710,Ss_85_30_58_96,85,30,58,96,Wet scrubber systems,TRUE
+26720,Ss_85_45,85,45,,,Manufacturing process systems,TRUE
+26730,Ss_85_45_06,85,45,06,,Battery manufacturing process systems,TRUE
+26740,Ss_85_45_06_06,85,45,06,06,Battery cell assembly systems,TRUE
+26750,Ss_85_45_06_13,85,45,06,13,Chemical mixing systems,TRUE
+26760,Ss_85_45_06_17,85,45,06,17,Coating process systems,TRUE
+26770,Ss_85_45_06_27,85,45,06,27,Electrode calendering systems,TRUE
+26780,Ss_85_45_06_28,85,45,06,28,Electrolyte filling systems,TRUE
+26790,Ss_85_45_06_30,85,45,06,30,Formation and ageing systems,TRUE
+26800,Ss_85_45_06_80,85,45,06,80,Slitting systems,TRUE
+26810,Ss_85_45_06_85,85,45,06,85,Stacking and winding systems,TRUE
+26820,Ss_85_50,85,50,,,Mechanical power systems,TRUE
+26830,Ss_85_50_65,85,50,65,,Power supply systems,TRUE
+26840,Ss_85_50_65_27,85,50,65,27,Engine cooling systems,TRUE
+26850,Ss_85_50_65_28,85,50,65,28,Engine exhaust systems,TRUE
+26860,Ss_85_50_65_38,85,50,65,38,Hydraulic power systems,TRUE
+26870,Ss_85_50_65_40,85,50,65,40,Internal combustion engine systems,TRUE
+26880,Ss_85_72,85,72,,,Robotic systems,TRUE
+26890,Ss_90,90,,,,Soft facility management systems,TRUE
+26900,Ss_90_05,90,05,,,Demand for space,TRUE
+26910,Ss_90_06,90,06,,,Demand for technical infrastructure,TRUE
+26920,Ss_90_07,90,07,,,Demand for cleaning,TRUE
+26930,Ss_90_08,90,08,,,Demand related to outdoor space,TRUE
+26940,Ss_90_09,90,09,,,Workplace,TRUE
+26950,Ss_90_10,90,10,,,Specific demand related to space and infrastructure,TRUE
+26960,Ss_90_11,90,11,,,"Demand for health, safety and security",TRUE
+26970,Ss_90_12,90,12,,,Hospitality demands,TRUE
+26980,Ss_90_13,90,13,,,Demand for information and communication,TRUE
+26990,Ss_90_14,90,14,,,Demand for logistics,TRUE
+27000,Ss_90_15,90,15,,,"Demand for integrated management, consultancy and administration",TRUE
+27010,Ss_90_20,90,20,,,"Specific demand of administrative, commercial and protective services",TRUE
+27020,Ss_90_25,90,25,,,"Specific demand of cultural, educational, scientific and information organizations",TRUE
+27030,Ss_90_30,90,30,,,Specific demand of industrial organizations,TRUE
+27040,Ss_90_35,90,35,,,"Specific demand of medical, health, welfare and sanitary organizations",TRUE
+27050,Ss_90_40,90,40,,,Specific demand of recreational organizations,TRUE
+27060,Ss_90_45,90,45,,,Specific demand of residential organizations,TRUE
+27070,Ss_90_50,90,50,,,Specific demand of disposal organizations,TRUE
+27080,Ss_90_55,90,55,,,Specific demand of piped supply organizations,TRUE
+27090,Ss_90_60,90,60,,,"Specific demand of heating, cooling and refrigeration organizations",TRUE
+27100,Ss_90_65,90,65,,,Specific demand of ventilation and air conditioning organizations,TRUE
+27110,Ss_90_70,90,70,,,Specific demand of electrical organizations,TRUE
+27120,Ss_90_75,90,75,,,"Specific demand of communications, security, safety and protection organizations",TRUE
+27130,Ss_90_80,90,80,,,Specific demand of rail organizations,TRUE
+27140,Ss_90_81,90,81,,,Specific demand of road organizations,TRUE
+27150,Ss_90_82,90,82,,,Specific demand of marine and waterway organizations,TRUE
+27160,Ss_90_83,90,83,,,Specific demand of cable transport organizations,TRUE
+27170,Ss_90_84,90,84,,,Specific demand of aerospace organizations,TRUE
