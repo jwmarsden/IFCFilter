@@ -197,7 +197,7 @@ edges (flag 3): u32 count, then pairs of vertex indices
 - Positions are quantized to 16 bits on the mesh's box, unless that would be coarser than 0.5 mm, in which case they're float. Below about 30 m across, a mesh is quantized; long road meshes are float. The viewer dequantizes in the vertex shader, from the box.
 - Normals are only stored for curved shapes, where the faces around a vertex aren't all in one plane. Flat shapes are shaded flat in the fragment shader, from screen-space derivatives, which most of a BIM model is.
 - Parts are what a colour map or several styled items make: each part is a run of triangles in one material.
-- Edges are the feature edges, where faces meet at more than 30 degrees, and boundary edges, for the outline a BIM viewer draws.
+- Edges are the feature edges, where faces meet at more than 30 degrees, and boundary edges, for the outline a BIM viewer draws, less those on a flat surface all the same: a surface written both ways up, a sliver beside a flat face, a T-junction, or a piece lying on another (`src/edges.h`). Caches written before this have those too; IFCViewer takes them out as it loads.
 
 Against IFC text, a triangle mesh is about 6 bytes a vertex and 6 a triangle before zstd, against about 25 and 15.
 

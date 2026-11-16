@@ -1,6 +1,7 @@
 #include "cache.h"
 
 #include "compact.h"
+#include "edges.h"
 #include "extent.h"
 #include "register.h"
 #include "rigid.h"
@@ -367,8 +368,9 @@ void finish(Mesh& mesh, double unit) {
     mesh.materials.clear();
 }
 
-// Edges to outline: where faces meet at more than 30 degrees, and where a surface ends. Points in the same
-// place count as one, as a face set often repeats them face by face.
+// Edges to outline: where faces meet at more than 30 degrees, and where a surface ends, less those on a flat
+// surface all the same (see edges.h). Points in the same place count as one, as a face set often repeats them
+// face by face.
 std::vector<uint32_t> feature_edges(const Mesh& mesh) {
     std::vector<uint32_t> canonical(mesh.points.size());
     {
@@ -405,6 +407,7 @@ std::vector<uint32_t> feature_edges(const Mesh& mesh) {
         if (edge.faces != 2 || edge.sharp) kept.emplace_back(edge.a, edge.b);
     }
     std::sort(kept.begin(), kept.end());  // the same mesh makes the same bytes
+    kept = flat_edges_out(mesh.points, mesh.indices, kept);
     std::vector<uint32_t> out;
     out.reserve(kept.size() * 2);
     for (const auto& [a, b] : kept) {

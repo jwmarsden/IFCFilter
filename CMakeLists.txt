@@ -98,7 +98,7 @@ else()
     add_library(IfcOpenShell::parse_schema_ifc4x3_add2 ALIAS parse_schema_ifc4x3_add2)
 endif()
 
-add_executable(ifcfilter src/main.cpp src/report.cpp src/split.cpp src/merge.cpp src/progress.cpp src/combine.cpp src/bake.cpp src/extent.cpp src/mapping.cpp src/instance.cpp src/rigid.cpp src/register.cpp src/system.cpp src/upgrade.cpp src/spf.cpp src/breps.cpp src/compact.cpp src/simplify.cpp src/tidy.cpp src/zip.cpp src/cache.cpp src/trace.cpp src/property_schema.cpp src/site_lookup.cpp src/location_reference.cpp src/site_inventory.cpp src/xlsx.cpp src/uniclass.cpp src/signs.cpp)
+add_executable(ifcfilter src/main.cpp src/report.cpp src/split.cpp src/merge.cpp src/progress.cpp src/combine.cpp src/bake.cpp src/extent.cpp src/mapping.cpp src/instance.cpp src/rigid.cpp src/register.cpp src/system.cpp src/upgrade.cpp src/spf.cpp src/breps.cpp src/compact.cpp src/simplify.cpp src/tidy.cpp src/zip.cpp src/cache.cpp src/edges.cpp src/trace.cpp src/property_schema.cpp src/site_lookup.cpp src/location_reference.cpp src/site_inventory.cpp src/xlsx.cpp src/uniclass.cpp src/signs.cpp)
 # The schemas are plugins, loaded when a file is opened, so nothing links to them
 add_dependencies(ifcfilter IfcOpenShell::parse_schema_ifc2x3 IfcOpenShell::parse_schema_ifc4 IfcOpenShell::parse_schema_ifc4x3_add2)
 target_compile_definitions(ifcfilter PRIVATE BOOST_OPTIONAL_USE_OLD_DEFINITION_OF_NONE IFCFILTER_VERSION="${PROJECT_VERSION}")
@@ -167,6 +167,8 @@ install(TARGETS ifcfilter RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 add_custom_command(TARGET ifcfilter POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/data/uniclass" "$<TARGET_FILE_DIR:ifcfilter>/uniclass")
 install(DIRECTORY data/uniclass DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-
-
-
+# The edge rule's own checks: ctest --test-dir build
+enable_testing()
+add_executable(edges_test tests/edges_test.cpp src/edges.cpp)
+target_include_directories(edges_test PRIVATE src)
+add_test(NAME edges COMMAND edges_test)
