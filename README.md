@@ -220,7 +220,20 @@ cmake -B build -DIFCFILTER_BUILD_OCCT=OFF -DIFCFILTER_WITH_GEOMETRY=ON "-DOpenCA
 cmake --build build --config Release --target ifcfilter
 ```
 
-Keep the geometry kernel, mapping and Open CASCADE DLLs copied beside the executable as well. By default an element stays uncut and is marked approximate if it has more than 32 opening relationships, more than 192 opening-and-shape-item combinations, or an opening mesh with more than 512 faces, as very large cuts can take hours to process. Set `IFCFILTER_MAX_OPENINGS`, `IFCFILTER_MAX_CUT_WORK` or `IFCFILTER_MAX_OPENING_FACES` at CMake configuration to change a limit, or to `0` to disable it. The parser-only build leaves opening cuts and Boolean subtractions uncut and marks affected elements approximate.
+Keep the geometry kernel, mapping and Open CASCADE DLLs copied beside the executable as well.
+
+On Linux, in `nix develop`, the same two steps into a folder of their own, so the parser-only `build` stays as it is (Open CASCADE takes about an hour on four cores):
+
+```sh
+git submodule update --init --depth 1
+cmake -B build-geometry -DIFCFILTER_BUILD_OCCT=ON
+cmake --build build-geometry --target ifcfilter_occt -j3
+cmake -B build-geometry -DIFCFILTER_BUILD_OCCT=OFF -DIFCFILTER_WITH_GEOMETRY=ON -DOpenCASCADE_DIR=$PWD/build-geometry/occt-install/lib/cmake/opencascade
+cmake --build build-geometry --target ifcfilter -j3
+python3 tests/cache_cuts.py build-geometry/ifcfilter
+```
+
+Open CASCADE's libraries are installed to find one another beside them (`$ORIGIN`), as the geometry kernel loads them as a plugin; without that, every cut falls back to uncut with `libTKFillet.so.7.9: cannot open shared object file`. By default an element stays uncut and is marked approximate if it has more than 32 opening relationships, more than 192 opening-and-shape-item combinations, or an opening mesh with more than 512 faces, as very large cuts can take hours to process. Set `IFCFILTER_MAX_OPENINGS`, `IFCFILTER_MAX_CUT_WORK` or `IFCFILTER_MAX_OPENING_FACES` at CMake configuration to change a limit, or to `0` to disable it. The parser-only build leaves opening cuts and Boolean subtractions uncut and marks affected elements approximate.
 
 With a geometry-enabled build, `python tests/cache_cuts.py build/Release/ifcfilter.exe` checks opening subtraction, Boolean differences and the default complex-opening fallback.
 

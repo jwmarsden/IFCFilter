@@ -42,7 +42,11 @@ if(IFCFILTER_BUILD_OCCT)
             -DBUILD_MODULE_ApplicationFramework=OFF
             -DBUILD_MODULE_DataExchange=OFF
             -DUSE_FREETYPE=OFF
-            -DUSE_TCL=OFF)
+            -DUSE_TCL=OFF
+        # Each library finds the others beside it once installed, as the geometry kernel loads them as a
+        # plugin: otherwise Linux can't find libTKFillet and the rest, and every cut falls back to uncut
+        CMAKE_CACHE_ARGS
+            "-DCMAKE_INSTALL_RPATH:STRING=$ORIGIN")
 endif()
 
 find_package(Boost CONFIG REQUIRED)
