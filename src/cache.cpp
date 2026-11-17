@@ -715,6 +715,7 @@ class Builder {
 #ifdef IFCFILTER_WITH_GEOMETRY
         if (cut_requested_) out << "  " << cut_converted_ << " of " << cut_requested_ << " elements with openings or Booleans processed by IfcOpenShell geometry\n";
         if (cut_complex_) out << "  " << cut_complex_ << " elements left approximate because their opening cuts exceed the configured complexity limits\n";
+        if (cut_already_) out << "  " << cut_already_ << " elements left as their meshes, which a Reference View export has already cut\n";
         if (detail_retried_) out << "  " << detail_completed_ << " of " << detail_retried_ << " detailed geometry retries succeeded\n";
 #endif
         out << "  " << std::fixed << std::setprecision(1) << bytes / 1e6 << " MB, in " << seconds_ << " s\n";
@@ -919,6 +920,26 @@ class Builder {
             if (identifier == "Facetation" && !fallback) fallback = refs_in(parts[3]).size();
         }
         return fallback;
+    }
+
+    // An element whose Body is only meshes, as a Reference View export writes them with their openings already in
+    bool body_is_mesh(uint32_t id) const {
+        const auto product = attributes_of(spf_->line(id));
+        if (product.size() < 7) return false;
+        const auto definitions = refs_in(product[6]);
+        if (definitions.size() != 1) return false;
+        const auto definition = attributes_of(spf_->line(definitions[0]));
+        if (definition.size() < 3) return false;
+        for (const auto representation : refs_in(definition[2])) {
+            const auto parts = attributes_of(spf_->line(representation));
+            if (parts.size() != 4 || text_of(parts[1]) != "Body") continue;
+            const auto items = refs_in(parts[3]);
+            return !items.empty() && std::all_of(items.begin(), items.end(), [&](uint32_t item) {
+                const auto type = spf_->type(item);
+                return type == "IFCPOLYGONALFACESET" || type == "IFCTRIANGULATEDFACESET";
+            });
+        }
+        return false;
     }
 
 #if IFCFILTER_MAX_OPENING_FACES > 0
@@ -1227,6 +1248,17 @@ class Builder {
             if (reps.size() == 1 && contains_boolean(reps[0], visited)) wanted.insert(elements_[e].ifc);
         }
         if (wanted.empty()) return built;
+        // A Reference View export's meshes already have their openings cut, so cutting them again only costs time,
+        // and on some walls Open CASCADE recurses until the stack runs out
+        if (!selected && spf_->header().find("ReferenceView") != std::string_view::npos) {
+            for (auto it = wanted.begin(); it != wanted.end();) {
+                if (!body_is_mesh(*it)) { ++it; continue; }
+                if (Element* element = element_at(*it)) element->flags &= ~APPROXIMATE;
+                ++cut_already_;
+                it = wanted.erase(it);
+            }
+            if (wanted.empty()) return built;
+        }
         cut_requested_ += wanted.size();
 #if IFCFILTER_MAX_OPENINGS > 0 || IFCFILTER_MAX_CUT_WORK > 0 || IFCFILTER_MAX_OPENING_FACES > 0
         if (!options_.detail && !selected) for (auto it = wanted.begin(); it != wanted.end();) {
@@ -2392,7 +2424,7 @@ class Builder {
 
     size_t boxes_ = 0, unknown_ = 0, fanned_ = 0, extruded_ = 0, empty_ = 0, lods_stored_ = 0;
 #ifdef IFCFILTER_WITH_GEOMETRY
-    size_t cut_requested_ = 0, cut_converted_ = 0, cut_complex_ = 0;
+    size_t cut_requested_ = 0, cut_converted_ = 0, cut_complex_ = 0, cut_already_ = 0;
     size_t detail_retried_ = 0, detail_completed_ = 0;
 #endif
     std::unordered_map<uint32_t, Swept> swept_;
