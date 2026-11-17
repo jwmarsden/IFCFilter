@@ -5,6 +5,7 @@
 // element's body, placed where the element was.
 
 #include "spf.h"
+#include "element_corrections.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -53,6 +54,6 @@ struct MergePlan {
 // candidates are the elements that could merge; gone says what isn't in the file being written. Parts of a site
 // are only merged if they're within gap_m of each other, through any chain of its parts; 0 doesn't check.
 MergePlan plan_merge(const SpfFile& spf, const std::vector<uint32_t>& candidates, const std::function<bool(uint32_t)>& gone, const std::string& stem,
-                     double gap_m);
+                     double gap_m, const ElementCorrections& corrections = {});
 
 }  // namespace ifcfilter

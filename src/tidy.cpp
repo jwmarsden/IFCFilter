@@ -8,6 +8,7 @@
 #include <cctype>
 #include <ctime>
 #include <filesystem>
+#include <functional>
 #include <fstream>
 #include <map>
 #include <set>
@@ -106,7 +107,7 @@ std::string new_header(std::string_view header, const std::string& file_name, co
 
 }  // namespace
 
-TidyStats tidy(const std::string& path, const std::string& source) {
+TidyStats tidy(const std::string& path, const std::string& source, const std::map<std::string, double>& faded) {
     namespace fs = std::filesystem;
     TidyStats stats;
     const std::string temporary = path + ".tidy";
@@ -392,6 +393,222 @@ TidyStats tidy(const std::string& path, const std::string& source) {
                 continue;
             }
             rewritten[id] = with_attributes(line, attributes);
+        }
+
+        // A site drawn see-through, by transparent-site: the styles of what only its elements' bodies use are copied
+        // with that transparency, and their colour maps given it as their opacity. What other elements share, such
+        // as the shape an instance maps, isn't changed; a mapped item of the site's own is styled instead.
+        // The rules' sites, and this model's own from its element corrections, which win
+        std::map<std::string, double> transparent_sites = schema().transparent_sites;
+        for (const auto& [site, transparency] : faded) transparent_sites[site] = transparency;
+        if (!transparent_sites.empty()) {
+            // A product's representation items, with mapped items followed into what they map
+            const auto items_of = [&](uint32_t product, std::vector<uint32_t>& top, std::vector<uint32_t>& all) {
+                std::vector<uint32_t> stack;
+                const auto a = attributes_of(spf.line(product));
+                if (a.size() < 7) return;
+                for (const uint32_t shape : refs_in(a[6])) {
+                    if (spf.type(shape) != "IFCPRODUCTDEFINITIONSHAPE") continue;
+                    const auto shape_attributes = attributes_of(spf.line(shape));
+                    if (shape_attributes.size() != 3) continue;
+                    for (const uint32_t representation : refs_in(shape_attributes[2])) {
+                        const auto r = attributes_of(spf.line(representation));
+                        if (r.size() == 4) for (const uint32_t item : refs_in(r[3])) top.push_back(item), stack.push_back(item);
+                    }
+                }
+                std::unordered_set<uint32_t> seen;
+                while (!stack.empty()) {
+                    const uint32_t id = stack.back();
+                    stack.pop_back();
+                    if (id >= max_id || !seen.insert(id).second) continue;
+                    all.push_back(id);
+                    const auto type = spf.type(id);
+                    const auto at = attributes_of(spf.line(id));
+                    if (type == "IFCMAPPEDITEM" && !at.empty()) {
+                        for (const uint32_t map : refs_in(at[0])) {
+                            const auto m = attributes_of(spf.line(map));
+                            if (m.size() != 2) continue;
+                            for (const uint32_t representation : refs_in(m[1])) {
+                                const auto r = attributes_of(spf.line(representation));
+                                if (r.size() == 4) for (const uint32_t item : refs_in(r[3])) stack.push_back(item);
+                            }
+                        }
+                    } else if (type == "IFCBOOLEANRESULT" || type == "IFCBOOLEANCLIPPINGRESULT") {
+                        for (size_t k = 1; k < at.size(); ++k) for (const uint32_t operand : refs_in(at[k])) stack.push_back(operand);
+                    }
+                }
+            };
+            const auto is_product = [&](uint32_t id) {
+                const auto a = attributes_of(spf.line(id));
+                if (a.size() < 7) return false;
+                const auto shape = refs_in(a[6]);
+                return shape.size() == 1 && spf.type(shape[0]) == "IFCPRODUCTDEFINITIONSHAPE";
+            };
+            std::unordered_map<uint32_t, double> item_transparency;  // the site's items, and how transparent
+            std::vector<std::pair<uint32_t, double>> own_mapped;     // the site's top mapped items
+            std::vector<uint32_t> others;                            // every other product with a body
+            std::set<std::string> sites_found;
+            for (uint32_t id = 0; id < max_id; ++id) {
+                if (dropped[id] || spf.line(id).empty() || spf.type(id).rfind("IFCREL", 0) == 0 || !is_product(id)) continue;
+                const auto a = attributes_of(spf.line(id));
+                const auto site = transparent_sites.find(raw_string(a[2]));
+                if (site == transparent_sites.end()) {
+                    others.push_back(id);
+                    continue;
+                }
+                sites_found.insert(site->first);
+                std::vector<uint32_t> top, all;
+                items_of(id, top, all);
+                for (const uint32_t item : all) item_transparency[item] = site->second;
+                for (const uint32_t item : top) if (spf.type(item) == "IFCMAPPEDITEM") own_mapped.emplace_back(item, site->second);
+            }
+            std::unordered_set<uint32_t> shared;
+            for (const uint32_t product : others) {
+                std::vector<uint32_t> top, all;
+                items_of(product, top, all);
+                for (const uint32_t item : all) if (item_transparency.count(item)) shared.insert(item);
+            }
+            std::unordered_map<uint32_t, std::vector<uint32_t>> styled_of;  // item, and the styled items on it
+            std::unordered_map<uint32_t, std::vector<uint32_t>> maps_of;    // face set, and its colour maps
+            for (uint32_t id = 0; id < max_id; ++id) {
+                const auto type = spf.type(id);
+                if (type != "IFCSTYLEDITEM" && type != "IFCINDEXEDCOLOURMAP") continue;
+                const auto a = attributes_of(spf.line(id));
+                const auto on = a.empty() ? std::vector<uint32_t>{} : refs_in(a[0]);
+                if (on.size() != 1 || !item_transparency.count(on[0])) continue;
+                (type == "IFCSTYLEDITEM" ? styled_of : maps_of)[on[0]].push_back(id);
+            }
+            // A style again, with the transparency: surface styles and what they hold, each copied once
+            std::map<std::pair<uint32_t, double>, uint32_t> faded;
+            const std::function<uint32_t(uint32_t, double)> fade = [&](uint32_t style, double transparency) -> uint32_t {
+                const auto known = faded.find({style, transparency});
+                if (known != faded.end()) return known->second;
+                const auto type = spf.type(style);
+                const auto line = spf.line(style);
+                std::vector<std::string> a;
+                for (const auto attribute : attributes_of(line)) a.emplace_back(attribute);
+                uint32_t made = style;
+                const auto faded_list = [&](size_t index) {
+                    std::string list = "(";
+                    for (const uint32_t inner : refs_in(a[index])) list += (list.size() > 1 ? ",#" : "#") + std::to_string(fade(inner, transparency));
+                    a[index] = list + ")";
+                };
+                if (type == "IFCSURFACESTYLE" && a.size() == 3) faded_list(2);
+                else if (type == "IFCPRESENTATIONSTYLEASSIGNMENT" && a.size() == 1) faded_list(0);
+                else if ((type == "IFCSURFACESTYLERENDERING" || type == "IFCSURFACESTYLESHADING") && a.size() > 1) a[1] = std::to_string(transparency);
+                else return faded[{style, transparency}] = style;  // anything else, such as a curve style, as it is
+                made = next_id++;
+                const std::string text = with_attributes(line, a);
+                added.push_back("#" + std::to_string(made) + text.substr(text.find('=')));
+                return faded[{style, transparency}] = made;
+            };
+            for (const auto& [item, transparency] : item_transparency) {
+                if (shared.count(item)) continue;
+                for (const uint32_t styled : styled_of[item]) {
+                    const std::string line(current(styled));
+                    std::vector<std::string> a;
+                    for (const auto attribute : attributes_of(line)) a.emplace_back(attribute);
+                    if (a.size() != 3) continue;
+                    std::string list = "(";
+                    for (const uint32_t style : refs_in(a[1])) list += (list.size() > 1 ? ",#" : "#") + std::to_string(fade(style, transparency));
+                    a[1] = list + ")";
+                    rewritten[styled] = with_attributes(line, a);
+                    ++stats.items_faded;
+                }
+                for (const uint32_t map : maps_of[item]) {
+                    const std::string line(current(map));
+                    std::vector<std::string> a;
+                    for (const auto attribute : attributes_of(line)) a.emplace_back(attribute);
+                    if (a.size() < 2) continue;
+                    a[1] = std::to_string(1 - transparency);
+                    rewritten[map] = with_attributes(line, a);
+                    ++stats.items_faded;
+                }
+            }
+            // A mapped item of the site's own, of a shape others share, gets a style of its own: the first style
+            // of what it maps, made transparent
+            for (const auto& [mapped, transparency] : own_mapped) {
+                if (shared.count(mapped) || !styled_of[mapped].empty()) continue;
+                uint32_t style = 0;
+                bool inner_shared = false;
+                const auto a = attributes_of(spf.line(mapped));
+                std::vector<uint32_t> inner;
+                for (const uint32_t map : a.empty() ? std::vector<uint32_t>{} : refs_in(a[0])) {
+                    const auto m = attributes_of(spf.line(map));
+                    if (m.size() != 2) continue;
+                    for (const uint32_t representation : refs_in(m[1])) {
+                        const auto r = attributes_of(spf.line(representation));
+                        if (r.size() == 4) for (const uint32_t item : refs_in(r[3])) inner.push_back(item);
+                    }
+                }
+                for (const uint32_t item : inner) inner_shared = inner_shared || shared.count(item);
+                if (!inner_shared) continue;  // its shape is the site's own, and faded already
+                for (const uint32_t item : inner) {
+                    const auto styled = styled_of.find(item);
+                    if (style || styled == styled_of.end() || styled->second.empty()) continue;
+                    const auto s = attributes_of(spf.line(styled->second.front()));
+                    const auto styles = s.size() == 3 ? refs_in(s[1]) : std::vector<uint32_t>{};
+                    if (!styles.empty()) style = styles[0];
+                }
+                if (!style) continue;
+                const uint32_t made = next_id++;
+                added.push_back("#" + std::to_string(made) + "=IFCSTYLEDITEM(#" + std::to_string(mapped) + ",(#" + std::to_string(fade(style, transparency)) + "),$);");
+                ++stats.items_faded;
+            }
+            stats.items_shared += shared.size();
+            stats.sites_faded += sites_found.size();
+        }
+
+        // A port is nested on what it's on, which some checkers don't follow, so they list it as unreferenced: it's
+        // also contained where its host is, the host's own storey, or that of the assembly the host is part of
+        {
+            std::unordered_map<uint32_t, uint32_t> container_of;  // element, and the relationship containing it
+            std::unordered_map<uint32_t, uint32_t> whole_of;      // part, and the assembly it's in
+            std::vector<std::pair<uint32_t, uint32_t>> ports;      // port, and its host
+            for (uint32_t id = 0; id < max_id; ++id) {
+                if (dropped[id]) continue;
+                const auto type = spf.type(id);
+                if (type != "IFCRELCONTAINEDINSPATIALSTRUCTURE" && type != "IFCRELNESTS" && type != "IFCRELAGGREGATES") continue;
+                const auto attributes = attributes_of(spf.line(id));
+                if (attributes.size() != 6) continue;
+                if (type == "IFCRELCONTAINEDINSPATIALSTRUCTURE") {
+                    for (const uint32_t element : refs_in(attributes[4])) container_of.emplace(element, id);
+                    continue;
+                }
+                const auto whole = refs_in(attributes[4]);
+                if (whole.size() != 1) continue;
+                for (const uint32_t part : refs_in(attributes[5])) {
+                    if (part >= max_id || dropped[part]) continue;
+                    if (type == "IFCRELAGGREGATES") whole_of.emplace(part, whole[0]);
+                    else if (spf.type(part) == "IFCDISTRIBUTIONPORT") ports.emplace_back(part, whole[0]);
+                }
+            }
+            std::unordered_map<uint32_t, std::vector<uint32_t>> to_contain;  // containing relationship, and ports to add
+            for (const auto& [port, host] : ports) {
+                if (container_of.count(port)) continue;
+                uint32_t at = host;
+                for (int depth = 0; depth < 8 && !container_of.count(at); ++depth) {
+                    const auto whole = whole_of.find(at);
+                    if (whole == whole_of.end()) break;
+                    at = whole->second;
+                }
+                const auto container = container_of.find(at);
+                if (container == container_of.end()) continue;
+                to_contain[container->second].push_back(port);
+                container_of.emplace(port, container->second);
+            }
+            for (auto& [rel, more] : to_contain) {
+                const std::string line(current(rel));
+                std::vector<std::string> attributes;
+                for (const auto a : attributes_of(line)) attributes.emplace_back(a);
+                std::vector<uint32_t> held = refs_in(attributes[4]);
+                held.insert(held.end(), more.begin(), more.end());
+                std::string list = "(";
+                for (size_t i = 0; i < held.size(); ++i) list += (i ? ",#" : "#") + std::to_string(held[i]);
+                attributes[4] = list + ")";
+                rewritten[rel] = with_attributes(line, attributes);
+                stats.ports_contained += more.size();
+            }
         }
 
         // Owner histories say IFCFilter changed what they're on, now

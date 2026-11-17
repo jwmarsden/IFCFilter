@@ -72,7 +72,7 @@ std::string csv(const std::string& value) {
 
 }  // namespace
 
-TraceStats trace(const std::string& path, const SpfFile& input, const std::string& file_name, const std::vector<Traced>& elements, const SiteLookup& corrections, const PropertySchema& property_schema, const LocationReference& location_reference) {
+TraceStats trace(const std::string& path, const SpfFile& input, const std::string& file_name, const std::vector<Traced>& elements, const SiteLookup& corrections, const PropertySchema& property_schema, const LocationReference& location_reference, const ElementCorrections& element_corrections) {
     TraceStats stats;
     const Schema& s = schema();
 
@@ -373,6 +373,8 @@ TraceStats trace(const std::string& path, const SpfFile& input, const std::strin
                 }
                 if (setkey == "ifcfilter" && (key == "siteid" || key == "assettype" || key == "designid" || key == "designtag" || key == "description" || key == "identifier" || key == "zone" || key == "location" || key == "locationdescription" || key == "sourcefile")) continue;
                 if (setkey == "classification" && (key == "cocode" || key == "codescription" || key == "encode" || key == "endescription" || key == "slcode" || key == "sldescription" || key == "efcode" || key == "efdescription" || key == "sscode" || key == "ssdescription" || key == "prcode" || key == "prdescription")) continue;
+                // With a hierarchy-set, every Hierarchy field is resolved from it below
+                if (setkey == "hierarchy" && (key == "location" || !schema().hierarchy_set.empty())) continue;
                 result.push_back(copy(candidate.id));
             }
             return result;
@@ -384,9 +386,11 @@ TraceStats trace(const std::string& path, const SpfFile& input, const std::strin
             std::vector<std::string> zones, sites, types, locations, designs, identifiers, descriptions;
             for (const uint32_t source : traced->sources) {
                 const Found on = found_on(source);
+                const auto corrected = element_corrections.find(source);
+                const std::string site = corrected != element_corrections.end() && !corrected->second.site.empty() ? escaped(corrected->second.site) : on.site;
                 zones.push_back(on.zone);
-                sites.push_back(on.site);
-                types.push_back(on.site.empty() ? "" : asset_type_of(on.site));
+                sites.push_back(site);
+                types.push_back(corrected != element_corrections.end() && !corrected->second.type.empty() ? escaped(corrected->second.type) : (site.empty() ? "" : asset_type_of(site)));
                 locations.push_back(on.location);
                 designs.push_back(on.design);
                 identifiers.push_back(on.identifier);
@@ -412,9 +416,11 @@ TraceStats trace(const std::string& path, const SpfFile& input, const std::strin
             }
             for (const auto& [set_name, fields] : property_schema) if (name_key(set_name) == "ifcfilter") {
                 for (const auto& field : fields) if (name_key(field) == "locationdescription") list += "," + property(field.c_str(), location_description);
+                // The model the element came from, as its input file is named, which a combined file keeps for each
+                for (const auto& field : fields) if (name_key(field) == "modelfile") list += "," + property(field.c_str(), source_file);
                 if (correction) for (const auto& field : fields) {
                     const auto key = name_key(field);
-                    if (key == "siteid" || key == "assettype" || key == "designid" || key == "designtag" || key == "description" || key == "identifier" || key == "zone" || key == "location" || key == "locationdescription" || key == "sourcefile") continue;
+                    if (key == "siteid" || key == "assettype" || key == "designid" || key == "designtag" || key == "description" || key == "identifier" || key == "zone" || key == "location" || key == "locationdescription" || key == "sourcefile" || key == "modelfile") continue;
                     for (const auto& [column, value] : correction->extra) if (!value.empty() && name_key(column) == key) {
                         list += "," + property(field.c_str(), escaped(value));
                         break;
@@ -467,9 +473,55 @@ TraceStats trace(const std::string& path, const SpfFile& input, const std::strin
                 const auto key = name_key(set_name);
                 if (key == "ifcfilter" || key == "classification" || key == name_key(s.project_set)) continue;
                 const auto extra = source_properties(*traced, set_name, correction);
-                if (extra.empty()) continue;
                 std::string properties;
                 for (const auto property_id : extra) properties += (properties.empty() ? "" : ",") + std::string("#") + std::to_string(property_id);
+                if (key == "hierarchy") {
+                    // Location is the element's own; every other field comes from the rules' hierarchy-set, under its
+                    // own name or the one hierarchy-source gives it. Conflicting values across merged source elements
+                    // are left blank.
+                    const Schema& rules = schema();
+                    std::map<std::string, std::string> source_of;  // field key to source property key
+                    if (!rules.hierarchy_set.empty())
+                        for (const auto& field : property_schema.at(set_name)) {
+                            const auto renamed = rules.hierarchy_sources.find(field);
+                            if (name_key(field) != "location") source_of[name_key(field)] = name_key(renamed == rules.hierarchy_sources.end() ? field : renamed->second);
+                        }
+                    std::set<std::string> wanted;
+                    for (const auto& [_, source_key] : source_of) wanted.insert(source_key);
+                    std::map<std::string, std::set<std::string>> parent_values;
+                    for (const uint32_t source : traced->sources) {
+                        const auto source_sets = sets_of.find(source);
+                        if (wanted.empty() || source_sets == sets_of.end()) continue;
+                        for (const uint32_t source_set : source_sets->second) {
+                            if (input.type(source_set) != "IFCPROPERTYSET") continue;
+                            const auto a = attributes_of(input.line(source_set));
+                            if (a.size() != 5 || name_key(quoted_in(a[2])) != name_key(rules.hierarchy_set)) continue;
+                            for (const uint32_t source_property : refs_in(a[4])) {
+                                if (input.type(source_property) != "IFCPROPERTYSINGLEVALUE") continue;
+                                const auto pa = attributes_of(input.line(source_property));
+                                if (pa.size() < 3) continue;
+                                const auto source_key = name_key(quoted_in(pa[0]));
+                                if (!wanted.count(source_key)) continue;
+                                const auto candidate = quoted_in(pa[2]);
+                                if (!candidate.empty()) parent_values[source_key].insert(candidate);
+                            }
+                        }
+                    }
+                    for (const auto& field : property_schema.at(set_name)) {
+                        const auto field_key = name_key(field);
+                        std::string source_key;
+                        if (const auto at = source_of.find(field_key); at != source_of.end()) source_key = at->second;
+                        else if (field_key != "location") continue;
+                        std::string value;
+                        if (field_key == "location") value = joined(locations);
+                        else {
+                            const auto found_values = parent_values.find(source_key);
+                            if (found_values != parent_values.end() && found_values->second.size() == 1) value = *found_values->second.begin();
+                        }
+                        properties += (properties.empty() ? "" : ",") + property(field.c_str(), value);
+                    }
+                }
+                if (properties.empty()) continue;
                 const uint32_t extra_set = next++;
                 added.push_back("#" + std::to_string(extra_set) + "=IFCPROPERTYSET('" + derived_guid(traced->guid + "/" + set_name) + "'," + owner + ",'" + escaped(set_name) + "',$,(" + properties + "));");
                 added.push_back("#" + std::to_string(next++) + "=IFCRELDEFINESBYPROPERTIES('" + derived_guid(traced->guid + "/" + set_name + "/defines") + "'," + owner + ",$,$,(#" + std::to_string(id) + "),#" + std::to_string(extra_set) + ");");

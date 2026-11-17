@@ -87,10 +87,10 @@ std::vector<std::pair<uint32_t, uint32_t>> flat_edges_out(const std::vector<Edge
     // just past it), or neither (kept)
     enum class Kind { flat, one_sided, kept };
     struct Sort {
-        Kind kind = Kind::kept;
+        Kind kind;
         V normal{}, side{};  // one-sided: its plane, and across the edge towards its surface
     };
-    std::vector<Sort> sorts(edges.size());
+    std::vector<Sort> sorts(edges.size(), Sort{Kind::kept, {}, {}});
     for (size_t i = 0; i < edges.size(); ++i) {
         const V& pa = points[edges[i].first];
         const V along = sub(points[edges[i].second], pa);

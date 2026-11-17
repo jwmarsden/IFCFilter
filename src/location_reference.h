@@ -1,5 +1,5 @@
 #pragma once
-// data/location-referencing.csv, by location hierarchy code: the description and Uniclass Co, En and SL
+// location-referencing.xlsx (or legacy CSV), by location hierarchy code: the description and Uniclass Co, En and SL
 // codes and titles for each location, used to fill in what a matching IFC_Filter.Location leaves out.
 
 #include <array>

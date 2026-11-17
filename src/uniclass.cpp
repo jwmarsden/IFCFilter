@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <map>
@@ -29,6 +30,11 @@ const std::map<std::string,std::string>& titles() {
         std::map<std::string,std::string> result;
         const std::array<const char*,6> files={"V0006_Uniclass_Complex_122.csv","V0006_Uniclass_Entity_134.csv","V0006_Uniclass_Space_Location_135.csv","V0006_Uniclass_Element_Function_116.csv","V0006_Uniclass_System_142.csv","V0006_Uniclass_Product_142.csv"};
         auto dir=std::filesystem::path(program_path()).parent_path()/"uniclass";
+        if (const char* shared=std::getenv("IFC_DATA_DIR"); shared && *shared) dir=std::filesystem::path(shared)/"uniclass";
+        else if (const char* profile=std::getenv("USERPROFILE"); profile && *profile) {
+            auto shared=std::filesystem::path(profile)/"OneDrive"/"Work"/"IFCData"/"uniclass";
+            if (std::filesystem::is_directory(shared)) dir=shared;
+        }
         for(const auto* file:files) {
             std::ifstream in(dir/file,std::ios::binary); if(!in) throw std::runtime_error("missing Uniclass table: "+(dir/file).string());
             std::string line; std::getline(in,line);

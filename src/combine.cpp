@@ -134,6 +134,7 @@ uint32_t placement_of(const SpfFile& spf, uint32_t product) {
 
 struct GroupStats {
     size_t levels_joined = 0, levels_added = 0, placements_moved = 0, placements_left = 0;
+    size_t sites_joined = 0, elements_joined = 0, joins_refused = 0;  // join-across-models
 };
 
 bool read_row(std::istream& in, std::vector<std::string>& fields);
@@ -205,6 +206,175 @@ bool combine_group(std::vector<fs::path> paths, const fs::path& out_path, GroupS
     std::vector<uint32_t> new_levels;  // in the file written
     std::vector<std::unique_ptr<Extents>> extents;
     for (const auto& file : files) extents.push_back(std::make_unique<Extents>(*file));
+
+    // An element of a site that's in more than one of the models, by join-across-models, is written as one: the
+    // element of the model the rule names (or the first model's) keeps its own, and each other's bodies are
+    // placed in it by mapped items, where they were. The others, and what only they had, go. What a body's
+    // shapes are styled with, such as a transparency, stays with them.
+    std::vector<std::unordered_set<uint32_t>> joined(files.size());     // elements that go, file by file
+    std::vector<std::unordered_set<uint32_t>> held(files.size());       // what the new mapped items show, so it stays
+    std::unordered_map<std::string, std::string> joined_guid;           // a GlobalId that's gone, and what it's in now
+    std::vector<std::unordered_map<uint32_t, std::vector<uint32_t>>> referrers(files.size());
+    struct Keeper {
+        size_t file = 0;
+        uint32_t id = 0;
+        uint32_t body = 0;                // the representation the others' bodies go in
+        std::vector<uint32_t> items;      // the mapped items placing them, as written
+    };
+    std::map<std::string, Keeper> keepers;
+    if (!schema().join_across.empty()) {
+        // A file's discipline: the fourth part of its name, PRJ-ORG-Z01-XY-...
+        const auto discipline_of = [](const fs::path& path) {
+            const std::string name = path.filename().string();
+            size_t at = 0;
+            for (int part = 0; part < 3; ++part) {
+                at = name.find('-', at);
+                if (at == std::string::npos) return std::string();
+                ++at;
+            }
+            return name.substr(at, name.find_first_of("-.", at) - at);
+        };
+        const auto find_referrers = [&](size_t f) {
+            if (!referrers[f].empty()) return;
+            const SpfFile& spf = *files[f];
+            for (uint32_t id = 0; id < spf.max_id(); ++id) {
+                if (!spf.line(id).empty()) for_each_ref(spf.line(id), [&](uint32_t to) { referrers[f][to].push_back(id); });
+            }
+        };
+        const auto body_of = [](const SpfFile& spf, uint32_t product) {
+            std::vector<uint32_t> out;
+            const auto a = attributes_of(spf.line(product));
+            const auto shape = a.size() > 6 ? refs_in(a[6]) : std::vector<uint32_t>{};
+            if (shape.size() != 1 || spf.type(shape[0]) != "IFCPRODUCTDEFINITIONSHAPE") return out;
+            const auto sa = attributes_of(spf.line(shape[0]));
+            if (sa.size() != 3) return out;
+            for (const uint32_t r : refs_in(sa[2])) {
+                const auto ra = attributes_of(spf.line(r));
+                if (ra.size() == 4 && ra[1] == "'Body'") out.push_back(r);
+            }
+            return out;
+        };
+        // Each model's elements named after a site whose asset type is joined
+        std::map<std::string, std::vector<std::pair<size_t, uint32_t>>> by_site;
+        for (size_t f = 0; f < files.size(); ++f) {
+            const SpfFile& spf = *files[f];
+            for (uint32_t id = 0; id < spf.max_id(); ++id) {
+                if (spf.line(id).empty()) continue;
+                const auto type = spf.type(id);
+                if (type.rfind("IFCREL", 0) == 0 || type == "IFCSITE" || type == "IFCBUILDING" || type == "IFCBUILDINGSTOREY" || type == "IFCSPACE" || type == "IFCOPENINGELEMENT") continue;
+                const auto a = attributes_of(spf.line(id));
+                if (a.size() < 7 || a[0].size() != 24 || a[0][0] != '\'') continue;
+                const std::string name = unquoted(a[2]);
+                if (!is_one_site(name)) continue;
+                if (!schema().join_across.count(asset_type_of(name)) && !schema().join_across.count("*")) continue;
+                if (body_of(spf, id).empty()) continue;
+                by_site[name].emplace_back(f, id);
+            }
+        }
+        for (const auto& [site, found] : by_site) {
+            std::set<size_t> models;
+            for (const auto& [f, id] : found) models.insert(f);
+            if (models.size() < 2) continue;
+            // The keeper: the first element of the model the rule names, or of the first model
+            auto rule = schema().join_across.find(asset_type_of(site));
+            if (rule == schema().join_across.end()) rule = schema().join_across.find("*");
+            auto keeper = found.front();
+            for (const auto& candidate : found) {
+                if (!rule->second.empty() && discipline_of(paths[candidate.first]) == rule->second) {
+                    keeper = candidate;
+                    break;
+                }
+            }
+            const size_t kf = keeper.first;
+            const uint32_t kid = keeper.second;
+            const SpfFile& kspf = *files[kf];
+            const auto kplace = extents[kf]->placement(attributes_of(kspf.line(kid))[5]);
+            if (!kplace) {
+                std::cerr << "  warning: " << site << " in " << paths[kf].filename().string() << " has a placement that can't be read, so isn't joined\n";
+                ++stats.joins_refused;
+                continue;
+            }
+            Keeper k;
+            k.file = kf;
+            k.id = kid;
+            k.body = body_of(kspf, kid).front();
+            size_t joins = 0;
+            for (const auto& [f, id] : found) {
+                if (f == kf) continue;  // elements of one site in the same model were kept apart when it was split
+                const SpfFile& spf = *files[f];
+                find_referrers(f);
+                // Only what relationships list can be joined: what an element places or holds would be lost
+                bool listed_only = true;
+                for (const uint32_t by : referrers[f][id]) {
+                    if (spf.type(by).rfind("IFCREL", 0) != 0) listed_only = false;
+                    for (const auto attribute : attributes_of(spf.line(by))) {
+                        if (!attribute.empty() && attribute[0] == '#' && refs_in(attribute) == std::vector<uint32_t>{id}) listed_only = false;
+                    }
+                }
+                const auto a = attributes_of(spf.line(id));
+                const auto place = extents[f]->placement(a[5]);
+                if (!listed_only || !place) {
+                    std::cerr << "  warning: " << site << " in " << paths[f].filename().string() << (place ? " holds or places other elements" : " has a placement that can't be read")
+                              << ", so isn't joined to " << paths[kf].filename().string() << "'s\n";
+                    ++stats.joins_refused;
+                    continue;
+                }
+                const Rigid relative = compose(inverse(*kplace), *place);
+                // A styled item of what's replaced styles what replaces it
+                const auto restyle = [&](uint32_t old_item, uint32_t new_item) {
+                    for (const uint32_t by : referrers[f][old_item]) {
+                        if (spf.type(by) != "IFCSTYLEDITEM") continue;
+                        const auto sa = attributes_of(spf.line(by));
+                        if (sa.size() != 3) continue;
+                        emitter.emit("IFCSTYLEDITEM(" + reference(new_item) + "," + with_refs(sa[1], [&](uint32_t r) { return offset[f] + r; }) + "," + std::string(sa[2]) + ");");
+                    }
+                };
+                for (const uint32_t body : body_of(spf, id)) {
+                    const auto ra = attributes_of(spf.line(body));
+                    bool mapped = ra[2] == "'MappedRepresentation'";
+                    struct Placed {
+                        uint32_t item, map;
+                        Rigid target;
+                    };
+                    std::vector<Placed> placed;
+                    if (mapped) {
+                        for (const uint32_t item : refs_in(ra[3])) {
+                            const auto parts = spf.type(item) == "IFCMAPPEDITEM" ? attributes_of(spf.line(item)) : std::vector<std::string_view>{};
+                            const auto map = parts.size() == 2 ? refs_in(parts[0]) : std::vector<uint32_t>{};
+                            const auto target = parts.size() == 2 ? refs_in(parts[1]) : std::vector<uint32_t>{};
+                            const auto rigid = map.size() == 1 && target.size() == 1 ? operator_of(spf, target[0]) : std::nullopt;
+                            if (!rigid) {
+                                mapped = false;
+                                break;
+                            }
+                            placed.push_back({item, map[0], compose(relative, *rigid)});
+                        }
+                    }
+                    if (mapped) {
+                        // Mapped items are placed directly, as maps inside maps aren't reliably read
+                        for (const Placed& p : placed) {
+                            const uint32_t now = emitter.emit("IFCMAPPEDITEM(" + reference(offset[f] + p.map) + "," + reference(emitter.emit_operator(p.target)) + ");");
+                            held[f].insert(p.map);
+                            restyle(p.item, now);
+                            k.items.push_back(now);
+                        }
+                    } else {
+                        const uint32_t map = emitter.emit("IFCREPRESENTATIONMAP(" + reference(emitter.emit_identity()) + "," + reference(offset[f] + body) + ");");
+                        held[f].insert(body);
+                        k.items.push_back(emitter.emit("IFCMAPPEDITEM(" + reference(map) + "," + reference(emitter.emit_operator(relative)) + ");"));
+                    }
+                }
+                joined[f].insert(id);
+                joined_guid[unquoted(a[0])] = unquoted(attributes_of(kspf.line(kid))[0]);
+                ++joins;
+                ++stats.elements_joined;
+            }
+            if (!joins) continue;
+            find_referrers(kf);
+            keepers[site] = std::move(k);
+            ++stats.sites_joined;
+        }
+    }
     std::unordered_map<uint32_t, std::string> replaced;  // in the file written
     const std::string& project_name = schema().project_set;  // none if the rules name no project set
     std::vector<uint32_t> project_sets(files.size(), 0);
@@ -244,7 +414,7 @@ bool combine_group(std::vector<fs::path> paths, const fs::path& out_path, GroupS
                 if (targets) for (const auto product : refs_in(a[4])) targets->insert(product);
             }
             for (const auto product : traced) {
-                if (with_project.count(product)) continue;
+                if (with_project.count(product) || joined[f].count(product)) continue;
                 const auto a = attributes_of(spf.line(product));
                 if (a.empty()) continue;
                 emitter.emit("IFCRELDEFINESBYPROPERTIES('" + derived_guid(unquoted(a[0]) + "/primary project") + "',$,$,$,(" +
@@ -371,6 +541,75 @@ bool combine_group(std::vector<fs::path> paths, const fs::path& out_path, GroupS
         }
     }
 
+    // The joined elements go, with what only they had, and come out of the relationships that list them
+    for (size_t f = 0; f < files.size(); ++f) {
+        if (joined[f].empty()) continue;
+        const SpfFile& spf = *files[f];
+        auto& to = instead[f];
+        const auto change = [&](uint32_t id) {
+            const auto mapped = to.find(id);
+            return mapped != to.end() && mapped->second ? mapped->second : offset[f] + id;
+        };
+        const auto gone = [&](uint32_t id) {
+            const auto at = to.find(id);
+            return at != to.end() && at->second == 0;
+        };
+        std::function<void(uint32_t)> drop = [&](uint32_t id) {
+            if (to.count(id) || held[f].count(id)) return;
+            to[id] = 0;
+            for (const uint32_t by : referrers[f][id]) {
+                if (spf.type(by) == "IFCSTYLEDITEM") drop(by);
+            }
+            for_each_ref(spf.line(id), [&](uint32_t child) {
+                if (to.count(child) || held[f].count(child)) return;
+                const auto& by = referrers[f][child];
+                if (std::all_of(by.begin(), by.end(), [&](uint32_t b) { return gone(b) || spf.type(b) == "IFCSTYLEDITEM"; })) drop(child);
+            });
+        };
+        for (const uint32_t id : joined[f]) drop(id);
+        for (const uint32_t id : joined[f]) {
+            for (const uint32_t rel : referrers[f][id]) {
+                if (gone(rel)) continue;
+                const auto existing = rewritten[f].find(rel);
+                const bool was_rewritten = existing != rewritten[f].end();
+                // A relationship rewritten already has its references as written
+                const std::string source = was_rewritten ? "#" + std::to_string(offset[f] + rel) + "=" + existing->second : std::string(spf.line(rel));
+                const auto is_gone = [&](uint32_t r) { return was_rewritten ? r >= offset[f] && gone(r - offset[f]) && joined[f].count(r - offset[f]) : joined[f].count(r) > 0; };
+                std::string kept;
+                if (!rewrite(source, is_gone, WhenEmpty::Drop, kept)) {
+                    rewritten[f].erase(rel);
+                    drop(rel);
+                    continue;
+                }
+                rewritten[f][rel] = was_rewritten ? kept.substr(kept.find('=') + 1) : with_refs(kept, change);
+            }
+        }
+    }
+    // and the elements they're joined to get their bodies
+    for (const auto& [site, k] : keepers) {
+        const SpfFile& spf = *files[k.file];
+        const auto change = [&](uint32_t id) {
+            const auto mapped = instead[k.file].find(id);
+            return mapped != instead[k.file].end() && mapped->second ? mapped->second : offset[k.file] + id;
+        };
+        auto attributes = strings_of(with_refs(spf.line(k.body), change));
+        std::vector<uint32_t> items = refs_in(attributes[3]);
+        items.insert(items.end(), k.items.begin(), k.items.end());
+        attributes[3] = list_of(items);
+        if (referrers[k.file][k.body].size() == 1) {
+            rewritten[k.file][k.body] = rebuilt("IFCSHAPEREPRESENTATION", attributes);
+        } else {
+            // Its body is shared, so it gets one of its own
+            const uint32_t body = emitter.emit(rebuilt("IFCSHAPEREPRESENTATION", attributes));
+            const uint32_t shape = refs_in(attributes_of(spf.line(k.id))[6]).front();
+            auto shape_attributes = strings_of(with_refs(spf.line(shape), change));
+            std::vector<uint32_t> representations;
+            for (const uint32_t r : refs_in(shape_attributes[2])) representations.push_back(r == change(k.body) ? body : r);
+            shape_attributes[2] = list_of(representations);
+            rewritten[k.file][shape] = rebuilt("IFCPRODUCTDEFINITIONSHAPE", shape_attributes);
+        }
+    }
+
     std::ofstream out(out_path, std::ios::binary);
     {
         // The header names the file written and what it's made of
@@ -475,6 +714,8 @@ bool combine_group(std::vector<fs::path> paths, const fs::path& out_path, GroupS
             read_row(in, row);
             while (read_row(in, row)) {
                 if (row.size() != 5) throw std::runtime_error(trace_path(path).string() + ": invalid source manifest row");
+                const auto joined_to = joined_guid.find(row[0]);
+                if (joined_to != joined_guid.end()) row[0] = joined_to->second;
                 for (size_t i = 0; i < row.size(); ++i) manifest << (i ? "," : "") << csv_field(row[i]);
                 manifest << "\r\n";
             }
@@ -580,7 +821,7 @@ std::pair<size_t, std::string> contents_of(const fs::path& path) {
     return {elements, text};
 }
 
-constexpr const char* REGISTER_HEADER = "combined,model,discipline,zone,mb,elements,contents";
+constexpr const char* REGISTER_HEADER = "combined,model,discipline,zone,mb,elements,contents,name";  // name: what the model is, such as its bridge, for people
 
 // Reads the register, adds what's given that it doesn't have, and writes it again. Returns what to combine,
 // by name; empty, with written true, if it didn't exist and has just been made.
@@ -606,7 +847,7 @@ std::map<std::string, std::vector<fs::path>> from_register(const CombineOptions&
                 return i != at.end() && i->second < fields.size() ? fields[i->second] : std::string();
             };
             Row row;
-            for (const char* column : {"combined", "model", "discipline", "zone", "mb", "elements", "contents"}) row.fields.push_back(get(column));
+            for (const char* column : {"combined", "model", "discipline", "zone", "mb", "elements", "contents", "name"}) row.fields.push_back(get(column));
             if (row.fields[1].empty()) continue;
             row_of[row.fields[1]] = rows.size();
             rows.push_back(std::move(row));
@@ -625,7 +866,7 @@ std::map<std::string, std::vector<fs::path>> from_register(const CombineOptions&
         Row row;
         row.fields = {"", model, fs::absolute(path).parent_path().filename().string(),
                       options.name_part >= 1 && parts.size() >= static_cast<size_t>(options.name_part) ? parts[static_cast<size_t>(options.name_part - 1)] : "", mb,
-                      std::to_string(elements), contents};
+                      std::to_string(elements), contents, ""};
         row_of[model] = rows.size();
         rows.push_back(std::move(row));
         ++added;
@@ -714,6 +955,7 @@ int combine(const CombineOptions& options) {
         std::cout << out_path.filename().string() << ": " << paths.size() << " models, " << bytes_in / (1 << 20) << " -> " << fs::file_size(out_path) / (1 << 20) << " MB; "
                   << stats.levels_joined << " levels joined to one of the same name, " << stats.levels_added << " added; " << stats.placements_moved
                   << " placements now from the first model's site, building or levels" << (stats.placements_left ? ", " + std::to_string(stats.placements_left) + " left as they were" : "")
+                  << (stats.sites_joined ? "; " + std::to_string(stats.elements_joined) + " elements joined to " + std::to_string(stats.sites_joined) + " sites' elements in other models" : "")
                   << "\n" << std::flush;
     }
     return result;
@@ -744,7 +986,8 @@ bool combine_files(const std::vector<fs::path>& paths, const fs::path& out_path,
     if (!combine_group(paths, out_path, stats)) return false;
     summary = std::to_string(paths.size()) + " models, " + std::to_string(bytes_in / (1 << 20)) + " -> " + std::to_string(fs::file_size(out_path) / (1 << 20)) + " MB; " +
               std::to_string(stats.levels_joined) + " levels joined to one of the same name, " + std::to_string(stats.levels_added) + " added; " +
-              std::to_string(stats.placements_moved) + " placements now from the first model's site, building or levels";
+              std::to_string(stats.placements_moved) + " placements now from the first model's site, building or levels" +
+              (stats.sites_joined ? "; " + std::to_string(stats.elements_joined) + " elements joined to " + std::to_string(stats.sites_joined) + " sites' elements in other models" : "");
     return true;
 }
 

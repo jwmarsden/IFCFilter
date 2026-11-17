@@ -5,6 +5,7 @@
 // (how the site ID starts, as its level is named) and location.
 
 #include "site_lookup.h"
+#include "element_corrections.h"
 #include "location_reference.h"
 #include "property_schema.h"
 #include <cstdint>
@@ -30,7 +31,7 @@ inline const char* TRACE_SET = "IFCFilter";
 
 // input is the model as it was read, for its elements' GUIDs and properties; file_name is the model's.
 // The sets are added to the file at path.
-TraceStats trace(const std::string& path, const SpfFile& input, const std::string& file_name, const std::vector<Traced>& elements, const SiteLookup& corrections, const PropertySchema& property_schema = {}, const LocationReference& locations = {});
+TraceStats trace(const std::string& path, const SpfFile& input, const std::string& file_name, const std::vector<Traced>& elements, const SiteLookup& corrections, const PropertySchema& property_schema = {}, const LocationReference& locations = {}, const ElementCorrections& element_corrections = {});
 
 }  // namespace ifcfilter
 

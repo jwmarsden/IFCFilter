@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
+#include <map>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -28,6 +29,11 @@ struct Schema {
     std::string zone_property;          // zone-property: an element's zone, in any set, for the IFCFilter set
     std::set<std::string> zones;        // zone: one of the zones, as Z01; anything else, such as a group of them, isn't one
     std::string location_property;      // location-property: an element's location, in any set, for the IFCFilter set
+    std::string discipline_property;    // discipline-property: an element's discipline, in the IFC_Filter or project set, for caches
+    std::string hierarchy_set;          // hierarchy-set: the set the Hierarchy set's parent fields are read from
+    std::map<std::string, std::string> hierarchy_sources;  // hierarchy-source: a Hierarchy field read from a differently named property
+    std::map<std::string, double> transparent_sites;  // transparent-site: a site ID, and how transparent it's drawn, from 0 to 1
+    std::map<std::string, std::string> join_across;  // join-across-models: asset types (or *) joined across combined models, and the discipline whose element keeps its own
     std::set<std::string> merge_runs;   // merge-runs: asset types whose placeholder site IDs, such as ABC000000, merge where they touch
     std::string quantity_set;           // quantity-set: sizes worked out for an asset as a whole
     std::string length_property, width_property, height_property;  // quantity-length, -width, -height
@@ -63,7 +69,36 @@ inline bool schema_rule(const std::string& action, const std::string& text) {
     else if (action == "zone-property") s.zone_property = text;
     else if (action == "zone") s.zones.insert(text);
     else if (action == "location-property") s.location_property = text;
+    else if (action == "discipline-property") s.discipline_property = text;
+    else if (action == "hierarchy-set") s.hierarchy_set = text;
+    else if (action == "hierarchy-source") {
+        // FIELD PROPERTY, as hierarchy-source SafetyParent SupplyIsolationID
+        const auto space = text.find(' ');
+        if (space == std::string::npos) throw std::runtime_error("hierarchy-source needs a field and a property: " + text);
+        std::string property = text.substr(space + 1);
+        property.erase(0, std::min(property.size(), property.find_first_not_of(' ')));
+        while (!property.empty() && (property.back() == ' ' || property.back() == '\r')) property.pop_back();
+        s.hierarchy_sources[text.substr(0, space)] = property;
+    }
     else if (action == "merge-runs") s.merge_runs.insert(text);
+    else if (action == "join-across-models") {
+        // TYPE [DISCIPLINE], as join-across-models ABC XY: each site's element in the XY model keeps its own
+        const auto space = text.find(' ');
+        std::string keeper = space == std::string::npos ? std::string() : text.substr(space);
+        keeper.erase(0, std::min(keeper.size(), keeper.find_first_not_of(' ')));
+        while (!keeper.empty() && (keeper.back() == ' ' || keeper.back() == '\r')) keeper.pop_back();
+        s.join_across[text.substr(0, space)] = keeper;
+    }
+    else if (action == "transparent-site") {
+        // SITEID TRANSPARENCY, as transparent-site ABC123456 0.5
+        const auto space = text.rfind(' ');
+        if (space == std::string::npos) throw std::runtime_error("transparent-site needs a site ID and a transparency: " + text);
+        const double transparency = std::stod(text.substr(space + 1));
+        if (transparency < 0 || transparency > 1) throw std::runtime_error("transparent-site's transparency is from 0 to 1: " + text);
+        std::string site = text.substr(0, space);
+        while (!site.empty() && site.back() == ' ') site.pop_back();
+        s.transparent_sites[site] = transparency;
+    }
     else if (action == "quantity-set") s.quantity_set = text;
     else if (action == "quantity-length") s.length_property = text;
     else if (action == "quantity-width") s.width_property = text;

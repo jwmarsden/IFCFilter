@@ -1,6 +1,6 @@
 """Build an editable, one-row-per-site register from existing IFCViewer caches.
 
-Usage: python scripts/site-register.py C:/Apps/IFCViewer data/site-register.csv
+Usage: python scripts/site-register.py C:/Apps/IFCViewer data/site-register.xlsx
 Conflicting values are blank; GUIDs and files are listed to show sites spanning models.
 This is a report generator, not yet an override mechanism.
 """
@@ -9,6 +9,7 @@ import pathlib
 import sqlite3
 import sys
 from collections import defaultdict
+from site_register_xlsx import write_register
 
 
 def build(root, output):
@@ -58,12 +59,16 @@ def build(root, output):
         fields.update((f'Classification.{code} Value', f'Classification.{code} Description'))
     fields = sorted(fields)
     output.parent.mkdir(parents=True, exist_ok=True)
-    with output.open('x', newline='', encoding='utf-8-sig') as f:
-        writer = csv.writer(f)
-        writer.writerow(['SiteID', 'Output GUID count', 'Output GUIDs', 'Source file count', 'Source files', 'Cache file count', 'Cache files', *fields])
+    def rows():
+        yield ['SiteID', 'Output GUID count', 'Output GUIDs', 'Source file count', 'Source files', 'Cache file count', 'Cache files', *fields]
         for site, data in sorted(sites.items()):
             values = [next(iter(v)) if len(v) == 1 else '' for v in (data['values'].get(name, set()) for name in fields)]
-            writer.writerow([site, len(data['guids']), '; '.join(sorted(data['guids'])), len(data['sources']), '; '.join(sorted(data['sources'])), len(data['files']), '; '.join(sorted(data['files'])), *values])
+            yield [site, len(data['guids']), '; '.join(sorted(data['guids'])), len(data['sources']), '; '.join(sorted(data['sources'])), len(data['files']), '; '.join(sorted(data['files'])), *values]
+    if output.suffix.lower() == '.xlsx':
+        write_register(output, rows())
+    else:
+        with output.open('x', newline='', encoding='utf-8-sig') as f:
+            csv.writer(f).writerows(rows())
     multi_file = sum(len(data['files']) > 1 for data in sites.values())
     multi_source = sum(len(data['sources']) > 1 for data in sites.values())
     multi_guid = sum(len(data['guids']) > 1 for data in sites.values())

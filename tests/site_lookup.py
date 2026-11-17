@@ -26,11 +26,17 @@ with tempfile.TemporaryDirectory() as temp:
 #113=IFCRELDEFINESBYPROPERTIES('0Jm4wmcl10lPX6wYa53Xrn',$,$,$,(#15),#112);
 #114=IFCRELAGGREGATES('0Jm4wmcl10lPX6wYa53Xro',$,$,$,#15,(#115));
 #115=IFCWALL('0Jm4wmcl10lPX6wYa53Xrp',$,'Child',$,$,#4,#14,$,$);
+#116=IFCPROPERTYSINGLEVALUE('PrimaryParent',$,IFCTEXT('PRIMARY-1'),$);
+#117=IFCPROPERTYSINGLEVALUE('ElectricalParent',$,IFCTEXT('ELECTRICAL-1'),$);
+#118=IFCPROPERTYSINGLEVALUE('CommsParent',$,IFCTEXT('COMMS-1'),$);
+#119=IFCPROPERTYSINGLEVALUE('SupplyIsolationID',$,IFCTEXT('ISOLATION-1'),$);
+#120=IFCPROPERTYSET('0Jm4wmcl10lPX6wYa53Xrq',$,'AssetData',$,(#116,#117,#118,#119));
+#121=IFCRELDEFINESBYPROPERTIES('0Jm4wmcl10lPX6wYa53Xrr',$,$,$,(#15),#120);
 """
     model = root / 'test.ifc'
     model.write_text(text.replace('ENDSEC;\nEND-ISO-10303-21;', extra+'ENDSEC;\nEND-ISO-10303-21;'))
     rules = root / 'rules.txt'
-    rules.write_text('site-set Asset\nsite-id SiteID\ndesign-set Asset\ndesign-tag DesignTag\nproject-set Project\n')
+    rules.write_text('site-set Asset\nsite-id SiteID\ndesign-set Asset\ndesign-tag DesignTag\nproject-set Project\nhierarchy-set AssetData\nhierarchy-source SafetyParent SupplyIsolationID\n')
     lookup = root / 'lookup.csv'
     lookup.write_text('SiteID,DesignTag,Asset Type,Location,Zone,Co,En,SL,EF,Ss,Pr,Identifier,Description\nPU000123,NEW,PUMP,LOC,A,,,,EF_20,,,CORRECTED ID,CORRECTED DESCRIPTION\n')
     schema_book = Workbook()
@@ -40,16 +46,18 @@ with tempfile.TemporaryDirectory() as temp:
     for name in ('EF_Code', 'EF_Description', 'Co_Code', 'Co_Description', 'En_Code', 'En_Description', 'SL_Code', 'SL_Description'):
         schema_sheet.append(('Classification', name))
     schema_sheet.append(('Project', 'DisciplineCode'))
+    for name in ('Location', 'PrimaryParent', 'ElectricalParent', 'CommsParent', 'SafetyParent'):
+        schema_sheet.append(('Hierarchy', name))
     schema = root / 'schema.xlsx'
     schema_book.save(schema)
     reference = root / 'location-referencing.csv'
-    reference.write_text('LocationHierarchyCode,LocationHierarchyDescription,Uniclass_CoCode,Uniclass_CoTitle,Uniclass_EnCode,Uniclass_EnTitle,Uniclass_SLCode,Uniclass_SLTitle\nLOC,Example location,Co_20,Complex,En_20,Entity,SL_20,Space\n')
+    reference.write_text('XYZ_LocationHierarchyCode,LocationHierarchyDescription,Uniclass_CoCode,Uniclass_CoTitle,Uniclass_EnCode,Uniclass_EnTitle,Uniclass_SLCode,Uniclass_SLTitle\nLOC,Example location,Co_20,Complex,En_20,Entity,SL_20,Space\n')
     out = root / 'output'
     cmd = [str(exe), 'split', str(model), '--out', str(out), '--rules', str(rules), '--site-lookup', str(lookup), '--property-schema', str(schema), '--no-zip', '--no-merge', '--no-instance', '--no-compact', '--simplify-mm', '0']
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL)
     result = next((out / 'federate').rglob('*.ifc'))
     cache = root / 'test.ifcc'
-    subprocess.run([str(exe), 'cache', str(result), '--out', str(cache)], check=True, stdout=subprocess.DEVNULL)
+    subprocess.run([str(exe), 'cache', str(result), '--out', str(cache), '--rules', str(rules)], check=True, stdout=subprocess.DEVNULL)
     with sqlite3.connect(cache) as db:
         rows = db.execute('''SELECT sn.text, pn.text, t.text FROM elements e
           JOIN element_psets ep ON ep.element=e.id JOIN psets p ON p.id=ep.pset
@@ -62,6 +70,17 @@ with tempfile.TemporaryDirectory() as temp:
     actual = {(s,n):v for s,n,v in rows}
     for key, value in {('IFC_Filter','SiteID'):'PU000123',('IFC_Filter','Design_ID'):'NEW',('IFC_Filter','Asset_Type'):'PUMP',('IFC_Filter','Location'):'LOC',('IFC_Filter','Location_Description'):'Example location',('IFC_Filter','Identifier'):'CORRECTED ID',('IFC_Filter','Description'):'CORRECTED DESCRIPTION',('Classification','Co_Code'):'Co_20',('Classification','Co_Description'):'Complex',('Classification','En_Code'):'En_20',('Classification','SL_Code'):'SL_20',('Classification','EF_Code'):'EF_20',('Classification','EF_Description'):'Structural elements'}.items():
         assert actual.get(key) == value, (key, actual.get(key))
+    for name, value in {'Location': 'LOC', 'PrimaryParent': 'PRIMARY-1', 'ElectricalParent': 'ELECTRICAL-1', 'CommsParent': 'COMMS-1', 'SafetyParent': 'ISOLATION-1'}.items():
+        assert actual.get(('Hierarchy', name)) == value, (name, actual.get(('Hierarchy', name)))
+    # Prefer the workbook next to the property schema, even when a stale CSV also exists.
+    location_book = Workbook()
+    location_sheet = location_book.active
+    location_sheet.append(['XYZ_LocationHierarchyCode', 'LocationHierarchyDescription', 'Uniclass_CoCode'])
+    location_sheet.append(['LOC', 'Workbook location', 'Co_20'])
+    location_book.save(root / 'location-referencing.xlsx')
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL)
+    assert "IFCPROPERTYSINGLEVALUE('Location_Description',$,IFCLABEL('Workbook location')" in result.read_text()
+    (root / 'location-referencing.xlsx').unlink()
     # Excel's inline strings and an edited correction must take the same path as CSV.
     workbook = Workbook()
     sheet = workbook.active
@@ -88,6 +107,14 @@ with tempfile.TemporaryDirectory() as temp:
     assert "IFCPROPERTYSINGLEVALUE('EF_Code',$,IFCLABEL('EF_15')" in text
     assert "IFCPROPERTYSINGLEVALUE('Identifier',$,IFCLABEL('ORIGINAL ID')" in text
     assert "IFCPROPERTYSINGLEVALUE('Description',$,IFCLABEL('ORIGINAL DESCRIPTION')" in text
+    # Multiple different source values must not be silently chosen for a merged hierarchy field.
+    conflict = """#122=IFCPROPERTYSINGLEVALUE('PrimaryParent',$,IFCTEXT('OTHER-PARENT'),$);
+#123=IFCPROPERTYSET('0Jm4wmcl10lPX6wYa53Xrs',$,'AssetData',$,(#122));
+#124=IFCRELDEFINESBYPROPERTIES('0Jm4wmcl10lPX6wYa53Xrt',$,$,$,(#15),#123);
+"""
+    model.write_text(model.read_text().replace('ENDSEC;\nEND-ISO-10303-21;', conflict+'ENDSEC;\nEND-ISO-10303-21;'))
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL)
+    assert "IFCPROPERTYSINGLEVALUE('PrimaryParent',$,IFCLABEL(''),$)" in result.read_text()
 print('Site lookup overrides and blank preservation passed')
 
 

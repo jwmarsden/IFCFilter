@@ -5,6 +5,7 @@
 #include "extent.h"
 #include "register.h"
 #include "rigid.h"
+#include "site.h"
 #include "spf.h"
 #include "system.h"
 #include "upgrade.h"
@@ -19,6 +20,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -1801,11 +1803,20 @@ class Builder {
 
     // Resolve filter values once, with the same precedence and inheritance as the viewer's legacy reader.
     void write_filters() {
-        const char* query = "SELECT ep.element, lower(replace(replace(trim(n.text), '_', ''), ' ', '')), trim(t.text) FROM pset_values pv JOIN psets p ON p.id = pv.pset JOIN strings s ON s.id = p.name JOIN element_psets ep ON ep.pset = p.id JOIN strings n ON n.id = pv.name JOIN \"values\" v ON v.id = pv.value JOIN strings t ON t.id = v.text WHERE pv.name IN (SELECT id FROM strings WHERE lower(replace(replace(trim(text), '_', ''), ' ', '')) IN ('zone', 'discipline', 'disciplinecode')) AND p.name IN (SELECT id FROM strings WHERE lower(replace(replace(trim(text), '_', ''), ' ', '')) IN ('ifcfilter')) AND trim(t.text) <> '' ORDER BY ep.element, CASE lower(replace(replace(trim(s.text), '_', ''), ' ', '')) WHEN 'ifcfilter' THEN 0 ELSE 1 END, t.text";
+        // Built-in names, then the rules' zone, discipline and project set
+        const auto key = [](const std::string& text) {
+            std::string out;
+            for (const unsigned char c : text) if (c != '_' && c != ' ') out += static_cast<char>(std::tolower(c));
+            return "'" + out + "'";
+        };
+        std::string properties = "'zone', 'discipline', 'disciplinecode'", sets = "'ifcfilter'";
+        for (const auto* name : {&schema().zone_property, &schema().discipline_property}) if (!name->empty() && name->find('\'') == std::string::npos) properties += ", " + key(*name);
+        if (!schema().project_set.empty() && schema().project_set.find('\'') == std::string::npos) sets += ", " + key(schema().project_set);
+        const std::string query = "SELECT ep.element, lower(replace(replace(trim(n.text), '_', ''), ' ', '')), trim(t.text) FROM pset_values pv JOIN psets p ON p.id = pv.pset JOIN strings s ON s.id = p.name JOIN element_psets ep ON ep.pset = p.id JOIN strings n ON n.id = pv.name JOIN \"values\" v ON v.id = pv.value JOIN strings t ON t.id = v.text WHERE pv.name IN (SELECT id FROM strings WHERE lower(replace(replace(trim(text), '_', ''), ' ', '')) IN (" + properties + ")) AND p.name IN (SELECT id FROM strings WHERE lower(replace(replace(trim(text), '_', ''), ' ', '')) IN (" + sets + ")) AND trim(t.text) <> '' ORDER BY ep.element, CASE lower(replace(replace(trim(s.text), '_', ''), ' ', '')) WHEN 'ifcfilter' THEN 0 ELSE 1 END, t.text";
         using Fields = std::pair<std::optional<std::string>, std::optional<std::string>>;
         std::vector<Fields> own(elements_.size());
         sqlite3_stmt* raw = nullptr;
-        if (sqlite3_prepare_v2(db_.get(), query, -1, &raw, nullptr) != SQLITE_OK) throw std::runtime_error(sqlite3_errmsg(db_.get()));
+        if (sqlite3_prepare_v2(db_.get(), query.c_str(), -1, &raw, nullptr) != SQLITE_OK) throw std::runtime_error(sqlite3_errmsg(db_.get()));
         std::unique_ptr<sqlite3_stmt, decltype(&sqlite3_finalize)> stmt(raw, sqlite3_finalize);
         int status;
         while ((status = sqlite3_step(stmt.get())) == SQLITE_ROW) {

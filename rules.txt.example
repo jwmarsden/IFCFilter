@@ -11,6 +11,10 @@ physical Grating
 physical Stair
 envelope Clearance
 hidden Pile Cap
+# Tree root balls are separate children in the landscape export.
+hidden-if [Generic].[Graphic3d].User Label=Rootball
+# A property on an assembly can hide its entire hierarchy, including its geometry-bearing children.
+hidden-tree-if Corridor Data.Element_Description=Shared Cell: Footing Type 3
 
 # For when the family doesn't say what a thing is, as with a road's meshes, by a property's value: SET.PROPERTY=VALUE
 # keep-if takes precedence over hidden, envelope, keep-largest and transparency rules.
@@ -24,6 +28,10 @@ forward-if Corridor Data.IsSignFace=Yes 25
 # A body within this many metres of the world's 0,0 is left out, when nearly all the model is far from it:
 # a dummy an exporter left there, such as an empty surface
 cull-at-origin 10
+# A site drawn see-through in the federation file, from 0 (as it is) to 1 (invisible): SITEID TRANSPARENCY
+transparent-site ABC123456 0.5
+# One element per site across the models of a combined file: the XY model's keeps its own, and the others' bodies go in it
+join-across-models ABC XY
 
 # Where the models keep their asset data. Anything left out is left alone: without site-set and site-id,
 # nothing merges by site.
@@ -38,6 +46,9 @@ cull-at-origin 10
 # zone-property      an element's zone, in any set, for the IFCFilter set; the model's file name says it if that doesn't
 # zone               one zone, a line each; anything else, such as a group of zones, isn't one
 # location-property  an element's location, in any set, for the IFCFilter set
+# discipline-property  an element's discipline, in the IFC_Filter or project set, for the viewing caches' filters
+# hierarchy-set      the set the workbook's Hierarchy fields are read from, by the same names
+# hierarchy-source   FIELD PROPERTY: a Hierarchy field read from a differently named property in that set
 # merge-runs         an asset type whose placeholder site IDs are merged as runs: parts that touch, within 5 cm
 # quantity-set       sizes are worked out for a merged asset as a whole in this set, as these three:
 # quantity-length, quantity-width, quantity-height
@@ -60,6 +71,9 @@ zone-property Zone
 zone NORTH
 zone SOUTH
 location-property LocationCode
+discipline-property DisciplineCode
+hierarchy-set Asset
+hierarchy-source SafetyParent SupplyIsolationID
 merge-runs PIP
 quantity-set Quantities
 quantity-length Length

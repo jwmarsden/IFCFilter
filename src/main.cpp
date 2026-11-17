@@ -6,6 +6,7 @@
 #include "mapping.h"
 #include "report.h"
 #include "split.h"
+#include "site.h"
 #include "site_inventory.h"
 
 #include <cstdlib>
@@ -19,18 +20,32 @@ namespace {
 int usage(int code) {
     (code ? std::cerr : std::cout)
         << "usage: ifcfilter report MODEL.ifc [--csv FAMILIES.csv] [--suspects ELEMENTS.csv] [--rules rules.txt] [--top N] [--heavy-faces N] [--transparent T]\n"
-        << "       ifcfilter split MODEL.ifc|FOLDER... --out DIR [--rules rules.txt] [--transparent T] [--mapping mapping.csv] [--site-lookup site-id-lookup.xlsx] [--location-reference location-referencing.csv] [--property-schema site-id-attributes.xlsx] [--combine combine.csv] [--no-merge] [--merge-gap M] [--no-instance] [--no-compact] [--precision-mm MM] [--simplify-mm MM] [--no-zip] [--jobs N] [--all]\n"
+        << "       ifcfilter split MODEL.ifc|FOLDER... --out DIR [--rules rules.txt] [--transparent T] [--mapping mapping.csv] [--site-lookup site-id-lookup.xlsx] [--location-reference location-referencing.xlsx] [--property-schema site-id-attributes.xlsx] [--combine combine.csv] [--no-merge] [--merge-gap M] [--no-instance] [--no-compact] [--precision-mm MM] [--simplify-mm MM] [--no-zip] [--jobs N] [--all]\n"
         << "       ifcfilter check MODEL.ifc|FOLDER... --out DIR\n"
-        << "       ifcfilter cache MODEL.ifc [MODEL.ifc...] [--out CACHE.ifcc] [--detail | --detail-element GUID] [--if-changed]\n"
+        << "       ifcfilter cache MODEL.ifc [MODEL.ifc...] [--out CACHE.ifcc] [--detail | --detail-element GUID] [--if-changed] [--rules rules.txt]\n"
         << "       ifcfilter inventory MODEL.ifc|FOLDER... --mapping mapping.csv [--jobs N]\n"
         << "       ifcfilter combine FEDERATE.ifc|FOLDER... --out DIR [--register combine.csv] [--name-part N]\n"
-        << "       ifcfilter site-uniclass-inventory MODEL.ifc|FOLDER... --rules rules.txt --out SITES.csv\n";
+        << "       ifcfilter site-uniclass-inventory MODEL.ifc|FOLDER... --rules rules.txt --out SITES.csv\n"
+        << "       Any command: --data-dir DIR (or set IFC_DATA_DIR)\n";
     return code;
 }
 
 }  // namespace
 
 int main(int argc, char** argv) {
+    for (int i = 1; i < argc; ++i) {
+        if (std::string(argv[i]) != "--data-dir") continue;
+        if (i + 1 >= argc) { std::cerr << "--data-dir needs a directory\n"; return 2; }
+#ifdef _WIN32
+        if (_putenv_s("IFC_DATA_DIR", argv[i + 1]) != 0) { std::cerr << "Cannot set IFC_DATA_DIR\n"; return 2; }
+#else
+        if (setenv("IFC_DATA_DIR", argv[i + 1], 1) != 0) { std::cerr << "Cannot set IFC_DATA_DIR\n"; return 2; }
+#endif
+        for (int j = i; j + 2 < argc; ++j) argv[j] = argv[j + 2];
+        argc -= 2;
+        argv[argc] = nullptr;
+        --i;
+    }
     if (argc < 2) return usage(2);
     const std::string command = argv[1];
     if (command == "-h" || command == "--help") return usage(0);
@@ -101,6 +116,7 @@ int main(int argc, char** argv) {
             else if (arg == "--detail") options.detail = true;
             else if (arg == "--detail-element" && i + 1 < argc) options.detail_elements.push_back(argv[++i]);
             else if (arg == "--if-changed") options.if_changed = true;
+            else if (arg == "--rules" && i + 1 < argc) ifcfilter::load_schema(argv[++i]);
             else if (!arg.empty() && arg[0] == '-') return usage(2);
             else inputs.push_back(arg);
         }

@@ -12,6 +12,7 @@ from collections import defaultdict
 from openpyxl import Workbook
 from openpyxl.cell import WriteOnlyCell
 from openpyxl.styles import Font, PatternFill
+from site_register_xlsx import read_register
 
 csv.field_size_limit(2**31-1)
 
@@ -23,8 +24,13 @@ def run(register, federation, output):
         raise SystemExit(f'{output} exists; refusing to overwrite edits')
     guid_sites = defaultdict(set)
     by_manifest = defaultdict(lambda: defaultdict(set))
-    with register.open(encoding='utf-8-sig', newline='') as f:
-        for row in csv.DictReader(f):
+    def register_rows():
+        if register.suffix.lower() == '.xlsx':
+            yield from read_register(register)
+        else:
+            with register.open(encoding='utf-8-sig', newline='') as f:
+                yield from csv.DictReader(f)
+    for row in register_rows():
             if not valid_site(row['SiteID']) or int(row['Source file count']) < 2:
                 continue
             for guid in row['Output GUIDs'].split('; '):

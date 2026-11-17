@@ -54,8 +54,8 @@ struct Member {
 
 class Planner {
   public:
-    Planner(const SpfFile& spf, const std::function<bool(uint32_t)>& gone, const std::string& stem, double gap_m, MergePlan& plan)
-        : spf_(spf), gone_(gone), stem_(stem), plan_(plan), emitter_(spf.max_id()), extents_(spf) {
+    Planner(const SpfFile& spf, const std::function<bool(uint32_t)>& gone, const std::string& stem, double gap_m, MergePlan& plan, const ElementCorrections& corrections)
+        : spf_(spf), gone_(gone), stem_(stem), plan_(plan), corrections_(corrections), emitter_(spf.max_id()), extents_(spf) {
         const double unit = length_unit(spf);
         unit_ = unit;
         plan_.gap_checked = gap_m <= 0 || unit > 0;
@@ -565,6 +565,8 @@ class Planner {
 
     // Blank if it has none. The first site-set is preferred, though they've not been seen to differ.
     std::string site_of(uint32_t element) {
+        const auto corrected = corrections_.find(element);
+        if (corrected != corrections_.end() && !corrected->second.site.empty()) return corrected->second.site;
         std::string site;
         const auto sets = sets_of_.find(element);
         if (sets == sets_of_.end()) return site;
@@ -902,6 +904,7 @@ class Planner {
     const std::function<bool(uint32_t)>& gone_;
     const std::string& stem_;
     MergePlan& plan_;
+    const ElementCorrections& corrections_;
     Emitter emitter_;
     Baker baker_{spf_, emitter_, gone_};
     Extents extents_;
@@ -926,9 +929,9 @@ class Planner {
 }  // namespace
 
 MergePlan plan_merge(const SpfFile& spf, const std::vector<uint32_t>& candidates, const std::function<bool(uint32_t)>& gone, const std::string& stem,
-                     double gap_m) {
+                     double gap_m, const ElementCorrections& corrections) {
     MergePlan plan;
-    Planner(spf, gone, stem, gap_m, plan).run(candidates);
+    Planner(spf, gone, stem, gap_m, plan, corrections).run(candidates);
     std::sort(plan.keep.begin(), plan.keep.end());
     plan.keep.erase(std::unique(plan.keep.begin(), plan.keep.end()), plan.keep.end());
     return plan;

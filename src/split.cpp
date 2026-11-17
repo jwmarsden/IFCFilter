@@ -4,6 +4,7 @@
 #include "combine.h"
 #include "compact.h"
 #include "extent.h"
+#include "metres.h"
 #include "signs.h"
 #include "simplify.h"
 #include "ifc_access.h"
@@ -57,6 +58,7 @@ constexpr const char* ZIPPED = "zip";  // added to an .ifc, makes .ifczip
 struct PropertyRule {
     std::string set, property, value;
     Output output = FEDERATION;
+    bool descendants = false;
 };
 
 std::string trimmed(std::string s) {
@@ -114,11 +116,12 @@ struct Rules {
                 if (dot == std::string::npos || equals == std::string::npos || equals < dot) throw std::runtime_error(path + ": " + action + " needs SET.PROPERTY=VALUE: " + family);
                 rules.small_parts.push_back({family.substr(0, dot), family.substr(dot + 1, equals - dot - 1), trimmed(family.substr(equals + 1)), HIDDEN});
             }
-            else if (action == "keep-if" || action == "hidden-if" || action == "envelope-if") {
-                const auto dot = family.find('.');
+            else if (action == "keep-if" || action == "hidden-if" || action == "hidden-tree-if" || action == "envelope-if") {
                 const auto equals = family.find('=');
+                // Exporters can use bracketed property-set names such as [Generic].[Graphic3d].
+                const auto dot = !family.empty() && family.front() == '[' && equals != std::string::npos ? family.rfind('.', equals) : family.find('.');
                 if (dot == std::string::npos || equals == std::string::npos || equals < dot) throw std::runtime_error(path + ": " + action + " needs SET.PROPERTY=VALUE: " + family);
-                rules.by_property.push_back({family.substr(0, dot), family.substr(dot + 1, equals - dot - 1), trimmed(family.substr(equals + 1)), action == "keep-if" ? FEDERATION : action == "hidden-if" ? HIDDEN : ENVELOPES});
+                rules.by_property.push_back({family.substr(0, dot), family.substr(dot + 1, equals - dot - 1), trimmed(family.substr(equals + 1)), action == "keep-if" ? FEDERATION : action == "envelope-if" ? ENVELOPES : HIDDEN, action == "hidden-tree-if"});
             }
             else throw std::runtime_error(path + ": unknown rule " + action);
         }
@@ -284,6 +287,7 @@ void classify(ifcopenshell::file& file, const SpfFile& spf, const Rules& rules, 
 
     std::unordered_map<uint32_t, Output> by_property;
     std::unordered_set<uint32_t> kept_by_property;
+    std::unordered_set<uint32_t> hidden_tree_roots;
     if (!rules.by_property.empty()) {
         for (const auto& i : all_of(file, "IfcRelDefinesByProperties")) {
             const auto relationship = i.as<express::entity>();
@@ -298,9 +302,30 @@ void classify(ifcopenshell::file& file, const SpfFile& spf, const Rules& rules, 
                     for (const auto& object : links(relationship, "RelatedObjects")) {
                         if (rule.output == FEDERATION) kept_by_property.insert(object.id());
                         else by_property[object.id()] = rule.output;
+                        if (rule.descendants) hidden_tree_roots.insert(object.id());
                     }
                 }
             }
+        }
+    }
+
+    // Assemblies may hold no body themselves; carry their hidden rule down to every aggregated part.
+    if (!hidden_tree_roots.empty()) {
+        std::unordered_map<uint32_t, std::vector<uint32_t>> children;
+        for (const auto& i : all_of(file, "IfcRelAggregates")) {
+            const auto rel = i.as<express::entity>();
+            const auto parent = link(rel, "RelatingObject");
+            if (!parent) continue;
+            for (const auto& child : links(rel, "RelatedObjects")) children[parent.id()].push_back(child.id());
+        }
+        std::vector<uint32_t> todo(hidden_tree_roots.begin(), hidden_tree_roots.end());
+        std::unordered_set<uint32_t> visited;
+        while (!todo.empty()) {
+            const auto id = todo.back(); todo.pop_back();
+            if (!visited.insert(id).second) continue;
+            by_property[id] = HIDDEN;
+            const auto found = children.find(id);
+            if (found != children.end()) todo.insert(todo.end(), found->second.begin(), found->second.end());
         }
     }
 
@@ -769,6 +794,29 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         }
     }
 
+    // Everything in metres, in a copy that's read from here on, so that models combine and compare as they are
+    Metres metres;
+    struct Converted {
+        fs::path path;
+        ~Converted() {
+            if (path.empty()) return;
+            std::error_code ignored;
+            fs::remove(path, ignored);
+            fs::remove(path.parent_path(), ignored);
+        }
+    } in_metres;
+    {
+        const fs::path path = fs::path(options.out_dir) / ".work" / (stem + ".metres.ifc");
+        fs::create_directories(path.parent_path());
+        metres = to_metres(SpfFile(source.string()), schema_in_header(source), path.string());
+        if (metres.converted()) {
+            in_metres.path = path;
+            source = path;
+        } else if (!metres.refused.empty()) {
+            std::cerr << input.string() << ": warning: left in its own units, as its " << metres.refused << "\n";
+        }
+    }
+
     // Sign faces and the like moved forward, in a copy that's read from here on
     Forward forward;
     struct Moved {
@@ -791,6 +839,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     }
 
     const SpfFile spf(source.string());
+    ElementCorrections element_corrections = load_element_corrections(element_correction_path(input, options.property_schema_path), input, spf);
     const uint32_t max_id = spf.max_id();
     Model model;
     std::vector<uint32_t> always;
@@ -809,6 +858,13 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         for (const char* type : {"IfcProject", "IfcSpatialStructureElement"}) {
             for (const auto& i : all_of(*file, type)) always.push_back(i.id());
         }
+    }
+    // A matching GUID must identify a product, not a relationship or property set.
+    for (auto at = element_corrections.begin(); at != element_corrections.end();) {
+        if (at->first >= model.is_product.size() || !model.is_product[at->first]) {
+            std::cerr << "  warning: correction #" << at->first << " does not identify an IFC product; skipped\n";
+            at = element_corrections.erase(at);
+        } else ++at;
     }
     rename_repeats(spf, stem, shared, model);
 
@@ -899,7 +955,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
                 if (in_output[FEDERATION][element.id] && !element.feature && !spatial) candidates.push_back(element.id);
             }
             const std::function<bool(uint32_t)> is_gone = [&](uint32_t id) { return id < gone.size() && gone[id]; };
-            merge = plan_merge(spf, candidates, is_gone, stem, options.merge_gap_m);
+            merge = plan_merge(spf, candidates, is_gone, stem, options.merge_gap_m, element_corrections);
             for (const auto& [element, asset] : merge.merged_into) gone[element] = true;
             for (const uint32_t level : merge.dropped) {
                 gone[level] = true;
@@ -995,10 +1051,15 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     const Mapping mapping = options.mapping_path.empty() ? Mapping{} : load_mapping(options.mapping_path);
     MappingStats mapped;
     TraceStats trace_stats;
+    // Sites an approved correction gives a transparency, drawn see-through in this model's federate file
+    std::map<std::string, double> faded_by_corrections;
+    for (const auto& [id, correction] : element_corrections) {
+        if (correction.transparency >= 0) faded_by_corrections[correction.site] = std::max(faded_by_corrections[correction.site], correction.transparency);
+    }
     for (const Output output : {FEDERATION, HIDDEN, ENVELOPES}) {
         const auto path = output_path(output);
         writers[output]->write(path.string(), layers);
-        tidied[output] = tidy(path.string(), input.string());
+        tidied[output] = tidy(path.string(), input.string(), output == FEDERATION ? faded_by_corrections : std::map<std::string, double>{});
         if (options.compact) converted[output] = breps_to_face_sets(path.string());
         if (options.instance) instanced[output] = instance(path.string(), options.precision_mm);
         if (options.compact) compacted[output] = compact(path.string(), options.precision_mm);
@@ -1024,7 +1085,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
             for (auto& [index, traced] : assets) elements.push_back(std::move(traced));
             trace_stats = trace(path.string(), spf, input.filename().string(), elements, load_site_lookup(options.site_lookup_path),
                                 options.property_schema_path.empty() ? PropertySchema{} : load_property_schema(options.property_schema_path),
-                                load_location_reference(options.location_reference_path));
+                                load_location_reference(options.location_reference_path), element_corrections);
         }
         const auto zipped = fs::path(path.string() + ZIPPED);
         // The federation file stays plain, as that's the format Bentley's list names
@@ -1102,6 +1163,12 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         if (loose) std::cout << "  " << loose << " ports on nothing left out\n";
         if (at_origin) std::cout << "  " << at_origin << " bodies at the world's 0,0 left out by cull-at-origin\n";
     }
+    if (metres.converted()) {
+        const auto flags = std::cout.flags();
+        std::cout << "  converted to metres: lengths x" << std::defaultfloat << metres.length << ", areas x" << metres.area << ", volumes x" << metres.volume
+                  << ", in " << metres.lines << " lines\n";
+        std::cout.flags(flags);
+    }
     if (forward.faces || forward.unsure) std::cout << "  " << forward.faces << " assemblies moved forward by forward-if, " << forward.unsure << " left as which way is forward couldn't be told\n";
     if (model.small_parts) std::cout << "  " << model.small_parts << " small parts of " << model.small_part_assemblies << " assemblies hidden by hidden-small-parts-if\n";
     if (!model.renamed.empty()) std::cout << "  " << model.renamed.size() << " GUIDs changed, as they weren't unique\n";
@@ -1148,7 +1215,12 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         std::cout << "  federate tidied: " << federated.sets_dropped << " culled and duplicate sets left out, " << federated.repeats_dropped
                   << " properties left out of Data as other sets have them, " << federated.named << " elements renamed, " << federated.described
                   << " described as their asset component, " << federated.types_corrected << " " << schema().type_property << " values corrected to their site ID ("
-                  << federated.types_mixed << " sets on elements of different types left), " << federated.histories << " owner histories marked as changed by IFCFilter\n";
+                  << federated.types_mixed << " sets on elements of different types left), " << federated.histories << " owner histories marked as changed by IFCFilter, "
+                  << federated.ports_contained << " ports contained where their hosts are\n";
+        if (federated.sites_faded) {
+            std::cout << "  " << federated.sites_faded << " sites made transparent by transparent-site: " << federated.items_faded << " styles and colour maps, "
+                      << federated.items_shared << " shapes left as other elements share them\n";
+        }
     }
     if (options.compact) {
         const BrepStats& federated = converted[FEDERATION];
@@ -1376,10 +1448,16 @@ bool combine_all(const std::vector<fs::path>& models, const SplitOptions& option
 
 int split(const SplitOptions& supplied) {
     SplitOptions options = supplied;
+    fs::path shared_data;
+    if (const char* configured = std::getenv("IFC_DATA_DIR"); configured && *configured) shared_data = configured;
+    else if (const char* profile = std::getenv("USERPROFILE"); profile && *profile) shared_data = fs::path(profile) / "OneDrive" / "Work" / "IFCData";
     if (options.property_schema_path.empty()) {
+        if (!shared_data.empty() && fs::is_regular_file(shared_data / "site-id-attributes.xlsx"))
+            options.property_schema_path = (shared_data / "site-id-attributes.xlsx").string();
         // Prefer the maintained workbook in the current project, then search beside the executable.
         const std::array<fs::path, 2> origins = {fs::current_path(), fs::path(program_path()).parent_path()};
         for (auto origin : origins) {
+            if (!options.property_schema_path.empty()) break;
             for (unsigned depth = 0; depth < 6 && !origin.empty(); ++depth) {
                 const auto candidate = origin / "data" / "site-id-attributes.xlsx";
                 if (fs::is_regular_file(candidate)) { options.property_schema_path = candidate.string(); break; }
@@ -1392,7 +1470,11 @@ int split(const SplitOptions& supplied) {
         if (options.property_schema_path.empty())
             throw std::runtime_error("site-id-attributes.xlsx was not found; provide --property-schema with its path");
     }
-    if (options.location_reference_path.empty()) options.location_reference_path = (fs::path(options.property_schema_path).parent_path() / "location-referencing.csv").string();
+    if (options.location_reference_path.empty()) {
+        const auto directory = fs::path(options.property_schema_path).parent_path();
+        const auto workbook = directory / "location-referencing.xlsx";
+        options.location_reference_path = (fs::is_regular_file(workbook) ? workbook : directory / "location-referencing.csv").string();
+    }
     // One of the processes that run_in_parallel starts
     if (!options.worker_shared.empty()) {
         std::unordered_set<std::string> shared;
@@ -1431,6 +1513,13 @@ int split(const SplitOptions& supplied) {
     // A model whose input, build and shared GUIDs are as they were when its outputs were written, and whose
     // outputs are all there, would come out the same, so it's left as it is
     const std::string build = build_of(options);
+    // Only a model whose own corrections changed needs rebuilding.
+    const auto model_build = [&](const fs::path& model) {
+        const auto path = element_correction_path(model, options.property_schema_path);
+        return sha256_of(build + "|" + (fs::is_regular_file(path) ? sha256_of_file(path.string()) : std::string()));
+    };
+    std::unordered_map<std::string, std::string> build_for_model;
+    for (const auto& model : models) build_for_model.emplace(model.string(), model_build(model));
     std::unordered_map<std::string, std::string> shared_of;
     for (size_t i = 0; i < models.size(); ++i) shared_of[models[i].string()] = found.by_model[i];
     std::vector<fs::path> to_do;
@@ -1440,7 +1529,7 @@ int split(const SplitOptions& supplied) {
         const auto hash_models = [&]() {
             for (size_t i = next++; i < models.size(); i = next++) {
                 const auto known = sources.find(models[i].stem().string());
-                if (options.all || known == sources.end() || known->second.build != build || known->second.shared != found.by_model[i]) continue;
+                if (options.all || known == sources.end() || known->second.build != build_for_model.at(models[i].string()) || known->second.shared != found.by_model[i]) continue;
                 hashes[i] = sha256_of_file(models[i]);
             }
         };
@@ -1480,7 +1569,7 @@ int split(const SplitOptions& supplied) {
         }
         ++states[static_cast<size_t>(state_of(sources, source))];
         Source done = source;
-        done.build = build;
+        done.build = build_for_model.at(model.string());
         done.shared = shared_of[model.string()];
         record(sources, std::move(done));
         // As it goes, so that a stopped run still counts. The next save has everything, so this can't lose the run.
