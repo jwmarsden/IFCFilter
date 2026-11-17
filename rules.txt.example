@@ -50,6 +50,8 @@ join-across-models ABC XY
 # hierarchy-set      the set the workbook's Hierarchy fields are read from, by the same names
 # hierarchy-source   FIELD PROPERTY: a Hierarchy field read from a differently named property in that set
 # merge-runs         an asset type whose placeholder site IDs are merged as runs: parts that touch, within 5 cm
+# site-from-assembly an assembly's IFC class, or *: its parts with no site ID take the assembly's, as a Revit
+#                    stair's runs and landings, which are its shape, have none and the stair has it
 # quantity-set       sizes are worked out for a merged asset as a whole in this set, as these three:
 # quantity-length, quantity-width, quantity-height
 # cull-set           left out of every output once merging has used it
@@ -75,6 +77,7 @@ discipline-property DisciplineCode
 hierarchy-set Asset
 hierarchy-source SafetyParent SupplyIsolationID
 merge-runs PIP
+site-from-assembly IfcStair
 quantity-set Quantities
 quantity-length Length
 quantity-width Width

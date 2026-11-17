@@ -35,6 +35,7 @@ struct Schema {
     std::map<std::string, double> transparent_sites;  // transparent-site: a site ID, and how transparent it's drawn, from 0 to 1
     std::map<std::string, std::string> join_across;  // join-across-models: asset types (or *) joined across combined models, and the discipline whose element keeps its own
     std::set<std::string> merge_runs;   // merge-runs: asset types whose placeholder site IDs, such as ABC000000, merge where they touch
+    std::set<std::string> site_from_assembly;  // site-from-assembly: IFC classes, upper case, or *, whose parts with no site ID take theirs
     std::string quantity_set;           // quantity-set: sizes worked out for an asset as a whole
     std::string length_property, width_property, height_property;  // quantity-length, -width, -height
     std::set<std::string> culled_sets;  // cull-set: used to work out what merges, and not wanted after
@@ -81,6 +82,13 @@ inline bool schema_rule(const std::string& action, const std::string& text) {
         s.hierarchy_sources[text.substr(0, space)] = property;
     }
     else if (action == "merge-runs") s.merge_runs.insert(text);
+    else if (action == "site-from-assembly") {
+        // CLASS, as site-from-assembly IfcStair, or * for any assembly
+        std::string type = text;
+        while (!type.empty() && (type.back() == ' ' || type.back() == '\r')) type.pop_back();
+        std::transform(type.begin(), type.end(), type.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+        s.site_from_assembly.insert(type);
+    }
     else if (action == "join-across-models") {
         // TYPE [DISCIPLINE], as join-across-models ABC XY: each site's element in the XY model keeps its own
         const auto space = text.find(' ');

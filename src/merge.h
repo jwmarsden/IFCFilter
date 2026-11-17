@@ -34,6 +34,7 @@ struct MergePlan {
     uint64_t left_out_extent = 0;                      // where its shape reaches couldn't be worked out
     uint64_t sites_apart = 0;                          // sites whose parts are in groups too far apart to be one thing
     std::unordered_map<uint32_t, std::string> apart;   // element, and its label, left as it is as nothing of its site is near it
+    uint64_t site_from_assembly = 0;                   // parts with no site ID that took their assembly's, by site-from-assembly
     uint64_t by_design = 0;                            // elements with no site ID that merged by their design tag
     uint64_t joined_by_design = 0;                     // of those, ones whose tag is only on one site, so they joined it
     uint64_t in_runs = 0, runs = 0;                    // elements with a merge-runs placeholder, and the runs they made

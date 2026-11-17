@@ -1203,6 +1203,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
                       << merge.by_mark << " with a mark, so only going with others of the same mark; "
                       << merge.tags_not_ids << " design tags on most of the model, so not taken as IDs\n";
         }
+        if (merge.site_from_assembly) std::cout << "  " << merge.site_from_assembly << " parts with no site ID took their assembly's, by site-from-assembly\n";
         if (merge.in_runs) std::cout << "  " << merge.in_runs << " elements with a merge-runs placeholder site ID, in " << merge.runs << " runs of what touches\n";
         if (merge.sites_apart || !merge.apart.empty()) {
             std::cout << "  " << merge.sites_apart << " sites with parts over " << options.merge_gap_m << " m apart, so not merged as one; " << merge.apart.size()

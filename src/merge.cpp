@@ -184,6 +184,7 @@ class Planner {
             levels_[site].emplace_back(element, structure);
         }
         make_levels();
+        plan_.site_from_assembly = inherited_.size();
 
         // Finish what's only known once every asset has been made
         for (const auto& [structure, elements] : contained_) {
@@ -563,20 +564,31 @@ class Planner {
         return set;
     }
 
-    // Blank if it has none. The first site-set is preferred, though they've not been seen to differ.
-    std::string site_of(uint32_t element) {
+    // Blank if it has none. The first site-set is preferred, though they've not been seen to differ. A part with
+    // none of its own takes its assembly's, where site-from-assembly names the assembly's class: a Revit stair
+    // has the site ID, and its runs and landings, which are its shape, have none.
+    std::string site_of(uint32_t element, int depth = 0) {
         const auto corrected = corrections_.find(element);
         if (corrected != corrections_.end() && !corrected->second.site.empty()) return corrected->second.site;
         std::string site;
         const auto sets = sets_of_.find(element);
-        if (sets == sets_of_.end()) return site;
-        for (const uint32_t id : sets->second) {
-            const PropertySet& set = property_set(id);
-            if (set.site.empty()) continue;
-            if (quoted_in(set.name) == schema().site_set_preferred) return set.site;
-            site = set.site;
+        if (sets != sets_of_.end()) {
+            for (const uint32_t id : sets->second) {
+                const PropertySet& set = property_set(id);
+                if (set.site.empty()) continue;
+                if (quoted_in(set.name) == schema().site_set_preferred) return set.site;
+                site = set.site;
+            }
         }
-        return site;
+        if (!site.empty() && !NOT_A_SITE.count(site)) return site;
+        const auto& from = schema().site_from_assembly;
+        const auto whole = whole_of_.find(element);
+        if (from.empty() || whole == whole_of_.end() || depth >= 8) return site;
+        if (!from.count("*") && !from.count(std::string(spf_.type(whole->second)))) return site;
+        const std::string inherited = site_of(whole->second, depth + 1);
+        if (inherited.empty()) return site;
+        inherited_.insert(element);
+        return inherited;
     }
 
     // Blank if it has none. The first design-set is preferred, though they've not been seen to differ.
@@ -919,6 +931,7 @@ class Planner {
     std::vector<uint32_t> placed_by_;  // placement, and how many products and the like it places
     std::vector<uint32_t> containments_;      // relationships that hold elements on levels
     std::unordered_set<uint32_t> held_;       // structures they hold elements on
+    std::unordered_set<uint32_t> inherited_;  // parts that took their assembly's site ID
     std::unordered_map<uint32_t, uint32_t> aggregation_of_;  // whole, and the relationship of its parts
     std::unordered_map<uint32_t, std::vector<uint32_t>> ports_of_;  // element, and the ports on it
     std::unordered_map<uint32_t, std::vector<uint32_t>> voids_of_;  // element, and the relationships of the openings that cut it
