@@ -22,7 +22,7 @@ int usage(int code) {
         << "usage: ifcfilter report MODEL.ifc [--csv FAMILIES.csv] [--suspects ELEMENTS.csv] [--rules rules.txt] [--top N] [--heavy-faces N] [--transparent T]\n"
         << "       ifcfilter split MODEL.ifc|FOLDER... --out DIR [--rules rules.txt] [--transparent T] [--mapping mapping.csv] [--site-lookup site-id-lookup.xlsx] [--location-reference location-referencing.xlsx] [--property-schema site-id-attributes.xlsx] [--combine combine.csv] [--no-merge] [--merge-gap M] [--no-instance] [--no-compact] [--precision-mm MM] [--simplify-mm MM] [--no-zip] [--jobs N] [--all]\n"
         << "       ifcfilter check MODEL.ifc|FOLDER... --out DIR\n"
-        << "       ifcfilter cache MODEL.ifc [MODEL.ifc...] [--out CACHE.ifcc] [--detail | --detail-element GUID] [--if-changed] [--rules rules.txt]\n"
+        << "       ifcfilter cache MODEL.ifc [MODEL.ifc...] [--out CACHE.ifcc] [--detail | --detail-element GUID] [--tile-spread M] [--if-changed] [--rules rules.txt]\n"
         << "       ifcfilter inventory MODEL.ifc|FOLDER... --mapping mapping.csv [--jobs N]\n"
         << "       ifcfilter combine FEDERATE.ifc|FOLDER... --out DIR [--register combine.csv] [--name-part N]\n"
         << "       ifcfilter site-uniclass-inventory MODEL.ifc|FOLDER... --rules rules.txt --out SITES.csv\n"
@@ -116,6 +116,7 @@ int main(int argc, char** argv) {
             else if (arg == "--detail") options.detail = true;
             else if (arg == "--detail-element" && i + 1 < argc) options.detail_elements.push_back(argv[++i]);
             else if (arg == "--if-changed") options.if_changed = true;
+            else if (arg == "--tile-spread" && i + 1 < argc) options.tile_spread_m = std::stod(argv[++i]);
             else if (arg == "--rules" && i + 1 < argc) ifcfilter::load_schema(argv[++i]);
             else if (!arg.empty() && arg[0] == '-') return usage(2);
             else inputs.push_back(arg);

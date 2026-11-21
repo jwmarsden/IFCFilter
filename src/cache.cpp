@@ -58,10 +58,11 @@ constexpr double QUANTUM_M = 0.0005;          // positions are 16 bits on the me
 constexpr double FEATURE_COSINE = 0.8660254;  // edges where faces meet at more than 30 degrees are drawn
 constexpr size_t TILE_INSTANCES = 4000, TILE_TRIANGLES = 400000;  // a tile is split past either: big, as the viewer batches a tile
 constexpr int TILE_DEPTH = 12;
-// A tile of what sits behind other things, such as pipes, is also split past this across, so it can be hidden or
-// left out; one of a few instances isn't. Ground, road, tunnel and concrete, which hide rather than get hidden, aren't.
-constexpr double TILE_SPREAD_M = 40;
-constexpr size_t TILE_SPREAD_INSTANCES = 64;
+// A tile of what sits behind other things, such as pipes, is also split once it's wider than the cache options'
+// tile_spread_m (150 m), so it can be hidden or left out. Ground, road, tunnel and concrete, which hide rather than
+// get hidden, aren't. Width alone decides: a cluster such as a building stays whole, and a long run, such as a
+// road's lights or a pipe network, is split along its length. (Until Nov 2026 it was 40 m and more than 64
+// instances, which cut clusters into many small tiles, each a draw or two for a viewer.)
 const char* const OCCLUDERS[] = {"-LA-", "-RW-", "-TU-", "-CV-", "-CC-"};
 constexpr int ZSTD_LEVEL = 12;
 constexpr int MAX_DEPTH = 8;  // of mapped items and booleans
@@ -1708,7 +1709,7 @@ class Builder {
         }
         std::array<std::vector<uint32_t>, 8> children;
         std::vector<uint32_t> kept;
-        const bool spread = !occluder_ && instances > TILE_SPREAD_INSTANCES && largest_side(tiles_[id].box) > TILE_SPREAD_M;
+        const bool spread = !occluder_ && options_.tile_spread_m > 0 && instances > 1 && largest_side(tiles_[id].box) > options_.tile_spread_m;
         if ((instances > TILE_INSTANCES || triangles > TILE_TRIANGLES || spread) && level < TILE_DEPTH) {
             for (const uint32_t e : members) {
                 const Box& box = elements_[e].box;
@@ -2079,6 +2080,7 @@ class Builder {
         set("element_count", std::to_string(elements_.size()));
         set("mesh_count", std::to_string(meshes_.size()));
         set("tile_count", std::to_string(tiles_.size()));
+        set("tile_spread_m", numbers({options_.tile_spread_m}));
         set("triangle_count", std::to_string(triangles));
         set("lod_cells", numbers({LOD_CELLS_M[0], LOD_CELLS_M[1], LOD_CELLS_M[2]}));
     }
