@@ -16,6 +16,11 @@
 #ifdef IFCFILTER_WITH_GEOMETRY
 #include <ifcgeom/iterator.h>
 #include <ifcgeom/kernel_registry.h>
+#ifndef _WIN32
+#include <sys/wait.h>
+#include <unistd.h>
+#include <cerrno>
+#endif
 #endif
 
 #include <algorithm>
@@ -28,8 +33,10 @@
 #include <cstring>
 #include <ctime>
 #include <filesystem>
+#include <functional>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <memory>
 #include <set>
@@ -40,6 +47,7 @@
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
+#include <thread>
 #include <vector>
 
 #ifndef IFCFILTER_VERSION
@@ -945,6 +953,269 @@ class Builder {
     }
 #endif
 
+    // What IfcOpenShell makes of one element: its triangles in world coordinates, in metres, and their styles
+    struct CutStyle { bool coloured = false; double r = 0, g = 0, b = 0, a = 1; std::string name; };
+    struct CutLog { int severity = 0; std::string product, message; };
+    struct Cut { uint32_t id = 0; std::vector<double> verts; std::vector<int> faces, material_ids; std::vector<CutStyle> styles; };
+    struct CutRun {
+        std::vector<Cut> cuts;
+        std::vector<CutLog> logs;
+        bool had_error = false;
+        std::vector<uint32_t> crashed;  // what Open CASCADE crashed on, left as it was
+    };
+
+    // Cuts the elements with IfcOpenShell, four at a time, or with `one_by_one` each on its own after `starting`
+    // is told which. Each result goes to `done`.
+    static void cut_here(const std::string& input, const std::vector<uint32_t>& ids, bool one_by_one,
+                         const std::function<void(uint32_t)>& starting, const std::function<void(Cut&&)>& done, CutRun& run) {
+        ifcopenshell::file file(input);
+        ifcopenshell::geom::settings settings;
+        settings.set("use-world-coords", true);
+        ifcopenshell::logger log;
+        log.output_format(ifcopenshell::logger::FMT_INMEMORY);
+        log.verbosity(ifcopenshell::logger::LOG_WARNING);
+        const auto cut = [&](const std::unordered_set<uint32_t>& wanted, int threads) {
+            std::vector<ifcopenshell::geom::filter_function> filters;
+            filters.emplace_back([&](const express::base& product) { return wanted.count(static_cast<uint32_t>(product.id())) != 0; });
+            ifcopenshell::geom::iterator it(ifcopenshell::geom::kernels::construct(&file, "opencascade", settings, log), settings, &file, filters, threads, log);
+            if (!it.initialize()) return;
+            do {
+                auto object = it.get();
+                auto* triangulated = dynamic_cast<ifcopenshell::geom::triangulation_element*>(object.get());
+                if (!triangulated) continue;
+                const auto& geometry = triangulated->geometry();
+                Cut result;
+                result.id = static_cast<uint32_t>(triangulated->id());
+                result.verts.assign(geometry.verts().begin(), geometry.verts().end());
+                result.faces.assign(geometry.faces().begin(), geometry.faces().end());
+                result.material_ids.assign(geometry.material_ids().begin(), geometry.material_ids().end());
+                for (const auto& style : geometry.materials()) {
+                    CutStyle s;
+                    if (style && style->get_color()) {
+                        const auto& c = style->get_color();
+                        s = {true, c.r(), c.g(), c.b(), style->has_transparency() ? 1.0 - std::clamp(style->transparency, 0.0, 1.0) : 1.0, style->name};
+                    }
+                    result.styles.push_back(std::move(s));
+                }
+                done(std::move(result));
+            } while (it.next());
+            run.had_error = run.had_error || it.had_error_processing_elements();
+        };
+        if (one_by_one) {
+            for (const uint32_t id : ids) {
+                starting(id);
+                cut({id}, 1);
+            }
+        } else {
+            // Independent products can be expensive to cut; IfcOpenShell processes them in parallel.
+            cut(std::unordered_set<uint32_t>(ids.begin(), ids.end()), 4);
+        }
+        for (const auto& message : log.log_messages()) run.logs.push_back({message.severity, message.product, message.message});
+    }
+
+#ifdef _WIN32
+    static CutRun cut_elements(const std::string& input, const std::vector<uint32_t>& ids) {
+        CutRun run;
+        cut_here(input, ids, false, [](uint32_t) {}, [&](Cut&& cut) { run.cuts.push_back(std::move(cut)); }, run);
+        return run;
+    }
+#else
+    // Open CASCADE can crash outright on some shapes, in its Boolean operations, which no exception catches; on
+    // Linux a slab with openings has, every time, in IfcOpenShell's own builds too. So the cutting is done in a
+    // child process, and what it finishes comes back over a pipe. If it crashes, what's left is cut again one at a
+    // time, in four processes, and an element it crashes on is reported and left as it was.
+    static CutRun cut_elements(const std::string& input, const std::vector<uint32_t>& ids) {
+        CutRun run;
+        std::unordered_set<uint32_t> finished;
+        std::optional<uint32_t> started;
+        if (cut_in_child(input, ids, false, run, finished, started)) return run;
+        std::vector<uint32_t> left;
+        for (const uint32_t id : ids) if (!finished.count(id)) left.push_back(id);
+        // Four at a time, each in a process of its own going one by one
+        constexpr size_t WORKERS = 4;
+        std::array<CutRun, WORKERS> runs;
+        std::vector<std::thread> workers;
+        for (size_t w = 0; w < WORKERS && w < left.size(); ++w) {
+            std::vector<uint32_t> share;
+            for (size_t i = w; i < left.size(); i += WORKERS) share.push_back(left[i]);
+            workers.emplace_back([&input, share = std::move(share), &out = runs[w]]() mutable {
+                try {
+                    cut_one_by_one(input, std::move(share), out);
+                } catch (const std::exception& error) {
+                    out.logs.push_back({ifcopenshell::logger::LOG_ERROR, "", error.what()});
+                }
+            });
+        }
+        for (auto& worker : workers) worker.join();
+        for (CutRun& part : runs) {
+            std::move(part.cuts.begin(), part.cuts.end(), std::back_inserter(run.cuts));
+            run.logs.insert(run.logs.end(), part.logs.begin(), part.logs.end());
+            run.crashed.insert(run.crashed.end(), part.crashed.begin(), part.crashed.end());
+            run.had_error = run.had_error || part.had_error;
+        }
+        return run;
+    }
+
+    // Cuts each element on its own in a child process, starting another past any it crashes on
+    static void cut_one_by_one(const std::string& input, std::vector<uint32_t> left, CutRun& run) {
+        while (!left.empty()) {
+            std::unordered_set<uint32_t> finished;
+            std::optional<uint32_t> started;
+            if (cut_in_child(input, left, true, run, finished, started)) return;
+            if (started && !finished.count(*started)) {
+                run.crashed.push_back(*started);
+                finished.insert(*started);
+            } else {
+                // It crashed outside any one element, so the rest can't be cut
+                for (const uint32_t id : left) if (!finished.count(id)) run.crashed.push_back(id);
+                return;
+            }
+            std::vector<uint32_t> rest;
+            for (const uint32_t id : left) if (!finished.count(id)) rest.push_back(id);
+            left.swap(rest);
+        }
+    }
+
+    // Runs cut_here in a child process. Returns whether it got to the end; what it finished either way is in `run`
+    // and `finished`, and `started` is the element it last began, one by one.
+    static bool cut_in_child(const std::string& input, const std::vector<uint32_t>& ids, bool one_by_one, CutRun& run,
+                             std::unordered_set<uint32_t>& finished, std::optional<uint32_t>& started) {
+        int pipe_ends[2];
+        if (pipe(pipe_ends) != 0) throw std::runtime_error("couldn't make a pipe for the geometry process");
+        std::cout.flush();
+        std::cerr.flush();
+        const pid_t child = fork();
+        if (child < 0) {
+            close(pipe_ends[0]);
+            close(pipe_ends[1]);
+            throw std::runtime_error("couldn't start the geometry process");
+        }
+        if (child == 0) {
+            // Only its own pipe: one of another child's, held open here, would hide that child's end from the parent
+            const unsigned own = static_cast<unsigned>(pipe_ends[1]);
+            close_range(3, own - 1, 0);
+            close_range(own + 1, ~0U, 0);
+            std::string out;
+            const auto send = [&] {
+                size_t at = 0;
+                while (at < out.size()) {
+                    const ssize_t n = write(pipe_ends[1], out.data() + at, out.size() - at);
+                    if (n <= 0) _exit(3);
+                    at += static_cast<size_t>(n);
+                }
+                out.clear();
+            };
+            const auto u32 = [&](uint32_t v) { out.append(reinterpret_cast<const char*>(&v), 4); };
+            const auto text = [&](const std::string& t) { u32(static_cast<uint32_t>(t.size())); out += t; };
+            const auto f64s = [&](const auto& values) { u32(static_cast<uint32_t>(values.size())); for (const double v : values) out.append(reinterpret_cast<const char*>(&v), 8); };
+            const auto i32s = [&](const std::vector<int>& values) { u32(static_cast<uint32_t>(values.size())); out.append(reinterpret_cast<const char*>(values.data()), values.size() * 4); };
+            try {
+                CutRun local;
+                cut_here(input, ids, one_by_one,
+                    [&](uint32_t id) { out += 'S'; u32(id); send(); },
+                    [&](Cut&& cut) {
+                        out += 'R';
+                        u32(cut.id);
+                        f64s(cut.verts);
+                        i32s(cut.faces);
+                        i32s(cut.material_ids);
+                        u32(static_cast<uint32_t>(cut.styles.size()));
+                        for (const CutStyle& style : cut.styles) {
+                            out += style.coloured ? '\1' : '\0';
+                            f64s(std::array<double, 4>{style.r, style.g, style.b, style.a});
+                            text(style.name);
+                        }
+                        send();
+                    }, local);
+                for (const auto& message : local.logs) {
+                    out += 'L';
+                    u32(static_cast<uint32_t>(message.severity));
+                    text(message.product);
+                    text(message.message);
+                }
+                if (local.had_error) out += 'E';
+            } catch (const std::exception& error) {
+                out += 'X';
+                text(error.what());
+            } catch (...) {
+                out += 'X';
+                text("unknown error");
+            }
+            out += 'Z';
+            send();
+            _exit(0);
+        }
+        close(pipe_ends[1]);
+        std::string in;
+        size_t at = 0;
+        bool closed = false;
+        const auto need = [&](size_t n) {
+            while (in.size() - at < n && !closed) {
+                char buffer[1 << 16];
+                const ssize_t got = read(pipe_ends[0], buffer, sizeof buffer);
+                if (got > 0) in.append(buffer, static_cast<size_t>(got));
+                else if (got == 0 || errno != EINTR) closed = true;
+            }
+            return in.size() - at >= n;
+        };
+        const auto u32 = [&](uint32_t& v) { if (!need(4)) return false; std::memcpy(&v, in.data() + at, 4); at += 4; return true; };
+        const auto text = [&](std::string& t) { uint32_t n; if (!u32(n) || !need(n)) return false; t.assign(in, at, n); at += n; return true; };
+        const auto f64s = [&](auto& values) {
+            uint32_t n; if (!u32(n) || !need(size_t{n} * 8)) return false;
+            values.resize(n); std::memcpy(values.data(), in.data() + at, size_t{n} * 8); at += size_t{n} * 8; return true;
+        };
+        const auto i32s = [&](std::vector<int>& values) {
+            uint32_t n; if (!u32(n) || !need(size_t{n} * 4)) return false;
+            values.resize(n); std::memcpy(values.data(), in.data() + at, size_t{n} * 4); at += size_t{n} * 4; return true;
+        };
+        bool complete = false;
+        std::string failure;
+        while (!complete && need(1)) {
+            const char tag = in[at++];
+            if (tag == 'S') {
+                uint32_t id; if (!u32(id)) break;
+                started = id;
+            } else if (tag == 'R') {
+                Cut cut;
+                uint32_t styles;
+                if (!u32(cut.id) || !f64s(cut.verts) || !i32s(cut.faces) || !i32s(cut.material_ids) || !u32(styles)) break;
+                bool whole = true;
+                for (uint32_t i = 0; i < styles && whole; ++i) {
+                    CutStyle style;
+                    std::vector<double> rgba;
+                    whole = need(1);
+                    if (!whole) break;
+                    style.coloured = in[at++] != 0;
+                    whole = f64s(rgba) && rgba.size() == 4 && text(style.name);
+                    if (whole) { style.r = rgba[0]; style.g = rgba[1]; style.b = rgba[2]; style.a = rgba[3]; cut.styles.push_back(std::move(style)); }
+                }
+                if (!whole) break;
+                finished.insert(cut.id);
+                run.cuts.push_back(std::move(cut));
+            } else if (tag == 'L') {
+                CutLog message;
+                uint32_t severity;
+                if (!u32(severity) || !text(message.product) || !text(message.message)) break;
+                message.severity = static_cast<int>(severity);
+                run.logs.push_back(std::move(message));
+            } else if (tag == 'E') {
+                run.had_error = true;
+            } else if (tag == 'X') {
+                if (!text(failure)) break;
+            } else if (tag == 'Z') {
+                complete = true;
+            } else {
+                break;
+            }
+        }
+        close(pipe_ends[0]);
+        int status = 0;
+        while (waitpid(child, &status, 0) < 0 && errno == EINTR) {}
+        if (!failure.empty()) throw std::runtime_error(failure);
+        return complete && WIFEXITED(status) && WEXITSTATUS(status) == 0;
+    }
+#endif
+
     std::unordered_set<uint32_t> cut_geometry(const std::string& input, size_t first, const std::unordered_set<uint32_t>* selected = nullptr) {
         std::unordered_set<uint32_t> wanted = selected ? *selected : cut_hosts_, built;
         std::unordered_map<uint32_t, std::vector<Instance>> original_instances;
@@ -986,42 +1257,22 @@ class Builder {
         if (wanted.empty()) return built;
 #endif
         try {
-            ifcopenshell::file file(input);
-            ifcopenshell::geom::settings settings;
-            settings.set("use-world-coords", true);
-            ifcopenshell::logger log;
-            log.output_format(ifcopenshell::logger::FMT_INMEMORY);
-            log.verbosity(ifcopenshell::logger::LOG_WARNING);
-            std::vector<ifcopenshell::geom::filter_function> filters;
-            filters.emplace_back([&](const express::base& product) { return wanted.count(static_cast<uint32_t>(product.id())) != 0; });
-            // Independent products can be expensive to cut; IfcOpenShell processes them in parallel.
-            ifcopenshell::geom::iterator it(ifcopenshell::geom::kernels::construct(&file, "opencascade", settings, log), settings, &file, filters, 4, log);
-            if (!it.initialize()) return built;
-            do {
-                auto object = it.get();
-                auto* triangulated = dynamic_cast<ifcopenshell::geom::triangulation_element*>(object.get());
-                if (!triangulated) continue;
-                Element* element = element_at(static_cast<uint32_t>(triangulated->id()));
+            CutRun run = cut_elements(input, std::vector<uint32_t>(wanted.begin(), wanted.end()));
+            for (const Cut& cut : run.cuts) {
+                Element* element = element_at(cut.id);
                 if (!element) continue;
-                const auto& geometry = triangulated->geometry();
-                const auto& vertices = geometry.verts();
-                const auto& faces = geometry.faces();
-                if (vertices.size() % 3 || faces.empty() || faces.size() % 3) continue;
+                if (cut.verts.size() % 3 || cut.faces.empty() || cut.faces.size() % 3) continue;
                 Mesh mesh;
-                for (size_t i = 0; i < vertices.size(); i += 3) mesh.points.push_back({vertices[i], vertices[i + 1], vertices[i + 2]});
+                for (size_t i = 0; i < cut.verts.size(); i += 3) mesh.points.push_back({cut.verts[i], cut.verts[i + 1], cut.verts[i + 2]});
                 bool valid = true;
-                for (const int index : faces) {
+                for (const int index : cut.faces) {
                     if (index < 0 || static_cast<size_t>(index) >= mesh.points.size()) { valid = false; break; }
                     mesh.indices.push_back(static_cast<uint32_t>(index));
                 }
                 if (!valid) continue;
                 std::vector<uint32_t> styles;
-                for (const auto& style : geometry.materials()) {
-                    if (!style || !style->get_color()) { styles.push_back(NO_MATERIAL); continue; }
-                    const auto& c = style->get_color();
-                    styles.push_back(material(c.r(), c.g(), c.b(), style->has_transparency() ? 1.0 - std::clamp(style->transparency, 0.0, 1.0) : 1.0, style->name));
-                }
-                for (const int index : geometry.material_ids()) mesh.materials.push_back(index >= 0 && static_cast<size_t>(index) < styles.size() ? styles[index] : NO_MATERIAL);
+                for (const CutStyle& style : cut.styles) styles.push_back(style.coloured ? material(style.r, style.g, style.b, style.a, style.name) : NO_MATERIAL);
+                for (const int index : cut.material_ids) mesh.materials.push_back(index >= 0 && static_cast<size_t>(index) < styles.size() ? styles[index] : NO_MATERIAL);
                 finish(mesh, 1.0);
                 const Vector centre = mesh.centre;
                 const uint32_t mesh_id = stored(mesh);
@@ -1031,10 +1282,10 @@ class Builder {
                 add_instance(*element, mesh_id, Rigid{}, centre, NO_MATERIAL);
                 element->flags &= ~APPROXIMATE;
                 built.insert(element->ifc);
-            } while (it.next());
-            bool unassigned_error = it.had_error_processing_elements();
+            }
+            bool unassigned_error = run.had_error;
             std::unordered_set<uint32_t> failed;
-            for (const auto& message : log.log_messages()) {
+            for (const auto& message : run.logs) {
                 if (message.severity < ifcopenshell::logger::LOG_ERROR) continue;
                 const auto product = refs_in(message.product);
                 if (!product.empty() && built.count(product[0])) {
@@ -1048,6 +1299,10 @@ class Builder {
                     else std::cerr << " on #" << product[0];
                 }
                 std::cerr << ": " << message.message << '\n';
+            }
+            for (const uint32_t id : run.crashed) {
+                const Element* element = element_at(id);
+                std::cerr << "warning: Open CASCADE crashed cutting " << (element ? element->guid : "#" + std::to_string(id)) << "; it's drawn uncut\n";
             }
             if (unassigned_error) {
                 failed.insert(built.begin(), built.end());
