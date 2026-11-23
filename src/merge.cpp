@@ -403,7 +403,8 @@ class Planner {
         if (products_placed_by(own[0]) <= 1 && !plan_.replace.count(own[0])) {
             plan_.replace[own[0]] = reference(own[0]) + "=" + text;
         } else {
-            attributes[5] = reference(emitter_.emit(text));
+            const std::string placement = reference(emitter_.emit(text));  // attributes are views, so it outlives them
+            attributes[5] = placement;
             std::string rewritten(line.substr(0, line.find('(') + 1));
             for (size_t i = 0; i < attributes.size(); ++i) rewritten.append(i ? "," : "").append(attributes[i]);
             rewritten += ");";

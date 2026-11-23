@@ -25,7 +25,8 @@ with tempfile.TemporaryDirectory() as directory:
     (root / 'location-referencing.csv').write_text('DIT_LocationHierarchyCode,LocationHierarchyDescription\nLOC,Example\n')
     output = root / 'out'
     subprocess.run([str(exe), 'split', str(model), '--out', str(output), '--rules', str(rules), '--data-dir', str(root), '--no-zip', '--no-merge', '--no-instance', '--no-compact'], check=True, stdout=subprocess.DEVNULL)
-    output_files = list(output.rglob('*.ifc'))
+    # Not the .original.ifc link back to the input, made where the system allows links
+    output_files = [p for p in output.rglob('*.ifc') if '.original.' not in p.name]
     contents = '\n'.join(p.read_text() for p in output_files)
     assert '0Jm4wmcl10lPX6wYa53Xr1' not in contents
     assert '0Jm4wmcl10lPX6wYa53Xr2' not in contents
