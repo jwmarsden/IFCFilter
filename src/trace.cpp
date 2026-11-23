@@ -406,6 +406,19 @@ TraceStats trace(const std::string& path, const SpfFile& input, const std::strin
                 if (!correction->identifier.empty()) identifiers = {escaped(correction->identifier)};
                 if (!correction->description.empty()) descriptions = {escaped(correction->description)};
             }
+            // An element's own location correction comes before the site lookup's and the model's
+            if (std::any_of(traced->sources.begin(), traced->sources.end(), [&](uint32_t source) {
+                    const auto at = element_corrections.find(source);
+                    return at != element_corrections.end() && !at->second.location.empty();
+                })) {
+                const std::vector<std::string> before = locations;
+                locations.clear();
+                for (size_t i = 0; i < traced->sources.size(); ++i) {
+                    const auto at = element_corrections.find(traced->sources[i]);
+                    if (at != element_corrections.end() && !at->second.location.empty()) locations.push_back(escaped(at->second.location));
+                    else locations.push_back(before.size() == traced->sources.size() ? before[i] : before.empty() ? std::string() : before.front());
+                }
+            }
             const auto location_at = location_reference.find(joined(locations));
             const std::string location_description = location_at == location_reference.end() ? "" : escaped(location_at->second.description);
             std::string list = property("SourceFile", source_file);

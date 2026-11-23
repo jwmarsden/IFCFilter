@@ -14,8 +14,6 @@ if not exist "%RULES%" (echo Rules file is missing: %RULES% & goto :fail)
 if not exist "%SOURCE%\" (echo Source discipline folder is missing: %SOURCE% & goto :fail)
 if not exist "%INPUT%\" (echo Federation folder is missing: %INPUT% & goto :fail)
 if exist "%~dp0.work\" (echo A regeneration may be running or incomplete. & goto :fail)
-set "FAILED=0"
-set "COUNT=0"
 set "ARGUMENTS=%*"
 if "%~1"=="" (
     set "DISCIPLINES="
@@ -24,32 +22,12 @@ if "%~1"=="" (
     echo Enter discipline codes separated by spaces, or press Enter for all.
     set /p "ARGUMENTS=Disciplines [all]: "
 )
-if not defined ARGUMENTS (
-    for /d %%D in ("%SOURCE%\*") do if /i not "%%~nxD"=="SW" if /i not "%%~nxD"=="TW" if /i not "%%~nxD"=="SU" call :discipline "%%~nxD"
-) else (
-    for %%D in (!ARGUMENTS!) do call :discipline "%%~D"
-)
+set "IFCFILTER_CACHE_SELECTION=!ARGUMENTS!"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\Users\jwmar\Source\IFCFilter\scripts\regenerate-cache-progress.ps1" -Exe "%EXE%" -Rules "%RULES%" -Source "%SOURCE%" -InputDir "%INPUT%" -Output "%OUTPUT%" -DataDir "%IFC_DATA_DIR%" -ProgressDir "%~dp0."
+set "CODE=!ERRORLEVEL!"
 echo.
-echo Processed %COUNT% models; %FAILED% failed.
-if not "%FAILED%"=="0" goto :fail
 pause
-exit /b 0
-
-:discipline
-set "DISC=%~1"
-if /i "%DISC%"=="SW" (echo SW is excluded from regeneration. & set /a FAILED+=1 & exit /b)
-if /i "%DISC%"=="TW" (echo TW is excluded from regeneration. & set /a FAILED+=1 & exit /b)
-if /i "%DISC%"=="SU" (echo SU is excluded from regeneration. & set /a FAILED+=1 & exit /b)
-if not exist "%SOURCE%\%DISC%\" (echo Missing source discipline: %DISC% & set /a FAILED+=1 & exit /b)
-if not exist "%INPUT%\%DISC%\" (echo No federation output for discipline: %DISC% & set /a FAILED+=1 & exit /b)
-if not exist "%OUTPUT%\%DISC%\" mkdir "%OUTPUT%\%DISC%"
-for %%F in ("%INPUT%\%DISC%\*.ifc") do if exist "%%~fF" (
-    set /a COUNT+=1
-    echo Building %%~nxF
-    "%EXE%" cache "%%~fF" --data-dir "%IFC_DATA_DIR%" --out "%OUTPUT%\%DISC%\%%~nF.ifcc" --rules "%RULES%"
-    if not "!ERRORLEVEL!"=="0" set /a FAILED+=1
-)
-exit /b
+exit /b !CODE!
 
 :fail
 pause

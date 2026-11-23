@@ -287,6 +287,7 @@ const char* const TABLES = R"(
 CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE strings(id INTEGER PRIMARY KEY, text TEXT UNIQUE);
 CREATE TABLE element_filters(element INTEGER PRIMARY KEY, zone TEXT, discipline TEXT);
+CREATE TABLE drive_lanes(element INTEGER PRIMARY KEY, name TEXT NOT NULL, alignment TEXT NOT NULL);
 CREATE TABLE elements(id INTEGER PRIMARY KEY, guid TEXT, class INTEGER, name INTEGER, description INTEGER, object_type INTEGER,
     tag INTEGER, parent INTEGER, sort INTEGER, type_name INTEGER, minx REAL, miny REAL, minz REAL, maxx REAL, maxy REAL, maxz REAL,
     tile INTEGER, flags INTEGER);
@@ -554,6 +555,7 @@ struct MeshInfo {
 struct Element {
     uint32_t ifc = 0;
     std::string guid, class_name, name, description, object_type, tag, type_name;
+    std::string drive_lane, drive_alignment;
     uint32_t parent = 0;  // the ifc id of what it's in
     bool has_parent = false;
     int64_t sort = 0;
@@ -636,6 +638,7 @@ class Builder {
         }
         read_styles();
         read_elements(*schema);
+        read_drive_lanes(input, first);
         read_tree();
 #ifdef IFCFILTER_WITH_GEOMETRY
         const auto cut_built = cut_geometry(input, first);
@@ -833,6 +836,32 @@ class Builder {
             index_[id] = static_cast<uint32_t>(elements_.size());
             elements_.push_back(std::move(element));
         }
+    }
+
+    // The filter writes lane identity beside the IFC, outside the user-managed property schema.
+    void read_drive_lanes(const std::string& input, size_t first) {
+        const fs::path path(input + ".lanes.tsv");
+        if (!fs::exists(path)) return;
+        std::ifstream in(path, std::ios::binary);
+        if (!in) throw std::runtime_error("cannot read lane metadata: " + path.string());
+        std::unordered_map<std::string, std::pair<std::string, std::string>> lanes;
+        for (std::string line; std::getline(in, line);) {
+            if (!line.empty() && line.back() == '\r') line.pop_back();
+            const auto a = line.find('\t'), b = a == std::string::npos ? a : line.find('\t', a + 1);
+            if (a == std::string::npos || b == std::string::npos || a == 0 || b == a + 1)
+                throw std::runtime_error("invalid lane metadata: " + path.string());
+            if (!lanes.emplace(line.substr(0, a), std::make_pair(line.substr(a + 1, b - a - 1), line.substr(b + 1))).second)
+                throw std::runtime_error("duplicate lane GUID in " + path.string());
+        }
+        for (size_t i = first; i < elements_.size(); ++i) {
+            auto& e = elements_[i];
+            if (const auto found = lanes.find(e.guid); found != lanes.end()) {
+                e.drive_lane = found->second.first;
+                e.drive_alignment = found->second.second;
+                lanes.erase(found);
+            }
+        }
+        if (!lanes.empty()) throw std::runtime_error("lane metadata does not match IFC: " + path.string());
     }
 
     Element* element_at(uint32_t ifc) {
@@ -2070,6 +2099,7 @@ class Builder {
     void write_elements() {
         Statement insert(db_, "INSERT INTO elements(id, guid, class, name, description, object_type, tag, parent, sort, type_name, "
                               "minx, miny, minz, maxx, maxy, maxz, tile, flags) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        Statement lane(db_, "INSERT INTO drive_lanes(element, name, alignment) VALUES(?, ?, ?)");
         std::unordered_set<std::string> guids;
         for (uint32_t id = 0; id < elements_.size(); ++id) {
             const Element& element = elements_[id];
@@ -2086,6 +2116,7 @@ class Builder {
             if (element.tile >= 0) insert.integer(17, element.tile);
             else insert.null(17);
             insert.integer(18, element.flags).run();
+            if (!element.drive_lane.empty()) lane.integer(1, id).text(2, element.drive_lane).text(3, element.drive_alignment).run();
         }
     }
 

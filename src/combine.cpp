@@ -134,7 +134,7 @@ uint32_t placement_of(const SpfFile& spf, uint32_t product) {
 
 struct GroupStats {
     size_t levels_joined = 0, levels_added = 0, placements_moved = 0, placements_left = 0;
-    size_t sites_joined = 0, elements_joined = 0, joins_refused = 0;  // join-across-models
+    size_t sites_joined = 0, elements_joined = 0, joins_refused = 0, ports_moved = 0;  // join-across-models; ports_moved counts nestings
 };
 
 bool read_row(std::istream& in, std::vector<std::string>& fields);
@@ -146,7 +146,7 @@ fs::path trace_path(fs::path path) {
 }
 
 // Writes the files, which share their units, as one. Returns false if they can't be.
-bool combine_group(std::vector<fs::path> paths, const fs::path& out_path, GroupStats& stats) {
+bool combine_group(std::vector<fs::path> paths, const fs::path& out_path, GroupStats& stats, const std::map<fs::path, std::set<std::string>>& corrected = {}) {
     // The source with the most contributing elements supplies the shared project metadata.
     std::map<fs::path, size_t> contributions;
     for (const auto& path : paths) {
@@ -212,6 +212,7 @@ bool combine_group(std::vector<fs::path> paths, const fs::path& out_path, GroupS
     // placed in it by mapped items, where they were. The others, and what only they had, go. What a body's
     // shapes are styled with, such as a transparency, stays with them.
     std::vector<std::unordered_set<uint32_t>> joined(files.size());     // elements that go, file by file
+    std::vector<std::unordered_map<uint32_t, std::pair<size_t, uint32_t>>> joined_into(files.size());  // and the file and element each is joined to
     std::vector<std::unordered_set<uint32_t>> held(files.size());       // what the new mapped items show, so it stays
     std::unordered_map<std::string, std::string> joined_guid;           // a GlobalId that's gone, and what it's in now
     std::vector<std::unordered_map<uint32_t, std::vector<uint32_t>>> referrers(files.size());
@@ -222,7 +223,15 @@ bool combine_group(std::vector<fs::path> paths, const fs::path& out_path, GroupS
         std::vector<uint32_t> items;      // the mapped items placing them, as written
     };
     std::map<std::string, Keeper> keepers;
-    if (!schema().join_across.empty()) {
+    // A site a correction put an element of one model in is joined as if a rule said so, to the element of a model
+    // that had it of its own
+    const auto from_correction = [&](size_t f, const std::string& site) {
+        const auto at = corrected.find(paths[f]);
+        return at != corrected.end() && at->second.count(site) > 0;
+    };
+    std::set<std::string> any_corrected;
+    for (const auto& [path, sites] : corrected) any_corrected.insert(sites.begin(), sites.end());
+    if (!schema().join_across.empty() || !any_corrected.empty()) {
         // A file's discipline: the fourth part of its name, PRJ-ORG-Z01-XY-...
         const auto discipline_of = [](const fs::path& path) {
             const std::string name = path.filename().string();
@@ -266,7 +275,7 @@ bool combine_group(std::vector<fs::path> paths, const fs::path& out_path, GroupS
                 if (a.size() < 7 || a[0].size() != 24 || a[0][0] != '\'') continue;
                 const std::string name = unquoted(a[2]);
                 if (!is_one_site(name)) continue;
-                if (!schema().join_across.count(asset_type_of(name)) && !schema().join_across.count("*")) continue;
+                if (!schema().join_across.count(asset_type_of(name)) && !schema().join_across.count("*") && !any_corrected.count(name)) continue;
                 if (body_of(spf, id).empty()) continue;
                 by_site[name].emplace_back(f, id);
             }
@@ -275,14 +284,24 @@ bool combine_group(std::vector<fs::path> paths, const fs::path& out_path, GroupS
             std::set<size_t> models;
             for (const auto& [f, id] : found) models.insert(f);
             if (models.size() < 2) continue;
-            // The keeper: the first element of the model the rule names, or of the first model
+            // The keeper: the first element of the model the rule names, or of the first model, preferring one whose
+            // site is its own rather than a correction's
             auto rule = schema().join_across.find(asset_type_of(site));
             if (rule == schema().join_across.end()) rule = schema().join_across.find("*");
+            const std::string named = rule == schema().join_across.end() ? std::string() : rule->second;
             auto keeper = found.front();
-            for (const auto& candidate : found) {
-                if (!rule->second.empty() && discipline_of(paths[candidate.first]) == rule->second) {
+            bool chosen = false;
+            for (const bool by_rule : {true, false}) {
+                for (const auto& candidate : found) {
+                    if (chosen || from_correction(candidate.first, site)) continue;
+                    if (by_rule && (named.empty() || discipline_of(paths[candidate.first]) != named)) continue;
                     keeper = candidate;
-                    break;
+                    chosen = true;
+                }
+            }
+            if (!chosen && !named.empty()) {
+                for (const auto& candidate : found) {
+                    if (!chosen && discipline_of(paths[candidate.first]) == named) { keeper = candidate; chosen = true; }
                 }
             }
             const size_t kf = keeper.first;
@@ -305,7 +324,15 @@ bool combine_group(std::vector<fs::path> paths, const fs::path& out_path, GroupS
                 find_referrers(f);
                 // Only what relationships list can be joined: what an element places or holds would be lost
                 bool listed_only = true;
+                // Its ports, nested on it, aren't lost: they're nested on what it's joined to instead
+                const auto nests_ports = [&](uint32_t by) {
+                    if (spf.type(by) != "IFCRELNESTS") return false;
+                    const auto ra = attributes_of(spf.line(by));
+                    const auto nested = ra.size() == 6 ? refs_in(ra[5]) : std::vector<uint32_t>{};
+                    return !nested.empty() && std::all_of(nested.begin(), nested.end(), [&](uint32_t n) { return spf.type(n) == "IFCDISTRIBUTIONPORT"; });
+                };
                 for (const uint32_t by : referrers[f][id]) {
+                    if (nests_ports(by)) continue;
                     if (spf.type(by).rfind("IFCREL", 0) != 0) listed_only = false;
                     for (const auto attribute : attributes_of(spf.line(by))) {
                         if (!attribute.empty() && attribute[0] == '#' && refs_in(attribute) == std::vector<uint32_t>{id}) listed_only = false;
@@ -365,6 +392,7 @@ bool combine_group(std::vector<fs::path> paths, const fs::path& out_path, GroupS
                     }
                 }
                 joined[f].insert(id);
+                joined_into[f][id] = {kf, kid};
                 joined_guid[unquoted(a[0])] = unquoted(attributes_of(kspf.line(kid))[0]);
                 ++joins;
                 ++stats.elements_joined;
@@ -575,6 +603,19 @@ bool combine_group(std::vector<fs::path> paths, const fs::path& out_path, GroupS
                 // A relationship rewritten already has its references as written
                 const std::string source = was_rewritten ? "#" + std::to_string(offset[f] + rel) + "=" + existing->second : std::string(spf.line(rel));
                 const auto is_gone = [&](uint32_t r) { return was_rewritten ? r >= offset[f] && gone(r - offset[f]) && joined[f].count(r - offset[f]) : joined[f].count(r) > 0; };
+                // What's nested on it, its ports, is nested on what it's joined to
+                if (spf.type(rel) == "IFCRELNESTS") {
+                    auto attributes = strings_of(was_rewritten ? source : with_refs(source, change));
+                    const auto into = joined_into[f].find(id);
+                    if (attributes.size() == 6 && into != joined_into[f].end() && refs_in(attributes[4]) == std::vector<uint32_t>{offset[f] + id}) {
+                        const auto& [kf, kid] = into->second;
+                        const auto kept_as = instead[kf].find(kid);
+                        attributes[4] = "#" + std::to_string(kept_as != instead[kf].end() && kept_as->second ? kept_as->second : offset[kf] + kid);
+                        rewritten[f][rel] = rebuilt("IFCRELNESTS", attributes);
+                        ++stats.ports_moved;
+                        continue;
+                    }
+                }
                 std::string kept;
                 if (!rewrite(source, is_gone, WhenEmpty::Drop, kept)) {
                     rewritten[f].erase(rel);
@@ -955,7 +996,7 @@ int combine(const CombineOptions& options) {
         std::cout << out_path.filename().string() << ": " << paths.size() << " models, " << bytes_in / (1 << 20) << " -> " << fs::file_size(out_path) / (1 << 20) << " MB; "
                   << stats.levels_joined << " levels joined to one of the same name, " << stats.levels_added << " added; " << stats.placements_moved
                   << " placements now from the first model's site, building or levels" << (stats.placements_left ? ", " + std::to_string(stats.placements_left) + " left as they were" : "")
-                  << (stats.sites_joined ? "; " + std::to_string(stats.elements_joined) + " elements joined to " + std::to_string(stats.sites_joined) + " sites' elements in other models" : "")
+                  << (stats.sites_joined ? "; " + std::to_string(stats.elements_joined) + " elements joined to " + std::to_string(stats.sites_joined) + " sites' elements in other models" + (stats.ports_moved ? ", their ports nested on them" : "") : "")
                   << "\n" << std::flush;
     }
     return result;
@@ -978,16 +1019,16 @@ std::map<std::string, std::string> combine_groups(const std::string& register_pa
     return out;
 }
 
-bool combine_files(const std::vector<fs::path>& paths, const fs::path& out_path, std::string& summary) {
+bool combine_files(const std::vector<fs::path>& paths, const fs::path& out_path, std::string& summary, const std::map<fs::path, std::set<std::string>>& corrected) {
     GroupStats stats;
     uint64_t bytes_in = 0;
     for (const fs::path& path : paths) bytes_in += fs::file_size(path);
     fs::create_directories(out_path.parent_path());
-    if (!combine_group(paths, out_path, stats)) return false;
+    if (!combine_group(paths, out_path, stats, corrected)) return false;
     summary = std::to_string(paths.size()) + " models, " + std::to_string(bytes_in / (1 << 20)) + " -> " + std::to_string(fs::file_size(out_path) / (1 << 20)) + " MB; " +
               std::to_string(stats.levels_joined) + " levels joined to one of the same name, " + std::to_string(stats.levels_added) + " added; " +
               std::to_string(stats.placements_moved) + " placements now from the first model's site, building or levels" +
-              (stats.sites_joined ? "; " + std::to_string(stats.elements_joined) + " elements joined to " + std::to_string(stats.sites_joined) + " sites' elements in other models" : "");
+              (stats.sites_joined ? "; " + std::to_string(stats.elements_joined) + " elements joined to " + std::to_string(stats.sites_joined) + " sites' elements in other models" + (stats.ports_moved ? ", their ports nested on them" : "") : "");
     return true;
 }
 

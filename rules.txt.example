@@ -1,6 +1,14 @@
 # ifcfilter split rules. Copy to rules.txt and change to suit the models. One rule a line: an action, a space, then its text.
 # Lines starting with # are comments.
 
+# Omit elements by their complete name, without regard to case, from every output.
+skip-name OBSERVER
+skip-name Edge
+# Omit diaphragm-wall units and capping beams identified by Uniclass.
+skip-if DIT_Asset.Uniclass_PrCode=Pr_20_93_71_18
+skip-if DIT_Asset.Uniclass_SsCode=Ss_20_60_30_70
+skip-if DIT_Asset.Uniclass_SsCode=Ss_20_50_30_11
+
 # Where a thing goes, by text its family's name holds:
 # keep-largest  the largest solid is the thing, and the rest is detail inside it, for the hidden file
 # physical      transparent, but really there, so not an envelope
@@ -9,8 +17,24 @@
 keep-largest HUME SLAB
 physical Grating
 physical Stair
+# Bridge screen panels can be transparent but are physical assets.
+physical SCRN_
 envelope Clearance
+# Parts drawn in a surface style whose name holds this text, without regard to case, are envelopes, however see-through:
+# the clearance zone in front of a cabinet, while the cabinet stays
+envelope-style Clearance Zone
+envelope-style Clearance_Zone
+envelope-style Service Zone
+envelope-style ServiceSpace
+envelope-style Maintenance Zone
+envelope-style Removal Zone
+envelope-style Exclusion Zone
+envelope-style Compliance_Structural zone
+envelope-style Mass Zone
 hidden Pile Cap
+# Piles identified by their Uniclass product, even where the family name does not say pile.
+hidden-if DIT_Asset.Uniclass_PrCode=Pr_20_85_62_18
+hidden-if Data.Uniclass_PrCode=Pr_20_85_62_18
 # Tree root balls are separate children in the landscape export.
 hidden-if [Generic].[Graphic3d].User Label=Rootball
 # A property on an assembly can hide its entire hierarchy, including its geometry-bearing children.

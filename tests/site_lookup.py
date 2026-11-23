@@ -19,8 +19,10 @@ with tempfile.TemporaryDirectory() as temp:
 #105=IFCRELDEFINESBYPROPERTIES('0Jm4wmcl10lPX6wYa53Xrj',$,$,$,(#15),#104);
 #106=IFCPROPERTYSINGLEVALUE('Identifier',$,IFCLABEL('ORIGINAL ID'),$);
 #107=IFCPROPERTYSINGLEVALUE('Description',$,IFCLABEL('ORIGINAL DESCRIPTION'),$);
-#108=IFCPROPERTYSET('0Jm4wmcl10lPX6wYa53Xrk',$,'IFCFilter',$,(#106,#107));
+#108=IFCPROPERTYSET('0Jm4wmcl10lPX6wYa53Xrk',$,'IFCFilter',$,(#106,#107,#125,#126));
 #109=IFCRELDEFINESBYPROPERTIES('0Jm4wmcl10lPX6wYa53Xrl',$,$,$,(#15),#108);
+#125=IFCPROPERTYSINGLEVALUE('Alias',$,IFCLABEL('SOURCE ALIAS'),$);
+#126=IFCPROPERTYSINGLEVALUE('Operational_ID',$,IFCLABEL('SOURCE OPERATIONAL'),$);
 #111=IFCPROPERTYSINGLEVALUE('DisciplineCode',$,IFCLABEL('BR'),$);
 #112=IFCPROPERTYSET('0Jm4wmcl10lPX6wYa53Xrm',$,'Project',$,(#111));
 #113=IFCRELDEFINESBYPROPERTIES('0Jm4wmcl10lPX6wYa53Xrn',$,$,$,(#15),#112);
@@ -41,7 +43,7 @@ with tempfile.TemporaryDirectory() as temp:
     lookup.write_text('SiteID,DesignTag,Asset Type,Location,Zone,Co,En,SL,EF,Ss,Pr,Identifier,Description\nPU000123,NEW,PUMP,LOC,A,,,,EF_20,,,CORRECTED ID,CORRECTED DESCRIPTION\n')
     schema_book = Workbook()
     schema_sheet = schema_book.active
-    for name in ('SiteID', 'Design_ID', 'Asset_Type', 'Location', 'Zone', 'Identifier', 'Description', 'Owner', 'Maintainer', 'Location_Description'):
+    for name in ('SiteID', 'Design_ID', 'Asset_Type', 'Location', 'Zone', 'Identifier', 'Description', 'Owner', 'Maintainer', 'Location_Description', 'Alias', 'Operational_ID'):
         schema_sheet.append(('IFC_Filter', name))
     for name in ('EF_Code', 'EF_Description', 'Co_Code', 'Co_Description', 'En_Code', 'En_Description', 'SL_Code', 'SL_Description'):
         schema_sheet.append(('Classification', name))
@@ -68,6 +70,8 @@ with tempfile.TemporaryDirectory() as temp:
     db.close()
     assert dict((guid, (zone, discipline)) for guid,zone,discipline in resolved) == {'0Jm4wmcl10lPX6wYa53Xrf': ('A','BR'), '0Jm4wmcl10lPX6wYa53Xrp': ('A','BR')}, resolved
     actual = {(s,n):v for s,n,v in rows}
+    assert actual.get(('IFC_Filter','Alias')) == 'SOURCE ALIAS'
+    assert actual.get(('IFC_Filter','Operational_ID')) == 'SOURCE OPERATIONAL'
     for key, value in {('IFC_Filter','SiteID'):'PU000123',('IFC_Filter','Design_ID'):'NEW',('IFC_Filter','Asset_Type'):'PUMP',('IFC_Filter','Location'):'LOC',('IFC_Filter','Location_Description'):'Example location',('IFC_Filter','Identifier'):'CORRECTED ID',('IFC_Filter','Description'):'CORRECTED DESCRIPTION',('Classification','Co_Code'):'Co_20',('Classification','Co_Description'):'Complex',('Classification','En_Code'):'En_20',('Classification','SL_Code'):'SL_20',('Classification','EF_Code'):'EF_20',('Classification','EF_Description'):'Structural elements'}.items():
         assert actual.get(key) == value, (key, actual.get(key))
     for name, value in {'Location': 'LOC', 'PrimaryParent': 'PRIMARY-1', 'ElectricalParent': 'ELECTRICAL-1', 'CommsParent': 'COMMS-1', 'SafetyParent': 'ISOLATION-1'}.items():
@@ -84,8 +88,8 @@ with tempfile.TemporaryDirectory() as temp:
     # Excel's inline strings and an edited correction must take the same path as CSV.
     workbook = Workbook()
     sheet = workbook.active
-    sheet.append(['SiteID','DesignTag','Asset Type','Location','Zone','Co','En','SL','EF','Ss','Pr','Identifier','Description','Owner','Maintainer'])
-    sheet.append(['PU000123','FROM EXCEL','PUMP','LOC','A',None,None,None,'EF_20',None,None,'EXCEL ID','EXCEL DESCRIPTION','OWNER TEST','MAINTAINER TEST'])
+    sheet.append(['SiteID','DesignTag','Asset Type','Location','Zone','Co','En','SL','EF','Ss','Pr','Identifier','Description','Owner','Maintainer','Alias','Operational_ID'])
+    sheet.append(['PU000123','FROM EXCEL','PUMP','LOC','A',None,None,None,'EF_20',None,None,'EXCEL ID','EXCEL DESCRIPTION','OWNER TEST','MAINTAINER TEST','LOOKUP ALIAS','LOOKUP OPERATIONAL'])
     excel = root / 'lookup.xlsx'
     workbook.save(excel)
     excel_cmd = cmd.copy()
@@ -96,6 +100,8 @@ with tempfile.TemporaryDirectory() as temp:
     assert "IFCPROPERTYSINGLEVALUE('Description',$,IFCLABEL('EXCEL DESCRIPTION')" in result.read_text()
     assert "IFCPROPERTYSINGLEVALUE('Owner',$,IFCLABEL('OWNER TEST')" in result.read_text()
     assert "IFCPROPERTYSINGLEVALUE('Maintainer',$,IFCLABEL('MAINTAINER TEST')" in result.read_text()
+    assert "IFCPROPERTYSINGLEVALUE('Alias',$,IFCLABEL('LOOKUP ALIAS')" in result.read_text()
+    assert "IFCPROPERTYSINGLEVALUE('Operational_ID',$,IFCLABEL('LOOKUP OPERATIONAL')" in result.read_text()
     # A suffix is not a match for the shorter location code.
     lookup.write_text('SiteID,DesignTag,Asset Type,Location,Zone,Co,En,SL,EF,Ss,Pr\nPU000123,,,LOC-SUFFIX,,,,,,,\n')
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL)

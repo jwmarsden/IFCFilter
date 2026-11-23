@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -30,6 +31,9 @@ std::map<std::string, std::string> combine_groups(const std::string& register_pa
 
 // Writes federation files as one, at out_path. Returns false, having said why, if they can't be; summary says
 // what it came to.
-bool combine_files(const std::vector<std::filesystem::path>& paths, const std::filesystem::path& out_path, std::string& summary);
+// corrected is each file's site IDs that corrections gave its elements: one of those that another file has too
+// is joined to that file's element, as join-across-models does.
+bool combine_files(const std::vector<std::filesystem::path>& paths, const std::filesystem::path& out_path, std::string& summary,
+                   const std::map<std::filesystem::path, std::set<std::string>>& corrected = {});
 
 }  // namespace ifcfilter

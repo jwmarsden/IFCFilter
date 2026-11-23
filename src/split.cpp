@@ -59,6 +59,7 @@ struct PropertyRule {
     std::string set, property, value;
     Output output = FEDERATION;
     bool descendants = false;
+    bool omit = false;
 };
 
 std::string trimmed(std::string s) {
@@ -73,6 +74,8 @@ struct Rules {
     std::vector<std::string> physical;      // transparent, but really there (gratings)
     std::vector<std::string> envelope;      // opaque, but not really there (clearance envelopes)
     std::vector<std::string> hidden;        // really there, but out of sight (buried piles)
+    std::vector<std::string> envelope_styles;  // lower case: parts drawn in a surface style so named are envelopes, however see-through
+    std::vector<std::string> skip_names;    // exact element names omitted from every output
     std::vector<PropertyRule> by_property;  // for models where the family doesn't say what a thing is
     std::vector<ForwardRule> forward;       // assemblies moved forward, such as sign faces off their posts
     std::vector<PropertyRule> small_parts;  // assemblies whose small parts are hidden, such as a sign's badly exported text
@@ -98,6 +101,18 @@ struct Rules {
             else if (action == "physical") rules.physical.push_back(family);
             else if (action == "envelope") rules.envelope.push_back(family);
             else if (action == "hidden") rules.hidden.push_back(family);
+            else if (action == "envelope-style") {
+                auto name = trimmed(family);
+                std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+                if (name.empty()) throw std::runtime_error(path + ": envelope-style requires a surface style name");
+                rules.envelope_styles.push_back(name);
+            }
+            else if (action == "skip-name") {
+                auto name = trimmed(family);
+                std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+                if (name.empty()) throw std::runtime_error(path + ": skip-name requires an element name");
+                rules.skip_names.push_back(name);
+            }
             else if (action == "cull-at-origin") rules.cull_at_origin = std::stod(family);
             else if (action == "forward-if") {
                 // SET.PROPERTY=VALUE MM, the distance last
@@ -116,12 +131,12 @@ struct Rules {
                 if (dot == std::string::npos || equals == std::string::npos || equals < dot) throw std::runtime_error(path + ": " + action + " needs SET.PROPERTY=VALUE: " + family);
                 rules.small_parts.push_back({family.substr(0, dot), family.substr(dot + 1, equals - dot - 1), trimmed(family.substr(equals + 1)), HIDDEN});
             }
-            else if (action == "keep-if" || action == "hidden-if" || action == "hidden-tree-if" || action == "envelope-if") {
+            else if (action == "keep-if" || action == "hidden-if" || action == "hidden-tree-if" || action == "envelope-if" || action == "skip-if") {
                 const auto equals = family.find('=');
                 // Exporters can use bracketed property-set names such as [Generic].[Graphic3d].
                 const auto dot = !family.empty() && family.front() == '[' && equals != std::string::npos ? family.rfind('.', equals) : family.find('.');
                 if (dot == std::string::npos || equals == std::string::npos || equals < dot) throw std::runtime_error(path + ": " + action + " needs SET.PROPERTY=VALUE: " + family);
-                rules.by_property.push_back({family.substr(0, dot), family.substr(dot + 1, equals - dot - 1), trimmed(family.substr(equals + 1)), action == "keep-if" ? FEDERATION : action == "envelope-if" ? ENVELOPES : HIDDEN, action == "hidden-tree-if"});
+                rules.by_property.push_back({family.substr(0, dot), family.substr(dot + 1, equals - dot - 1), trimmed(family.substr(equals + 1)), action == "keep-if" ? FEDERATION : action == "envelope-if" ? ENVELOPES : HIDDEN, action == "hidden-tree-if", action == "skip-if"});
             }
             else throw std::runtime_error(path + ": unknown rule " + action);
         }
@@ -146,6 +161,8 @@ struct Element {
     bool has_body = false;
     bool feature = false;               // an opening, which stays with what it cuts
     bool by_property = false;           // a property rule says where it goes
+    bool skipped = false;               // an exact-name rule leaves this element out of all outputs
+    std::string drive_lane, drive_alignment; // lane polygon metadata, kept outside the IFC property schema
     std::array<uint64_t, 3> items{}, faces{};
 };
 
@@ -233,7 +250,7 @@ double plan_area(const express::entity& item) {
     return (x1 - x0) * (y1 - y0);
 }
 
-void classify(ifcopenshell::file& file, const SpfFile& spf, const Rules& rules, double threshold, uint32_t max_id, Model& model) {
+void classify(ifcopenshell::file& file, const SpfFile& spf, const Rules& rules, double threshold, uint32_t max_id, Model& model, bool retain_drive_lanes) {
     model.is_product.assign(max_id, false);
     model.is_type.assign(max_id, false);
     model.is_root.assign(max_id, false);
@@ -258,21 +275,26 @@ void classify(ifcopenshell::file& file, const SpfFile& spf, const Rules& rules, 
     const auto transparency = item_transparency(file);
     // Door families include semi-transparent system zones at 50%, below the general envelope threshold.
     // A physical mesh can be transparent too; its family rule keeps the mesh, but not a System-Zones box.
-    std::unordered_set<uint32_t> system_zones;
-    const std::function<bool(const express::entity&)> is_system_zone = [&](const express::entity& style) {
-        if (style.declaration().is("IfcSurfaceStyle")) return text(style, "Name") == "System-Zones";
-        if (style.declaration().is("IfcPresentationStyleAssignment")) {
-            for (const auto& nested : links(style, "Styles")) if (is_system_zone(nested.as<express::entity>())) return true;
+    // An envelope-style rule names a surface style, such as Revit's Clearance Zones, that only envelopes are drawn in.
+    std::unordered_set<uint32_t> system_zones, styled_envelopes;
+    const std::function<void(const express::entity&, bool&, bool&)> named = [&](const express::entity& style, bool& zone, bool& envelope) {
+        if (style.declaration().is("IfcSurfaceStyle")) {
+            auto name = text(style, "Name");
+            if (name == "System-Zones") zone = true;
+            std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            if (Rules::matches(rules.envelope_styles, name)) envelope = true;
+        } else if (style.declaration().is("IfcPresentationStyleAssignment")) {
+            for (const auto& nested : links(style, "Styles")) named(nested.as<express::entity>(), zone, envelope);
         }
-        return false;
     };
     for (const auto& styled : all_of(file, "IfcStyledItem")) {
         const auto e = styled.as<express::entity>();
         const auto item = link(e, "Item");
         if (!item) continue;
-        for (const auto& style : links(e, "Styles")) {
-            if (is_system_zone(style.as<express::entity>())) system_zones.insert(item.id());
-        }
+        bool zone = false, envelope = false;
+        for (const auto& style : links(e, "Styles")) named(style.as<express::entity>(), zone, envelope);
+        if (zone) system_zones.insert(item.id());
+        if (envelope) styled_envelopes.insert(item.id());
     }
     const auto is_clear = [&](uint32_t id) {
         const auto t = transparency.find(id);
@@ -288,18 +310,35 @@ void classify(ifcopenshell::file& file, const SpfFile& spf, const Rules& rules, 
     std::unordered_map<uint32_t, Output> by_property;
     std::unordered_set<uint32_t> kept_by_property;
     std::unordered_set<uint32_t> hidden_tree_roots;
-    if (!rules.by_property.empty()) {
+    std::unordered_set<uint32_t> skipped_by_property;
+    struct LaneFields { std::string definition, name, alignment, label; };
+    std::unordered_map<uint32_t, LaneFields> lane_fields;
+    {
         for (const auto& i : all_of(file, "IfcRelDefinesByProperties")) {
             const auto relationship = i.as<express::entity>();
             const auto set = link(relationship, "RelatingPropertyDefinition");
             if (!set || !set.declaration().is("IfcPropertySet")) continue;
             const std::string name = text(set, "Name");
+            if (retain_drive_lanes && (name == "Corridor Data" || name == "Corridor_Mesh_ID")) {
+                for (const auto& p : links(set, "HasProperties")) {
+                    const auto property = p.as<express::entity>();
+                    const auto key = text(property, "Name"), value = trimmed(nominal_text(property));
+                    for (const auto& object : links(relationship, "RelatedObjects")) {
+                        auto& fields = lane_fields[object.id()];
+                        if (name == "Corridor Data" && key == "Feature_Definition") fields.definition = value;
+                        else if (name == "Corridor Data" && key == "Feature_Name") fields.name = value;
+                        else if (name == "Corridor Data" && key == "Alignment") fields.alignment = value;
+                        else if (name == "Corridor_Mesh_ID" && key == "Asset_Identifier_Label") fields.label = value;
+                    }
+                }
+            }
             for (const PropertyRule& rule : rules.by_property) {
                 if (rule.set != name) continue;
                 for (const auto& p : links(set, "HasProperties")) {
                     const auto property = p.as<express::entity>();
                     if (text(property, "Name") != rule.property || trimmed(nominal_text(property)) != rule.value) continue;
                     for (const auto& object : links(relationship, "RelatedObjects")) {
+                        if (rule.omit) { skipped_by_property.insert(object.id()); continue; }
                         if (rule.output == FEDERATION) kept_by_property.insert(object.id());
                         else by_property[object.id()] = rule.output;
                         if (rule.descendants) hidden_tree_roots.insert(object.id());
@@ -386,6 +425,20 @@ void classify(ifcopenshell::file& file, const SpfFile& spf, const Rules& rules, 
         element.guid = text(product, "GlobalId");
         element.type = product.declaration().name();
         element.family = family_of(product);
+        if (const auto found = lane_fields.find(product.id()); found != lane_fields.end()) {
+            const auto& fields = found->second;
+            const bool lane = fields.definition == "Lane" || fields.definition.rfind("Lane-", 0) == 0 ||
+                              (fields.definition == "Bridge" && fields.name.rfind("LANE-", 0) == 0);
+            if (lane && fields.label == "PLACEHOLDER") {
+                element.drive_lane = fields.name.empty() ? fields.definition : fields.name;
+                element.drive_alignment = fields.alignment;
+                kept_by_property.insert(product.id()); // retain this polygon despite the placeholder rule
+            }
+        }
+        auto name = trimmed(text(product, "Name"));
+        std::transform(name.begin(), name.end(), name.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        element.skipped = product.declaration().is("IfcElement") &&
+                          (skipped_by_property.count(product.id()) || std::find(rules.skip_names.begin(), rules.skip_names.end(), name) != rules.skip_names.end());
         const auto shape = link(product, "Representation");
         if (shape) model.element_shape[product.id()] = shape.id();
         for (const auto& r : links(shape, "Representations")) {
@@ -427,12 +480,13 @@ void classify(ifcopenshell::file& file, const SpfFile& spf, const Rules& rules, 
             }
         }
         for (const uint32_t id : element.leaves) {
+            if (element.skipped) continue;
             const auto transparency_at = transparency.find(id);
             const bool clear_door_part = door && transparency_at != transparency.end() && transparency_at->second > 0 &&
                                          (!physical || system_zones.count(id));
             if (!sorted || kept_by_property.count(product.id())) want(id, FEDERATION);
             else if (hidden) want(id, HIDDEN);
-            else if (envelope || clear_door_part || (model.leaves[id].transparent && !physical)) want(id, ENVELOPES);
+            else if (envelope || clear_door_part || (styled_envelopes.count(id) && !physical) || (model.leaves[id].transparent && !physical)) want(id, ENVELOPES);
             else if (keep_largest && largest && id != largest) want(id, HIDDEN);
             else want(id, FEDERATION);
         }
@@ -840,6 +894,8 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
 
     const SpfFile spf(source.string());
     ElementCorrections element_corrections = load_element_corrections(element_correction_path(input, options.property_schema_path), input, spf);
+    load_location_corrections(location_correction_path(input, options.property_schema_path), input, spf, element_corrections);
+    load_site_corrections_csv(site_correction_csv_path(input, options.property_schema_path), input, spf, element_corrections);
     const uint32_t max_id = spf.max_id();
     Model model;
     std::vector<uint32_t> always;
@@ -854,7 +910,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         if (file->schema()->name().rfind("IFC4", 0) != 0) {
             std::cerr << input.string() << ": warning: schema is " << file->schema()->name() << ", and is written out as it is: " << why_not_ifc4 << "\n";
         }
-        classify(*file, spf, rules, options.transparent, max_id, model);
+        classify(*file, spf, rules, options.transparent, max_id, model, lowercase(discipline) == "rw");
         for (const char* type : {"IfcProject", "IfcSpatialStructureElement"}) {
             for (const auto& i : all_of(*file, type)) always.push_back(i.id());
         }
@@ -882,6 +938,7 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         }
         const bool spatial = std::find(always.begin(), always.end(), element.id) != always.end();
         const uint64_t placed = element.items[HIDDEN] + element.items[ENVELOPES];
+        if (element.skipped && !spatial) continue;
         // Only an element with no body left is off the federation file
         in_output[FEDERATION][element.id] = spatial || !element.has_body || element.items[FEDERATION] || !placed;
         in_output[HIDDEN][element.id] = spatial || element.items[HIDDEN];
@@ -952,7 +1009,8 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
             std::vector<uint32_t> candidates;
             for (const auto& element : model.elements) {
                 const bool spatial = std::find(always.begin(), always.end(), element.id) != always.end();
-                if (in_output[FEDERATION][element.id] && !element.feature && !spatial) candidates.push_back(element.id);
+                // A port stays nested in what it's on, and goes with it, rather than being put on a level of its own
+                if (in_output[FEDERATION][element.id] && !element.feature && !spatial && element.type != "IfcDistributionPort" && element.drive_lane.empty()) candidates.push_back(element.id);
             }
             const std::function<bool(uint32_t)> is_gone = [&](uint32_t id) { return id < gone.size() && gone[id]; };
             merge = plan_merge(spf, candidates, is_gone, stem, options.merge_gap_m, element_corrections);
@@ -1115,12 +1173,25 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
     std::ofstream manifest(manifest_path);
     manifest << "guid,class,family,output,output_guid,items,faces,action,reason\n";
     std::array<uint64_t, 3> element_counts{}, item_counts{}, face_counts{};
+    // Lane identity must survive property-schema normalization without adding an IFC property set.
+    const auto lanes_path = fs::path(federation_file(input, options).first.string() + ".lanes.tsv");
+    if (std::any_of(model.elements.begin(), model.elements.end(), [&](const Element& e) { return !e.drive_lane.empty() && in_output[FEDERATION][e.id]; })) {
+        std::ofstream lanes(lanes_path, std::ios::binary | std::ios::trunc);
+        if (!lanes) throw std::runtime_error("cannot write lane metadata: " + lanes_path.string());
+        const auto clean = [](std::string value) { for (auto& c : value) if (c == '\t' || c == '\r' || c == '\n') c = ' '; return value; };
+        for (const auto& element : model.elements) {
+            if (element.drive_lane.empty() || !in_output[FEDERATION][element.id]) continue;
+            const bool whole = !in_output[HIDDEN][element.id] && !in_output[ENVELOPES][element.id];
+            lanes << model.guid_in_output(element.id, element.guid, FEDERATION, whole) << '\t' << clean(element.drive_lane) << '\t' << clean(element.drive_alignment) << '\n';
+        }
+        if (!lanes) throw std::runtime_error("cannot finish lane metadata: " + lanes_path.string());
+    } else { std::error_code ignored; fs::remove(lanes_path, ignored); }
     uint64_t split_elements = 0, moved_elements = 0;
     for (const auto& element : model.elements) {
         const int places = in_output[FEDERATION][element.id] + in_output[HIDDEN][element.id] + in_output[ENVELOPES][element.id];
         const bool spatial = std::find(always.begin(), always.end(), element.id) != always.end();
         if (!spatial && places > 1) ++split_elements;
-        if (!spatial && !in_output[FEDERATION][element.id]) ++moved_elements;
+        if (!spatial && !element.skipped && !in_output[FEDERATION][element.id]) ++moved_elements;
         for (const Output output : {FEDERATION, HIDDEN, ENVELOPES}) {
             if (!in_output[output][element.id]) continue;
             ++element_counts[output];
@@ -1162,6 +1233,8 @@ int split_model(const fs::path& input, const SplitOptions& options, const Rules&
         }
         if (loose) std::cout << "  " << loose << " ports on nothing left out\n";
         if (at_origin) std::cout << "  " << at_origin << " bodies at the world's 0,0 left out by cull-at-origin\n";
+        const auto skipped = std::count_if(model.elements.begin(), model.elements.end(), [](const Element& e) { return e.skipped; });
+        if (skipped) std::cout << "  " << skipped << " elements left out by skip rules\n";
     }
     if (metres.converted()) {
         const auto flags = std::cout.flags();
@@ -1410,10 +1483,12 @@ bool combine_all(const std::vector<fs::path>& models, const SplitOptions& option
     if (groups.empty()) return true;
     std::map<std::string, std::vector<fs::path>> parts;
     std::map<std::string, std::string> discipline_of;
+    std::map<fs::path, std::set<std::string>> corrected;  // each federation file's site IDs from corrections
     for (const fs::path& model : models) {
         const auto group = groups.find(model.stem().string());
         if (group == groups.end()) continue;
         parts[group->second].push_back(federation_file(model, options).first);
+        if (auto sites = corrected_sites(model, options.property_schema_path); !sites.empty()) corrected[parts[group->second].back()] = std::move(sites);
         discipline_of.emplace(group->second, fs::absolute(model).parent_path().filename().string());
     }
     const auto register_time = fs::last_write_time(options.combine_path);
@@ -1438,7 +1513,7 @@ bool combine_all(const std::vector<fs::path>& models, const SplitOptions& option
         }
         if (current) continue;
         std::string summary;
-        if (!combine_files(files, out, summary)) {
+        if (!combine_files(files, out, summary, corrected)) {
             ok = false;
             continue;
         }
@@ -1517,7 +1592,13 @@ int split(const SplitOptions& supplied) {
     // Only a model whose own corrections changed needs rebuilding.
     const auto model_build = [&](const fs::path& model) {
         const auto path = element_correction_path(model, options.property_schema_path);
-        return sha256_of(build + "|" + (fs::is_regular_file(path) ? sha256_of_file(path.string()) : std::string()));
+        const auto locations = location_correction_path(model, options.property_schema_path);
+        std::string key = build + "|" + (fs::is_regular_file(path) ? sha256_of_file(path.string()) : std::string());
+        // A model with no location corrections keeps the key it had before there were any
+        if (fs::is_regular_file(locations)) key += "|locations " + sha256_of_file(locations.string());
+        const auto sites = site_correction_csv_path(model, options.property_schema_path);
+        if (fs::is_regular_file(sites)) key += "|sites " + sha256_of_file(sites.string());
+        return sha256_of(key);
     };
     std::unordered_map<std::string, std::string> build_for_model;
     for (const auto& model : models) build_for_model.emplace(model.string(), model_build(model));
