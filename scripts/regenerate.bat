@@ -25,7 +25,7 @@ if not exist "%INPUT%\" (
     goto :done
 )
 set "ALL_DISCIPLINES="
-for /d %%D in ("%INPUT%\*") do if /i not "%%~nxD"=="SW" if /i not "%%~nxD"=="TW" if /i not "%%~nxD"=="SU" set "ALL_DISCIPLINES=!ALL_DISCIPLINES! %%~nxD"
+for /d %%D in ("%INPUT%\*") do if /i not "%%~nxD"=="SW" if /i not "%%~nxD"=="TW" set "ALL_DISCIPLINES=!ALL_DISCIPLINES! %%~nxD"
 if not defined ALL_DISCIPLINES (
     echo No discipline folders found in %INPUT%.
     goto :done
@@ -62,10 +62,7 @@ for %%A in (!ARGUMENTS!) do (
     ) else if /i "%%~A"=="TW" (
         echo TW is excluded from regeneration.
         goto :done
-    ) else if /i "%%~A"=="SU" (
-        echo SU is excluded from regeneration.
-        goto :done
-    ) else if exist "%INPUT%\%%A\" (
+        ) else if exist "%INPUT%\%%A\" (
         set FOLDERS=!FOLDERS! "%INPUT%\%%A"
     ) else (
         echo There's no %INPUT%\%%A folder.
@@ -73,7 +70,7 @@ for %%A in (!ARGUMENTS!) do (
     )
 )
 if "%FOLDERS%"=="" (
-    for /d %%D in ("%INPUT%\*") do if /i not "%%~nxD"=="SW" if /i not "%%~nxD"=="TW" if /i not "%%~nxD"=="SU" set FOLDERS=!FOLDERS! "%%~fD"
+    for /d %%D in ("%INPUT%\*") do if /i not "%%~nxD"=="SW" if /i not "%%~nxD"=="TW" set FOLDERS=!FOLDERS! "%%~fD"
 )
 
 set MAPPING=

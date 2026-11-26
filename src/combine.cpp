@@ -926,7 +926,7 @@ std::map<std::string, std::vector<fs::path>> from_register(const CombineOptions&
     std::map<std::string, std::vector<fs::path>> groups;
     for (const Row& row : rows) {
         const std::string& combined = row.fields[0];
-        if (combined.empty()) continue;
+        if (combined.empty() || is_skip(combined)) continue;
         const auto path = path_of.find(row.fields[1]);
         if (path == path_of.end()) {
             std::cerr << "warning: " << row.fields[1] << " is to go in " << combined << ", but isn't in what was given, so it's left out\n";
@@ -1002,6 +1002,11 @@ int combine(const CombineOptions& options) {
     return result;
 }
 
+bool is_skip(std::string combined) {
+    std::transform(combined.begin(), combined.end(), combined.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+    return combined == "SKIP";
+}
+
 std::map<std::string, std::string> combine_groups(const std::string& register_path) {
     std::map<std::string, std::string> out;
     std::ifstream in(register_path, std::ios::binary);
@@ -1014,7 +1019,28 @@ std::map<std::string, std::string> combine_groups(const std::string& register_pa
     if (!at.count("combined") || !at.count("model")) throw std::runtime_error(register_path + ": needs combined and model columns");
     while (read_row(in, fields)) {
         const size_t c = at["combined"], m = at["model"];
-        if (c < fields.size() && m < fields.size() && !fields[c].empty() && !fields[m].empty()) out[fields[m]] = fields[c];
+        if (c < fields.size() && m < fields.size() && !fields[c].empty() && !fields[m].empty() && !is_skip(fields[c])) out[fields[m]] = fields[c];
+    }
+    return out;
+}
+
+std::set<std::string> combine_skipped(const std::string& register_path) {
+    std::set<std::string> out;
+    std::ifstream in(register_path, std::ios::binary);
+    if (!in) throw std::runtime_error(register_path + ": can't be read");
+    if (in.peek() == 0xEF) in.ignore(3);  // Excel's byte order mark
+    std::vector<std::string> fields;
+    read_row(in, fields);
+    std::map<std::string, size_t> at;
+    for (size_t i = 0; i < fields.size(); ++i) at[fields[i]] = i;
+    if (!at.count("combined") || !at.count("model")) throw std::runtime_error(register_path + ": needs combined and model columns");
+    while (read_row(in, fields)) {
+        const size_t c = at["combined"], m = at["model"];
+        if (c < fields.size() && m < fields.size() && !fields[m].empty() && is_skip(fields[c])) {
+            std::string model = fields[m];
+            std::transform(model.begin(), model.end(), model.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+            out.insert(model);
+        }
     }
     return out;
 }

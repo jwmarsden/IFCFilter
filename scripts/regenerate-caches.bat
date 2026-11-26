@@ -17,7 +17,7 @@ if exist "%~dp0.work\" (echo A regeneration may be running or incomplete. & goto
 set "ARGUMENTS=%*"
 if "%~1"=="" (
     set "DISCIPLINES="
-    for /d %%D in ("%SOURCE%\*") do if /i not "%%~nxD"=="SW" if /i not "%%~nxD"=="TW" if /i not "%%~nxD"=="SU" set "DISCIPLINES=!DISCIPLINES! %%~nxD"
+    for /d %%D in ("%SOURCE%\*") do if /i not "%%~nxD"=="SW" if /i not "%%~nxD"=="TW" set "DISCIPLINES=!DISCIPLINES! %%~nxD"
     echo Available disciplines:!DISCIPLINES!
     echo Enter discipline codes separated by spaces, or press Enter for all.
     set /p "ARGUMENTS=Disciplines [all]: "

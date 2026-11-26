@@ -13,6 +13,10 @@ with tempfile.TemporaryDirectory() as temp:
     (root/'input/RW/good.ifc').write_bytes((repo/'tests/fixtures/opening.ifc').read_bytes())
     (root/'input/RW/bad.ifc').write_text('not an IFC')
     (root/'input/SW/excluded.ifc').write_text('must not be processed')
+    # A cache left from a model now combined with others, and one in a discipline the run doesn't do
+    for part in ['output/RW','output/SW']: (root/part).mkdir(parents=True)
+    (root/'output/RW/gone.federate.ifcc').write_text('old')
+    (root/'output/SW/gone.federate.ifcc').write_text('old')
     rules=root/'rules.txt';rules.write_text('')
     script=repo/'scripts/regenerate-cache-progress.ps1'
     cmd=['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(script),'-Exe',str(exe),'-Rules',str(rules),'-Source',str(root/'source'),'-InputDir',str(root/'input'),'-Output',str(root/'output'),'-DataDir',str(root/'data'),'-ProgressDir',str(root/'progress')]
@@ -23,6 +27,8 @@ with tempfile.TemporaryDirectory() as temp:
     assert 'finished with failures' in page and 'good.ifc' in page and 'bad.ifc' in page and 'Failed (exit 1)' in page
     assert 'excluded.ifc' not in page and 'http-equiv="refresh"' not in page
     assert (root/'output/RW/good.ifcc').is_file()
+    assert not (root/'output/RW/gone.federate.ifcc').exists(),'a cache with no federation file should go'
+    assert (root/'output/SW/gone.federate.ifcc').exists(),'a discipline the run does not do is left alone'
     logs=list((root/'progress/cache-logs').glob('*.log'));assert len(logs)==1
     assert 'no DATA section' in logs[0].read_text(encoding='utf8')
     result=subprocess.run(cmd+['-Selection','SW'],text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)

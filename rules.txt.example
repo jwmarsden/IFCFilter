@@ -8,6 +8,8 @@ skip-name Edge
 skip-if DIT_Asset.Uniclass_PrCode=Pr_20_93_71_18
 skip-if DIT_Asset.Uniclass_SsCode=Ss_20_60_30_70
 skip-if DIT_Asset.Uniclass_SsCode=Ss_20_50_30_11
+# A rule for every discipline but some, by the folder the model is in: except DISC[,DISC] RULE
+except CV skip-if DIT_Asset.Uniclass_SsCode=Ss_20_60_30_70
 
 # Where a thing goes, by text its family's name holds:
 # keep-largest  the largest solid is the thing, and the rest is detail inside it, for the hidden file

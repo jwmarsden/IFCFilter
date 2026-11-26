@@ -12,7 +12,7 @@ param(
     [int]$Jobs = [int]$env:IFCFILTER_CACHE_JOBS  # how many at once; 0 or unset for as many as there are processors
 )
 $ErrorActionPreference = 'Stop'
-$excluded = @('SW', 'TW', 'SU')
+$excluded = @('SW', 'TW')
 $disciplines = @()
 if ([string]::IsNullOrWhiteSpace($Selection)) {
     $disciplines = @(Get-ChildItem -LiteralPath $Source -Directory | Where-Object { $_.Name -notin $excluded } | Sort-Object Name | ForEach-Object { $_.Name })
@@ -94,6 +94,19 @@ function Write-ProgressPage {
     Move-Item -LiteralPath $temp -Destination $page -Force
 }
 [System.IO.File]::WriteAllText($log, "Cache regeneration started $($runStart.ToString('s')), up to $Jobs at once in $([math]::Round($budget/1GB)) GB of memory`n", $utf8)
+# A cache whose federation file is gone, such as a model's once it's combined with others and written to parts,
+# would be opened beside the combined file's cache, with the same elements as they were, so it's removed
+foreach ($discipline in $disciplines) {
+    $cacheDir = Join-Path $Output $discipline
+    if (!(Test-Path -LiteralPath $cacheDir -PathType Container)) { continue }
+    foreach ($cache in @(Get-ChildItem -LiteralPath $cacheDir -Filter '*.ifcc' -File)) {
+        # NAME.federate.ifcc is made from NAME.federate.ifc
+        if (Test-Path -LiteralPath (Join-Path (Join-Path $InputDir $discipline) ($cache.BaseName + '.ifc'))) { continue }
+        Remove-Item -LiteralPath $cache.FullName
+        [System.IO.File]::AppendAllText($log, "Removed $($cache.FullName), as there's no $($cache.BaseName).ifc to make it from`n", $utf8)
+        Write-Host "Removed $discipline\$($cache.Name): no federation file for it"
+    }
+}
 Write-ProgressPage
 Write-Host "Progress page: $page"
 Write-Host "Log: $log"

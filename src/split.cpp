@@ -80,23 +80,65 @@ struct Rules {
     std::vector<ForwardRule> forward;       // assemblies moved forward, such as sign faces off their posts
     std::vector<PropertyRule> small_parts;  // assemblies whose small parts are hidden, such as a sign's badly exported text
     double cull_at_origin = 0;              // metres: a body this close to the world's 0,0, in a model that's mostly far from it, is left out
+    // except DISC[,DISC] RULE: a rule for every discipline but those, in upper case, added by for_discipline
+    std::vector<std::pair<std::vector<std::string>, std::string>> excepted;
+    std::string path;
 
     static bool matches(const std::vector<std::string>& list, const std::string& family) {
         return std::any_of(list.begin(), list.end(), [&](const std::string& s) { return family.find(s) != std::string::npos; });
     }
 
+    static std::string upper(std::string s) {
+        std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+        return s;
+    }
+
     static Rules load(const std::string& path) {
         Rules rules;
+        rules.path = path;
         if (path.empty()) return rules;
         std::ifstream in(path);
         if (!in) throw std::runtime_error(path + ": can't be read");
         std::string line;
         while (std::getline(in, line)) {
+            if (!line.empty() && line.back() == '\r') line.pop_back();
             if (line.empty() || line[0] == '#') continue;
+            if (line.rfind("except ", 0) == 0) {
+                const auto start = line.find_first_not_of(' ', 7);
+                const auto space = start == std::string::npos ? std::string::npos : line.find(' ', start);
+                const auto rest = space == std::string::npos ? std::string::npos : line.find_first_not_of(' ', space);
+                if (rest == std::string::npos) throw std::runtime_error(path + ": except needs disciplines and a rule: " + line);
+                std::vector<std::string> disciplines;
+                std::stringstream list(line.substr(start, space - start));
+                for (std::string d; std::getline(list, d, ',');) if (!d.empty()) disciplines.push_back(upper(d));
+                const std::string rule = line.substr(rest);
+                Rules probe;  // so that a mistake in it stops the run, whatever the discipline
+                probe.add(path, rule, false);
+                rules.excepted.emplace_back(std::move(disciplines), rule);
+                continue;
+            }
+            rules.add(path, line, true);
+        }
+        return rules;
+    }
+
+    // These rules, with the except rules that don't leave this discipline out
+    Rules for_discipline(const std::string& discipline) const {
+        Rules rules = *this;
+        for (const auto& [disciplines, rule] : excepted) {
+            if (std::find(disciplines.begin(), disciplines.end(), upper(discipline)) == disciplines.end()) rules.add(path, rule, false);
+        }
+        return rules;
+    }
+
+    void add(const std::string& path, const std::string& line, bool schema_too) {
+        Rules& rules = *this;
+        {
             const auto space = line.find(' ');
             const std::string action = line.substr(0, space);
             const std::string family = space == std::string::npos ? "" : line.substr(line.find_first_not_of(' ', space));
-            if (schema_rule(action, family)) continue;
+            // The schema's rules, such as site-set, are for every model, so except can't take them
+            if (schema_too && schema_rule(action, family)) return;
             else if (action == "keep-largest") rules.keep_largest.push_back(family);
             else if (action == "physical") rules.physical.push_back(family);
             else if (action == "envelope") rules.envelope.push_back(family);
@@ -138,9 +180,8 @@ struct Rules {
                 if (dot == std::string::npos || equals == std::string::npos || equals < dot) throw std::runtime_error(path + ": " + action + " needs SET.PROPERTY=VALUE: " + family);
                 rules.by_property.push_back({family.substr(0, dot), family.substr(dot + 1, equals - dot - 1), trimmed(family.substr(equals + 1)), action == "keep-if" ? FEDERATION : action == "envelope-if" ? ENVELOPES : HIDDEN, action == "hidden-tree-if", action == "skip-if"});
             }
-            else throw std::runtime_error(path + ": unknown rule " + action);
+            else throw std::runtime_error(path + (schema_too ? ": unknown rule " : ": except can't be used with ") + action);
         }
-        return rules;
     }
 };
 
@@ -802,11 +843,12 @@ std::string build_of(const SplitOptions& options) {
     return sha256_of(key.str());
 }
 
-int split_model(const fs::path& input, const SplitOptions& options, const Rules& rules, const std::unordered_set<std::string>& shared) {
+int split_model(const fs::path& input, const SplitOptions& options, const Rules& all_rules, const std::unordered_set<std::string>& shared) {
     const std::string stem = input.stem().string();
     // Federation files go in a folder for their discipline, named after the folder the input is in, as there
     // are hundreds of them
     const std::string discipline = fs::absolute(input).parent_path().filename().string();
+    const Rules rules = all_rules.for_discipline(discipline);
     const auto output_path = [&](Output output) {
         if (output == FEDERATION && !discipline.empty()) return federation_file(input, options).first;
         return fs::path(options.out_dir) / FOLDERS[output] / (stem + SUFFIXES[output]);
@@ -1559,7 +1601,14 @@ int split(const SplitOptions& supplied) {
         return split_model(options.inputs.at(0), options, Rules::load(options.rules_path), shared);
     }
 
-    const std::vector<fs::path> models = models_in(options.inputs);
+    std::vector<fs::path> models = models_in(options.inputs);
+    if (!options.combine_path.empty()) {
+        // A model the register marks SKIP isn't worked on, so a discipline can be run for only some of its models
+        const auto skipped = combine_skipped(options.combine_path);
+        const auto before = models.size();
+        models.erase(std::remove_if(models.begin(), models.end(), [&](const fs::path& m) { return skipped.count(lowercase(m.stem().string())) > 0; }), models.end());
+        if (models.size() != before) std::cout << before - models.size() << " models marked SKIP in " << fs::path(options.combine_path).filename().string() << ", so left out" << std::endl;
+    }
     if (models.empty()) {
         std::cerr << "no .ifc files to work on\n";
         return 2;

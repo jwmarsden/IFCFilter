@@ -28,6 +28,9 @@ int combine(const CombineOptions& options);
 
 // A register's groups: each model, by its name, and the name of what it goes into. Models left blank aren't in it.
 std::map<std::string, std::string> combine_groups(const std::string& register_path);
+// SKIP in the combined column: a model that split leaves out of the run altogether. Their stems, in lower case.
+bool is_skip(std::string combined);
+std::set<std::string> combine_skipped(const std::string& register_path);
 
 // Writes federation files as one, at out_path. Returns false, having said why, if they can't be; summary says
 // what it came to.

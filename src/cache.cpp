@@ -965,7 +965,7 @@ class Builder {
             const auto items = refs_in(parts[3]);
             return !items.empty() && std::all_of(items.begin(), items.end(), [&](uint32_t item) {
                 const auto type = spf_->type(item);
-                return type == "IFCPOLYGONALFACESET" || type == "IFCTRIANGULATEDFACESET";
+                return type == "IFCPOLYGONALFACESET" || type == "IFCTRIANGULATEDFACESET" || type == "IFCTRIANGULATEDIRREGULARNETWORK";
             });
         }
         return false;
@@ -987,7 +987,7 @@ class Builder {
             if (type == "IFCPOLYGONALFACESET") {
                 const auto parts = attributes_of(line);
                 if (parts.size() > 2) faces += refs_in(parts[2]).size();
-            } else if (type == "IFCTRIANGULATEDFACESET") {
+            } else if (type == "IFCTRIANGULATEDFACESET" || type == "IFCTRIANGULATEDIRREGULARNETWORK") {
                 const auto parts = attributes_of(line);
                 if (parts.size() > 3) {
                     const size_t groups = static_cast<size_t>(std::count(parts[3].begin(), parts[3].end(), '('));
@@ -1398,7 +1398,8 @@ class Builder {
         if (seen != item_meshes_.end()) return seen->second;
         Mesh mesh;
         bool built = false;
-        if (type == "IFCTRIANGULATEDFACESET") built = triangulated(item, mesh);
+        // A TIN, such as a survey's surface, is a triangulated face set with flags at the end
+        if (type == "IFCTRIANGULATEDFACESET" || type == "IFCTRIANGULATEDIRREGULARNETWORK") built = triangulated(item, mesh);
         else if (type == "IFCPOLYGONALFACESET") built = polygonal(item, mesh);
         else built = faceted(item, type, mesh);
         if (!built || mesh.indices.empty()) return item_meshes_.emplace(item, std::make_pair(int64_t(-1), Vector{})).first->second;
@@ -1880,7 +1881,7 @@ class Builder {
             element.flags |= APPROXIMATE;
             return;
         }
-        if (type == "IFCTRIANGULATEDFACESET" || type == "IFCPOLYGONALFACESET" || type == "IFCFACETEDBREP" || type == "IFCFACETEDBREPWITHVOIDS" ||
+        if (type == "IFCTRIANGULATEDFACESET" || type == "IFCTRIANGULATEDIRREGULARNETWORK" || type == "IFCPOLYGONALFACESET" || type == "IFCFACETEDBREP" || type == "IFCFACETEDBREPWITHVOIDS" ||
             type == "IFCSHELLBASEDSURFACEMODEL" || type == "IFCFACEBASEDSURFACEMODEL") {
             const auto& [mesh, centre] = mesh_of(item, type);
             if (mesh >= 0) add_instance(element, static_cast<uint32_t>(mesh), placed, centre, material);
